@@ -1,0 +1,200 @@
+import { useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import { ArrowRight, MapPinOff } from 'lucide-react'
+import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
+import { speciesLabel } from '@/constants'
+import { formatDate } from '@/utils/date'
+import { cn } from '@/utils/cn'
+import { hasCoordinates } from '@/utils/location'
+import { ReportTypeBadge } from './ReportTypeBadge'
+import { StatusBadge } from './StatusBadge'
+import {
+  APPROXIMATE_RADIUS_M,
+  FALLBACK_CENTER,
+  FALLBACK_ZOOM,
+  TILE_LAYER,
+  iconForReport,
+} from './mapSetup'
+
+/**
+ * Map of one or more reports.
+ *
+ * Every position shown is the approximate area a reporter described, never an
+ * exact address (CLAUDE.md §14). With a single report the map also draws a
+ * circle, so the imprecision is visible rather than implied.
+ *
+ * @param {Object} props
+ * @param {Object[]} props.reports
+ * @param {boolean} [props.showApproximateArea]  Draw the radius circle.
+ * @param {string} [props.height]  Tailwind height classes.
+ */
+export function ReportMap({ reports, showApproximateArea = false, height = 'h-96', className }) {
+  // Both derived in one memo so `positions` keeps a stable identity — otherwise
+  // the fit-bounds effect re-runs and re-centres the map on every render.
+  const { mappable, positions } = useMemo(() => {
+    const withCoordinates = reports.filter(hasCoordinates)
+
+    return {
+      mappable: withCoordinates,
+      positions: withCoordinates.map((report) => [report.location.lat, report.location.lng]),
+    }
+  }, [reports])
+
+  if (mappable.length === 0) {
+    return (
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center gap-2 rounded-card border border-dashed border-border px-6 text-center',
+          height,
+          className,
+        )}
+      >
+        <MapPinOff size={28} className="text-fg-subtle" aria-hidden="true" />
+        <p className="font-medium text-fg">Nothing to show on the map</p>
+        <p className="max-w-prose text-sm text-fg-muted">
+          {reports.length === 0
+            ? 'No reports match your search.'
+            : 'None of these reports have a location pinned yet.'}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={cn('overflow-hidden rounded-card border border-border', height, className)}>
+      <MapContainer
+        center={FALLBACK_CENTER}
+        zoom={FALLBACK_ZOOM}
+        scrollWheelZoom={false}
+        className="size-full"
+      >
+        <TileLayer
+          url={TILE_LAYER.url}
+          attribution={TILE_LAYER.attribution}
+          maxZoom={TILE_LAYER.maxZoom}
+        />
+
+        <KeepMapSized />
+        <FitToReports positions={positions} />
+
+        {mappable.map((report) => (
+          <Marker
+            key={report.id}
+            position={[report.location.lat, report.location.lng]}
+            icon={iconForReport(report)}
+          >
+            <Popup>
+              <ReportPopup report={report} />
+            </Popup>
+          </Marker>
+        ))}
+
+        {showApproximateArea &&
+          mappable.map((report) => (
+            <Circle
+              key={`${report.id}-area`}
+              center={[report.location.lat, report.location.lng]}
+              radius={APPROXIMATE_RADIUS_M}
+              pathOptions={{
+                color: 'var(--color-brand)',
+                fillColor: 'var(--color-brand)',
+                fillOpacity: 0.12,
+                weight: 1,
+              }}
+            />
+          ))}
+      </MapContainer>
+    </div>
+  )
+}
+
+/**
+ * Tell Leaflet when its container changes size.
+ *
+ * Leaflet measures its container once and never checks again, so a map inside a
+ * responsive layout ends up with grey gaps where tiles were never requested —
+ * on a window resize, a phone rotating, or a sidebar collapsing at a
+ * breakpoint. `invalidateSize()` makes it re-measure and fetch what is missing.
+ */
+export function KeepMapSized() {
+  const map = useMap()
+
+  useEffect(() => {
+    const observer = new ResizeObserver(() => map.invalidateSize())
+    observer.observe(map.getContainer())
+    return () => observer.disconnect()
+  }, [map])
+
+  return null
+}
+
+/**
+ * Frame the map around whatever is being shown.
+ *
+ * Leaflet is an external system with its own imperative API, which is exactly
+ * what an effect is for.
+ */
+function FitToReports({ positions }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (positions.length === 0) return
+
+    if (positions.length === 1) {
+      map.setView(positions[0], 15)
+      return
+    }
+
+    map.fitBounds(positions, { padding: [40, 40], maxZoom: 15 })
+  }, [map, positions])
+
+  return null
+}
+
+/**
+ * Marker popup: a small preview of the report with a way into it.
+ *
+ * Includes the photograph — on a map full of identical pins, the picture is
+ * what tells someone whether this is worth opening.
+ */
+function ReportPopup({ report }) {
+  const heading = report.petName ?? `${speciesLabel(report.species)} (name unknown)`
+  const photo = report.photos.find((item) => item.isPrimary) ?? report.photos[0]
+
+  return (
+    <div className="flex w-56 flex-col gap-2">
+      <div className="relative">
+        <img
+          src={photo?.url ?? photoPlaceholder}
+          alt=""
+          className="aspect-4/3 w-full rounded-control bg-surface-muted object-cover"
+        />
+        <ReportTypeBadge
+          reportType={report.reportType}
+          size="sm"
+          className="absolute top-2 left-2 shadow-card"
+        />
+      </div>
+
+      <div className="flex flex-col gap-0.5">
+        <p className="font-semibold text-fg">{heading}</p>
+        <p className="text-fg-muted">{report.breed || speciesLabel(report.species)}</p>
+        <p className="text-fg-muted">
+          {report.location.city} · {formatDate(report.incidentDate)}
+        </p>
+        <StatusBadge status={report.status} className="mt-1" />
+      </div>
+
+      <Link
+        to={`/pet/${report.id}`}
+        className="inline-flex items-center gap-1 font-medium text-brand hover:underline"
+      >
+        View report
+        <ArrowRight size={14} aria-hidden="true" />
+      </Link>
+
+      <p className="text-fg-muted">Approximate area only.</p>
+    </div>
+  )
+}

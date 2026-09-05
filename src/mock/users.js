@@ -1,0 +1,176 @@
+/**
+ * Seed users.
+ *
+ * FICTIONAL DEMO DATA. Names, emails and phone numbers are invented and must
+ * not correspond to real people (CLAUDE.md §19). Emails use example.com and
+ * phone numbers use the reserved 0917-0100-xxx style block so they cannot dial
+ * a real subscriber.
+ *
+ * Covers all three roles plus one suspended account so the administrator
+ * workspace (Phase 11) has something to moderate.
+ */
+
+import { ROLES } from '@/constants'
+
+export const users = [
+  {
+    id: 'user-001',
+    fullName: 'Maria Santos',
+    email: 'maria.santos@example.com',
+    phone: '+63 917 010 0101',
+    role: ROLES.USER,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Makati City, Metro Manila',
+    notificationPreferences: {
+      possibleMatches: true,
+      statusUpdates: true,
+      staffMessages: true,
+    },
+    createdAt: '2026-03-14T02:11:00.000Z',
+  },
+  {
+    id: 'user-002',
+    fullName: 'Jomar Dela Cruz',
+    email: 'jomar.delacruz@example.com',
+    phone: '+63 917 010 0102',
+    role: ROLES.USER,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Quezon City, Metro Manila',
+    notificationPreferences: {
+      possibleMatches: true,
+      statusUpdates: true,
+      staffMessages: false,
+    },
+    createdAt: '2026-04-02T07:45:00.000Z',
+  },
+  {
+    id: 'user-003',
+    fullName: 'Liza Ocampo',
+    email: 'liza.ocampo@example.com',
+    phone: '+63 917 010 0103',
+    role: ROLES.USER,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Makati City, Metro Manila',
+    notificationPreferences: {
+      possibleMatches: true,
+      statusUpdates: true,
+      staffMessages: true,
+    },
+    createdAt: '2026-05-19T11:02:00.000Z',
+  },
+  {
+    id: 'user-004',
+    fullName: 'Aileen Reyes',
+    email: 'aileen.reyes@example.com',
+    phone: '+63 917 010 0104',
+    role: ROLES.USER,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Cebu City, Cebu',
+    notificationPreferences: {
+      possibleMatches: true,
+      statusUpdates: false,
+      staffMessages: true,
+    },
+    createdAt: '2026-06-01T05:30:00.000Z',
+  },
+  {
+    id: 'user-005',
+    fullName: 'Kenneth Villanueva',
+    email: 'kenneth.villanueva@example.com',
+    phone: '+63 917 010 0105',
+    role: ROLES.USER,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Davao City, Davao del Sur',
+    notificationPreferences: {
+      possibleMatches: true,
+      statusUpdates: true,
+      staffMessages: true,
+    },
+    createdAt: '2026-06-22T09:18:00.000Z',
+  },
+  {
+    id: 'user-006',
+    fullName: 'Noel Aguilar',
+    email: 'noel.aguilar@example.com',
+    phone: '+63 917 010 0106',
+    role: ROLES.USER,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Quezon City, Metro Manila',
+    notificationPreferences: {
+      possibleMatches: true,
+      statusUpdates: true,
+      staffMessages: true,
+    },
+    createdAt: '2026-07-08T13:55:00.000Z',
+  },
+  {
+    id: 'user-007',
+    fullName: 'Rico Panganiban',
+    email: 'rico.panganiban@example.com',
+    phone: '+63 917 010 0107',
+    role: ROLES.USER,
+    accountStatus: 'suspended',
+    avatarUrl: null,
+    preferredLocation: 'Manila, Metro Manila',
+    notificationPreferences: {
+      possibleMatches: false,
+      statusUpdates: false,
+      staffMessages: true,
+    },
+    createdAt: '2026-07-30T16:04:00.000Z',
+  },
+  {
+    id: 'staff-001',
+    fullName: 'Patricia Lim',
+    email: 'patricia.lim@example.com',
+    phone: '+63 917 010 0201',
+    role: ROLES.STAFF,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Metro Manila',
+    notificationPreferences: {
+      possibleMatches: true,
+      statusUpdates: true,
+      staffMessages: true,
+    },
+    createdAt: '2026-02-10T01:00:00.000Z',
+  },
+  {
+    id: 'staff-002',
+    fullName: 'Rafael Mendoza',
+    email: 'rafael.mendoza@example.com',
+    phone: '+63 917 010 0202',
+    role: ROLES.STAFF,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Cebu City, Cebu',
+    notificationPreferences: {
+      possibleMatches: true,
+      statusUpdates: true,
+      staffMessages: true,
+    },
+    createdAt: '2026-02-10T01:05:00.000Z',
+  },
+  {
+    id: 'admin-001',
+    fullName: 'Grace Bautista',
+    email: 'grace.bautista@example.com',
+    phone: '+63 917 010 0301',
+    role: ROLES.ADMIN,
+    accountStatus: 'active',
+    avatarUrl: null,
+    preferredLocation: 'Metro Manila',
+    notificationPreferences: {
+      possibleMatches: false,
+      statusUpdates: true,
+      staffMessages: true,
+    },
+    createdAt: '2026-01-05T00:30:00.000Z',
+  },
+]

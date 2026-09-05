@@ -1,0 +1,212 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Paws&Found — design tokens
+
+   OFFICIAL COLOUR DIRECTION: TEAL + AMBER (approved by the team).
+   Teal is the brand: reliable, organised, safe. Amber is the accent: warmth
+   and urgency without alarm. See docs/design-system.md.
+
+   Components must reference these semantic tokens, never raw Tailwind colours
+   like `bg-teal-600`. That is what lets the whole application be recoloured
+   from this one file.
+
+   Tailwind v4 is configured here in CSS — there is no tailwind.config.js.
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* -- Typography ---------------------------------------------------------
+     System font stack: no network request, no external dependency.
+
+     Type scale (Tailwind's default steps, used consistently):
+       hero headline   text-4xl → text-5xl   (36–48px)
+       page title      text-3xl              (30px)
+       section heading text-2xl              (24px)
+       card heading    text-lg               (18px)
+       body            text-base             (16px)
+       metadata        text-sm               (14px)
+     Body copy is text-base. text-sm is for metadata only — it was overused
+     early on and made the whole interface read as annotations. */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+
+  /* -- Brand: teal --------------------------------------------------------
+     Primary controls, navigation emphasis, links, and the Found-report
+     identity. Do not set body text in teal. */
+  --color-brand: #157a78;
+  --color-brand-hover: #0e5d5b;
+  --color-brand-soft: #e2f1ef;
+
+  /* -- Accent: amber ------------------------------------------------------
+     Secondary emphasis, the Lost-report identity, possible-match highlights.
+     NOT an error colour — see --color-danger. */
+  --color-accent: #f4a340;
+  --color-accent-hover: #d98a26;
+  --color-accent-soft: #fff1d6;
+
+  /* -- Neutrals -----------------------------------------------------------
+     The canvas is off-white, not pure white, so white cards lift off it. */
+  --color-surface: #fbf9f6; /* page canvas — warm off-white  */
+  --color-surface-alt: #f4f9f7; /* alternating section bands     */
+  --color-surface-warm: #fcf8f0; /* warmer neutral, for the footer      */
+  --color-surface-muted: #eef3f2; /* hover / subtle fills          */
+  --color-panel: #ffffff; /* cards, modals, nav bar        */
+
+  --color-border: #dde6e4; /* dividers, card outlines    */
+  --color-border-strong: #c7d5d2; /* form controls              */
+
+  --color-fg: #21302f; /* headings and body          */
+  --color-fg-muted: #667573; /* metadata, descriptions     */
+  --color-fg-inverted: #ffffff;
+
+  /* DECORATIVE ONLY — 3.06:1 on white, below the 4.5:1 needed for text.
+     Use it for icons and dividers; use fg-muted for anything readable. */
+  --color-fg-subtle: #899694;
+
+  /* -- Report type --------------------------------------------------------
+     Lost = amber, Found = teal. Type and status are separate concepts and
+     must not share a visual treatment. Never signalled by colour alone.
+
+     These two are the INK used on the soft backgrounds below, so both are
+     darkened from the brand values to stay readable at badge size:
+       lost   #d98a26 → #9a620f   (2.47:1 → 4.56:1)
+       found  #157a78 → #0e5d5b   (4.42:1 → 6.60:1)
+     The undarkened amber and teal remain correct for fills and, later, map
+     markers — see docs/design-system.md. */
+  --color-lost: #9a620f;
+  --color-lost-soft: #fff1d6;
+  --color-found: #0e5d5b;
+  --color-found-soft: #e2f1ef;
+
+  /* -- Report status ------------------------------------------------------ */
+  --color-status-active: #157a78;
+  --color-status-active-soft: #e8effa;
+  --color-status-match: #d98a26;
+  --color-status-match-soft: #fff1d6;
+  --color-status-returned: #338a55;
+  --color-status-returned-soft: #e4f2ea;
+  --color-status-closed: #737b7a;
+  --color-status-closed-soft: #eff1f1;
+
+  /* -- Feedback ----------------------------------------------------------- */
+  --color-danger: #c24141; /* destructive actions, validation errors */
+  --color-danger-hover: #a63535;
+  --color-danger-soft: #fbeaea;
+  --color-success: #338a55;
+  --color-success-soft: #e4f2ea;
+  --color-success-ink: #286f43; /* label on success-soft, 5.28:1 */
+
+  /* -- Shape --------------------------------------------------------------
+     Moderate rounding: friendly without becoming a pill. */
+  --radius-card: 1rem; /* 16px — cards, modals, panels   */
+  --radius-control: 0.625rem; /* 10px — buttons, inputs, badges */
+  --radius-pill: 9999px; /* chips and small status pills   */
+
+  /* -- Elevation ----------------------------------------------------------
+     Restrained on purpose: a card lifts off the canvas, it does not float.
+     No glow, no coloured shadows. */
+  --shadow-card: 0 1px 2px rgb(33 48 47 / 0.04), 0 2px 8px rgb(33 48 47 / 0.05);
+  --shadow-raised: 0 2px 4px rgb(33 48 47 / 0.05), 0 8px 24px rgb(33 48 47 / 0.08);
+
+  /* -- Layout -------------------------------------------------------------
+     Spacing uses Tailwind's 0.25rem step (p-4 = 1rem). Do not invent
+     arbitrary values like p-[13px]. */
+  --container-page: 80rem; /* 1280px — dashboards and listings */
+  --container-prose: 45rem; /* 720px  — long-form reading       */
+  --container-form: 42rem; /* 672px  — single-column forms     */
+  --container-wizard: 58rem; /* 928px  — the report wizard       */
+
+  /* -- Breakpoints --------------------------------------------------------
+     Tailwind defaults, kept explicit. Team test targets: 390 (mobile) → base,
+     768 (tablet) → md, 1366 (laptop) → xl, 1920 → 2xl. */
+  --breakpoint-sm: 40rem; /* 640px  */
+  --breakpoint-md: 48rem; /* 768px  */
+  --breakpoint-lg: 64rem; /* 1024px */
+  --breakpoint-xl: 80rem; /* 1280px */
+  --breakpoint-2xl: 96rem; /* 1536px */
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Accessibility: a visible focus ring on every keyboard-focused control.
+     Never remove this without providing an equivalent indicator. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Respect the OS "reduce motion" setting. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  z-index: 100;
+  translate: 0 -200%;
+  border-radius: var(--radius-control);
+  background-color: var(--color-brand);
+  padding: 0.5rem 0.75rem;
+  color: var(--color-fg-inverted);
+
+  &:focus {
+    translate: 0 0;
+  }
+}
+
+/* The homepage hero ground.
+
+   A warm amber glow behind the headline and a cooler teal one behind the
+   photograph, both far below full strength — the page should read as warmer
+   without anyone noticing a gradient. Both fade out before the reports
+   section, so the photographs there sit on the plain canvas. */
+@utility hero-ground {
+  background-image:
+    radial-gradient(64rem 48rem at 4% 2%, rgb(244 163 64 / 0.10), transparent 68%),
+    radial-gradient(60rem 44rem at 96% 0%, rgb(21 122 120 / 0.075), transparent 64%);
+}
+
+/* The same amber/teal atmosphere as the homepage hero, at roughly a third of
+   the strength, on every page. Enough that the interface reads as one warm
+   surface rather than cards floating on flat white; not enough to notice as a
+   gradient. Home keeps `hero-ground` on top of this for its stronger opening. */
+@utility page-ground {
+  background-image:
+    radial-gradient(70rem 40rem at 0% 0%, rgb(244 163 64 / 0.035), transparent 60%),
+    radial-gradient(64rem 38rem at 100% 4%, rgb(21 122 120 / 0.03), transparent 58%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/* The reporting wizard's ground. Amber for a lost report, teal for a found
+   one — just enough that someone knows which workflow they are in without the
+   whole form changing colour. */
+@utility lost-ground {
+  background-image: radial-gradient(56rem 34rem at 12% 0%, rgb(244 163 64 / 0.09), transparent 62%);
+}
+
+@utility found-ground {
+  background-image: radial-gradient(56rem 34rem at 12% 0%, rgb(21 122 120 / 0.07), transparent 62%);
+}

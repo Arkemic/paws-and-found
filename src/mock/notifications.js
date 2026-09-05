@@ -1,0 +1,137 @@
+/**
+ * Seed notifications.
+ *
+ * FICTIONAL DEMO DATA. Notifications always belong to exactly one user and,
+ * where relevant, link back to the report or match that caused them so the
+ * notification centre (Phase 9) can navigate straight to the case.
+ *
+ * Coordinators receive their own (notif-009 onwards): a coordinator is told
+ * when a pairing needs checking, when one has been raised that nobody has
+ * picked up, and when an active report is going nowhere.
+ */
+
+import { NOTIFICATION_TYPES } from '@/constants'
+
+export const notifications = [
+  {
+    id: 'notif-001',
+    userId: 'user-001',
+    type: NOTIFICATION_TYPES.MATCH_SUGGESTED,
+    title: 'Possible match found for Milo',
+    body: 'A found dog reported in Barangay Bel-Air shares several characteristics with your report.',
+    reportId: 'report-001',
+    matchId: 'match-001',
+    isRead: false,
+    createdAt: '2026-08-11T03:41:00.000Z',
+  },
+  {
+    id: 'notif-002',
+    userId: 'user-001',
+    type: NOTIFICATION_TYPES.VERIFICATION_REQUESTED,
+    title: 'Verification requested',
+    body: 'A Pet Coordinator asked you to describe two details about Milo before contact information is shared.',
+    reportId: 'report-001',
+    matchId: 'match-001',
+    isRead: false,
+    createdAt: '2026-08-12T01:15:00.000Z',
+  },
+  {
+    id: 'notif-003',
+    userId: 'user-003',
+    type: NOTIFICATION_TYPES.STAFF_REVIEWED,
+    title: 'Your found report was reviewed',
+    body: 'A Pet Coordinator reviewed your found report and linked it to a possible match.',
+    reportId: 'report-002',
+    matchId: 'match-001',
+    isRead: true,
+    createdAt: '2026-08-11T03:42:00.000Z',
+  },
+  {
+    id: 'notif-004',
+    userId: 'user-002',
+    type: NOTIFICATION_TYPES.MATCH_SUGGESTED,
+    title: 'Possible match found for Kitkat',
+    body: 'A found cat reported in Barangay Batasan Hills shares several characteristics with your report.',
+    reportId: 'report-003',
+    matchId: 'match-002',
+    isRead: false,
+    createdAt: '2026-08-15T12:31:00.000Z',
+  },
+  {
+    id: 'notif-005',
+    userId: 'user-003',
+    type: NOTIFICATION_TYPES.PET_RETURNED,
+    title: 'Mochi has been marked as returned',
+    body: 'Your report was closed as a successful reunion. Thank you for updating the community.',
+    reportId: 'report-007',
+    matchId: 'match-003',
+    isRead: true,
+    createdAt: '2026-08-02T07:31:00.000Z',
+  },
+  {
+    id: 'notif-006',
+    userId: 'user-001',
+    type: NOTIFICATION_TYPES.MATCH_CONFIRMED,
+    title: 'Match confirmed — thank you',
+    body: 'The cat you found was verified as Mochi and has been returned to her owner.',
+    reportId: 'report-010',
+    matchId: 'match-003',
+    isRead: true,
+    createdAt: '2026-08-02T07:32:00.000Z',
+  },
+  {
+    id: 'notif-007',
+    userId: 'user-002',
+    type: NOTIFICATION_TYPES.STATUS_CHANGED,
+    title: 'Report for Coco was closed',
+    body: 'Your lost report was closed at your request. You can reopen it by filing a new report.',
+    reportId: 'report-008',
+    matchId: null,
+    isRead: true,
+    createdAt: '2026-08-03T09:01:00.000Z',
+  },
+  {
+    id: 'notif-008',
+    userId: 'user-004',
+    type: NOTIFICATION_TYPES.REPORT_UPDATED,
+    title: 'Your report is still active',
+    body: 'No possible matches have been identified for Bantay yet. Adding a clearer photo can help.',
+    reportId: 'report-005',
+    matchId: null,
+    isRead: false,
+    createdAt: '2026-08-13T00:00:00.000Z',
+  },
+  {
+    id: 'notif-009',
+    userId: 'staff-001',
+    type: NOTIFICATION_TYPES.VERIFICATION_REQUESTED,
+    title: 'Verification requested on the Milo pairing',
+    body: 'The owner asked for the 85% pairing between a lost Shih Tzu and a found dog in Makati City to be checked.',
+    reportId: 'report-001',
+    matchId: 'match-001',
+    isRead: false,
+    createdAt: '2026-08-12T01:16:00.000Z',
+  },
+  {
+    id: 'notif-010',
+    userId: 'staff-001',
+    type: NOTIFICATION_TYPES.MATCH_SUGGESTED,
+    title: 'A possible match has no coordinator yet',
+    body: 'The 75% pairing raised for Kitkat in Quezon City has not been picked up by anyone.',
+    reportId: 'report-003',
+    matchId: 'match-002',
+    isRead: false,
+    createdAt: '2026-08-15T12:32:00.000Z',
+  },
+  {
+    id: 'notif-011',
+    userId: 'staff-001',
+    type: NOTIFICATION_TYPES.REPORT_UPDATED,
+    title: 'An active report has had no matches for a week',
+    body: 'Bantay in Cebu City is still active with nothing suggested. It may be worth asking the owner for a clearer photo.',
+    reportId: 'report-005',
+    matchId: null,
+    isRead: true,
+    createdAt: '2026-08-13T00:05:00.000Z',
+  },
+]

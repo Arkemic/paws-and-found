@@ -1,0 +1,181 @@
+/**
+ * Shared domain constants.
+ *
+ * Every list here is intentionally data-driven so that new values (extra
+ * statuses, extra species) can be added without hunting through JSX.
+ * See CLAUDE.md §6.7 — the status workflow must stay extensible.
+ */
+
+/** Application roles. A user has exactly one. */
+export const ROLES = {
+  USER: 'user',
+  STAFF: 'staff',
+  ADMIN: 'admin',
+}
+
+export const ROLE_LABELS = {
+  [ROLES.USER]: 'Customer/User',
+  [ROLES.STAFF]: 'Staff / Pet Coordinator',
+  [ROLES.ADMIN]: 'Administrator',
+}
+
+/** The two kinds of report a community member can file. */
+export const REPORT_TYPES = {
+  LOST: 'lost',
+  FOUND: 'found',
+}
+
+export const REPORT_TYPE_LABELS = {
+  [REPORT_TYPES.LOST]: 'Lost',
+  [REPORT_TYPES.FOUND]: 'Found',
+}
+
+/**
+ * Report statuses. More may be required once the instructor finalises the
+ * backend — add them here rather than hard-coding new strings at call sites.
+ */
+export const REPORT_STATUSES = {
+  ACTIVE: 'active',
+  POSSIBLE_MATCH: 'possible_match',
+  RETURNED: 'returned',
+  CLOSED: 'closed',
+}
+
+export const REPORT_STATUS_LABELS = {
+  [REPORT_STATUSES.ACTIVE]: 'Active',
+  [REPORT_STATUSES.POSSIBLE_MATCH]: 'Possible Match',
+  [REPORT_STATUSES.RETURNED]: 'Returned',
+  [REPORT_STATUSES.CLOSED]: 'Closed',
+}
+
+/** Order used by queues and filter chips. */
+export const REPORT_STATUS_ORDER = [
+  REPORT_STATUSES.ACTIVE,
+  REPORT_STATUSES.POSSIBLE_MATCH,
+  REPORT_STATUSES.RETURNED,
+  REPORT_STATUSES.CLOSED,
+]
+
+/** Lifecycle of a single match suggestion. */
+export const MATCH_STATUSES = {
+  SUGGESTED: 'suggested',
+  VERIFICATION_REQUESTED: 'verification_requested',
+  UNDER_REVIEW: 'under_review',
+  CONFIRMED: 'confirmed',
+  REJECTED: 'rejected',
+  DISMISSED: 'dismissed',
+}
+
+export const MATCH_STATUS_LABELS = {
+  [MATCH_STATUSES.SUGGESTED]: 'Possible Match',
+  [MATCH_STATUSES.VERIFICATION_REQUESTED]: 'Verification Requested',
+  [MATCH_STATUSES.UNDER_REVIEW]: 'Under Staff Review',
+  [MATCH_STATUSES.CONFIRMED]: 'Confirmed Match',
+  [MATCH_STATUSES.REJECTED]: 'Rejected',
+  [MATCH_STATUSES.DISMISSED]: 'Dismissed by User',
+}
+
+/** Match states that are sitting on a Pet Coordinator's desk. */
+export const MATCH_STATUSES_AWAITING_STAFF = [
+  MATCH_STATUSES.VERIFICATION_REQUESTED,
+  MATCH_STATUSES.UNDER_REVIEW,
+]
+
+/** Pet categories. Administrators manage these in Phase 11. */
+export const SPECIES = {
+  DOG: 'dog',
+  CAT: 'cat',
+  BIRD: 'bird',
+  RABBIT: 'rabbit',
+  OTHER: 'other',
+}
+
+export const SPECIES_LABELS = {
+  [SPECIES.DOG]: 'Dog',
+  [SPECIES.CAT]: 'Cat',
+  [SPECIES.BIRD]: 'Bird',
+  [SPECIES.RABBIT]: 'Rabbit',
+  [SPECIES.OTHER]: 'Other',
+}
+
+/**
+ * Display name for a species value.
+ *
+ * Falls back to the stored value when an administrator has added a category
+ * beyond the seeded five, so a new category renders sensibly everywhere instead
+ * of showing "undefined". The full list lives in `categoryService`.
+ *
+ * @param {string} value
+ */
+export function speciesLabel(value) {
+  if (SPECIES_LABELS[value]) return SPECIES_LABELS[value]
+  if (!value) return ''
+  return value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, ' ')
+}
+
+export const PET_SIZES = {
+  SMALL: 'small',
+  MEDIUM: 'medium',
+  LARGE: 'large',
+}
+
+export const PET_SIZE_LABELS = {
+  [PET_SIZES.SMALL]: 'Small',
+  [PET_SIZES.MEDIUM]: 'Medium',
+  [PET_SIZES.LARGE]: 'Large',
+}
+
+export const PET_SEXES = {
+  MALE: 'male',
+  FEMALE: 'female',
+  UNKNOWN: 'unknown',
+}
+
+export const PET_SEX_LABELS = {
+  [PET_SEXES.MALE]: 'Male',
+  [PET_SEXES.FEMALE]: 'Female',
+  [PET_SEXES.UNKNOWN]: 'Unknown',
+}
+
+/** Reasons a report can be flagged for moderation (Phase 11). */
+export const MODERATION_REASONS = {
+  FALSE_REPORT: 'false_report',
+  SPAM: 'spam',
+  SCAM: 'scam',
+  HARASSMENT: 'harassment',
+  INAPPROPRIATE: 'inappropriate',
+  DUPLICATE: 'duplicate',
+  OTHER: 'other',
+}
+
+export const MODERATION_REASON_LABELS = {
+  [MODERATION_REASONS.FALSE_REPORT]: 'False report',
+  [MODERATION_REASONS.SPAM]: 'Spam',
+  [MODERATION_REASONS.SCAM]: 'Scam',
+  [MODERATION_REASONS.HARASSMENT]: 'Harassment',
+  [MODERATION_REASONS.INAPPROPRIATE]: 'Inappropriate content',
+  [MODERATION_REASONS.DUPLICATE]: 'Duplicate report',
+  [MODERATION_REASONS.OTHER]: 'Other',
+}
+
+/** Kinds of notification the system can raise (Phase 9). */
+export const NOTIFICATION_TYPES = {
+  MATCH_SUGGESTED: 'match_suggested',
+  VERIFICATION_REQUESTED: 'verification_requested',
+  STAFF_REVIEWED: 'staff_reviewed',
+  MATCH_CONFIRMED: 'match_confirmed',
+  MATCH_REJECTED: 'match_rejected',
+  REPORT_UPDATED: 'report_updated',
+  STATUS_CHANGED: 'status_changed',
+  PET_RETURNED: 'pet_returned',
+  REPORT_FLAGGED: 'report_flagged',
+}
+
+/**
+ * How precisely a report's coordinates may be shown publicly.
+ * CLAUDE.md §14 — never expose an exact home address by default.
+ */
+export const LOCATION_PRECISION = {
+  APPROXIMATE: 'approximate',
+  EXACT: 'exact',
+}
