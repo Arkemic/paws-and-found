@@ -50,6 +50,7 @@ GET    /api/auth/me              the signed-in user, or { user: null }
 GET    /api/reports              list; see the parameters below
 POST   /api/reports              file a report            (signed in)
 GET    /api/reports/{id}         one report with photos, location and history
+GET    /api/reports/stats        dashboard figures       (staff or admin)
 PUT    /api/reports/{id}         edit details             (the reporter only)
 PATCH  /api/reports/{id}         change status            (reporter or coordinator)
 

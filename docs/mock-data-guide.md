@@ -22,7 +22,7 @@ src/mock/*            ← seed data
 
 **The one rule that makes this work:** nothing outside `src/services/` may
 import from `src/mock/` or from `mockDb`. If a component imports mock data
-directly, swapping in Supabase means rewriting that component.
+directly, moving it to the API means rewriting that component.
 
 ## Using a service
 

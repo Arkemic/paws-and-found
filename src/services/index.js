@@ -6,8 +6,8 @@
  *   import { petService } from '@/services'
  *   const reports = await petService.getRecentReports(6)
  *
- * This is the seam between the UI and the data source. Everything below it is
- * mock data today and Supabase later; everything above it should not care.
+ * This is the seam between the UI and the data source. Everything below it
+ * calls the PHP API; everything above it should not care.
  */
 
 import * as petService from './petService'

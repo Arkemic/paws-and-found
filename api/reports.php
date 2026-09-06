@@ -39,9 +39,13 @@ function handle_reports(string $method, ?string $identifier): never
         report_create();
     }
 
-    // Must be tested before the numeric branch, or 'activity' falls through.
+    // Must be tested before the numeric branch, or these fall through.
     if ($method === 'GET' && $identifier === 'activity') {
         reports_activity();
+    }
+
+    if ($method === 'GET' && $identifier === 'stats') {
+        reports_stats();
     }
 
     if (ctype_digit((string) $identifier)) {
@@ -313,6 +317,116 @@ function reports_activity(): never
         'actor_name' => $row['actor_name'],
         'created_at' => $row['created_at'],
     ], $statement->fetchAll())]);
+}
+
+/**
+ * The numbers the dashboards report on.
+ *
+ * Three GROUP BY queries, not one list fetched and counted in JavaScript. That
+ * matters for more than tidiness: the reports endpoint is paginated, so
+ * counting its rows in the browser would silently report on one page rather
+ * than on the whole table.
+ *
+ * Coordinators and administrators only — these are system figures, and the
+ * customer dashboard deliberately shows cases rather than counts.
+ */
+function reports_stats(): never
+{
+    require_role('staff', 'admin');
+
+    // ---- Totals, by status and by type -------------------------------------
+    $totals = [
+        'total' => 0,
+        'lost' => 0,
+        'found' => 0,
+        'active' => 0,
+        'possible_match' => 0,
+        'returned' => 0,
+        'closed' => 0,
+    ];
+
+    $rows = db()->query(
+        'SELECT status, report_type, COUNT(*) AS total
+           FROM pet_reports
+          GROUP BY status, report_type'
+    )->fetchAll();
+
+    foreach ($rows as $row) {
+        $count = (int) $row['total'];
+        $totals['total'] += $count;
+        $totals[$row['report_type']] += $count;
+        $totals[$row['status']] += $count;
+    }
+
+    // ---- Reports filed per month, over the last six months ------------------
+    // The window is built here rather than in SQL so that a month with no
+    // reports still appears as a zero. A chart that silently omits its empty
+    // months misreads as "nothing happened between July and September".
+    $window = [];
+    $startOfThisMonth = new DateTimeImmutable('first day of this month');
+
+    for ($ago = 5; $ago >= 0; $ago--) {
+        $month = $startOfThisMonth->modify("-{$ago} months");
+        $window[$month->format('Y-m')] = [
+            'month' => $month->format('Y-m'),
+            'label' => $month->format('M'),
+            'lost' => 0,
+            'found' => 0,
+            'total' => 0,
+        ];
+    }
+
+    $statement = db()->prepare(
+        "SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, report_type, COUNT(*) AS total
+           FROM pet_reports
+          WHERE created_at >= :since
+          GROUP BY month, report_type"
+    );
+    $statement->execute([':since' => $startOfThisMonth->modify('-5 months')->format('Y-m-d 00:00:00')]);
+
+    foreach ($statement->fetchAll() as $row) {
+        if (!isset($window[$row['month']])) {
+            continue;
+        }
+
+        $count = (int) $row['total'];
+        $window[$row['month']][$row['report_type']] += $count;
+        $window[$row['month']]['total'] += $count;
+    }
+
+    // ---- Which animals are reported most ------------------------------------
+    $species = [];
+
+    $rows = db()->query(
+        'SELECT c.category_code, c.category_name, r.report_type, COUNT(*) AS total
+           FROM pet_reports r
+           JOIN pet_categories c ON c.category_id = r.category_id
+          GROUP BY c.category_code, c.category_name, r.report_type'
+    )->fetchAll();
+
+    foreach ($rows as $row) {
+        $code = $row['category_code'];
+        $species[$code] ??= [
+            'code' => $code,
+            'label' => $row['category_name'],
+            'lost' => 0,
+            'found' => 0,
+            'total' => 0,
+        ];
+
+        $count = (int) $row['total'];
+        $species[$code][$row['report_type']] += $count;
+        $species[$code]['total'] += $count;
+    }
+
+    // Most reported first — the question the chart answers.
+    usort($species, fn ($a, $b) => $b['total'] <=> $a['total']);
+
+    json_response(['data' => [
+        'totals' => $totals,
+        'monthly' => array_values($window),
+        'by_species' => $species,
+    ]]);
 }
 
 // -----------------------------------------------------------------------------

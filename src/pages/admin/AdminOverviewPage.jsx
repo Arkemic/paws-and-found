@@ -4,20 +4,32 @@ import { Button, Card, CardBody, CardHeader, LoadingSkeleton } from '@/component
 import { PageHeader } from '@/components/PageHeader'
 import { StatTile } from '@/components/StatTile'
 import { StatusBadge } from '@/components/StatusBadge'
-import { MODERATION_REASON_LABELS, REPORT_STATUSES, ROLE_LABELS } from '@/constants'
+import { BreakdownBars } from '@/components/BreakdownBars'
+import { MonthlyReportsChart } from '@/components/MonthlyReportsChart'
+import {
+  MODERATION_REASON_LABELS,
+  REPORT_STATUSES,
+  REPORT_STATUS_BARS,
+  REPORT_STATUS_LABELS,
+  REPORT_STATUS_ORDER,
+  ROLE_LABELS,
+} from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
 import { categoryService, moderationService, petService, userService } from '@/services'
 import { formatRelativeTime } from '@/utils/date'
 
 async function loadAdminOverview() {
-  const [users, reports, openCases, categories] = await Promise.all([
+  const [users, reports, openCases, categories, stats] = await Promise.all([
     userService.getUsers(),
     petService.getReports(),
     moderationService.getCasesWithContext({ status: 'open' }),
     categoryService.getCategories(),
+    // Counted by the database. The report list above is a page, not the table,
+    // so it cannot answer "how many reports are there".
+    petService.getReportStats(),
   ])
 
-  return { users, reports, openCases, categories }
+  return { users, reports, openCases, categories, stats }
 }
 
 /**
@@ -58,9 +70,23 @@ export function AdminOverviewPage() {
     )
   }
 
-  const { users, reports, openCases, categories } = data
+  const { users, reports, openCases, categories, stats } = data
   const suspended = users.filter((user) => user.accountStatus === 'suspended')
-  const active = reports.filter((report) => report.status === REPORT_STATUSES.ACTIVE)
+
+  const statusRows = REPORT_STATUS_ORDER.map((status) => ({
+    key: status,
+    label: REPORT_STATUS_LABELS[status],
+    value: stats.totals[status],
+    barClassName: REPORT_STATUS_BARS[status],
+  }))
+
+  // Already sorted most-reported-first by the API.
+  const speciesRows = stats.bySpecies.map((row) => ({
+    key: row.code,
+    label: row.label,
+    value: row.total,
+    barClassName: 'bg-brand',
+  }))
   const recentlyClosed = reports
     .filter((report) => report.status === REPORT_STATUSES.CLOSED)
     .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
@@ -73,8 +99,43 @@ export function AdminOverviewPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile icon={Flag} label="Flags awaiting review" value={openCases.length} to="/admin/moderation" />
         <StatTile icon={Users} label="Accounts" value={users.length} to="/admin/users" />
-        <StatTile icon={ListChecks} label="Active reports" value={active.length} to="/admin/reports" />
+        <StatTile icon={ListChecks} label="Active reports" value={stats.totals.active} to="/admin/reports" />
         <StatTile icon={FolderTree} label="Pet categories" value={categories.length} to="/admin/categories" />
+      </div>
+
+      <Card>
+        <CardHeader
+          titleAs="h2"
+          title="Reports filed"
+          subtitle="The last six months, counted by when each report was filed."
+        />
+        <CardBody>
+          <MonthlyReportsChart months={stats.monthly} />
+        </CardBody>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader
+            titleAs="h2"
+            title="Where reports stand"
+            subtitle={`${stats.totals.total} reports in total.`}
+          />
+          <CardBody>
+            <BreakdownBars rows={statusRows} total={stats.totals.total} />
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader
+            titleAs="h2"
+            title="Most reported animals"
+            subtitle={`${stats.totals.lost} lost, ${stats.totals.found} found.`}
+          />
+          <CardBody>
+            <BreakdownBars rows={speciesRows} total={stats.totals.total} />
+          </CardBody>
+        </Card>
       </div>
 
       {openCases.length > 0 && (

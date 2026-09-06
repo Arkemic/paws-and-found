@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: sign-in and registration wired to the API — 2026-09-06_
+_Last updated: dashboard charts and reporting — 2026-09-06_
 
 ## Foundation
 
@@ -66,5 +66,5 @@ _Last updated: sign-in and registration wired to the API — 2026-09-06_
 | Prepared statements everywhere | `[x]` | PDO with `ATTR_EMULATE_PREPARES => false`. Injection tested with three payloads. |
 | Category management | `[~]` | Admin UI works but still writes to mock data — not persisted. |
 | Pagination | `[~]` | The API supports `page`/`per_page`; the frontend still uses "Show more". |
-| Charts on dashboards | `[ ]` | Required by the project guide. Not started. |
+| Charts on dashboards | `[x]` | `GET /api/reports/stats` — three SQL `GROUP BY` queries behind a staff/admin-only endpoint. The administrator overview shows reports filed per month (lost vs found, six months), where reports stand, and most-reported animals; the coordinator overview shares the same breakdown component. No charting library. **The seed clusters 28 of 32 reports in August**, so the monthly chart is honest but lopsided until the dates are spread. |
 | Deployment | `[ ]` | Local XAMPP only — team decision, 2026-08-19. |

@@ -5,24 +5,19 @@ import { Button, LoadingSkeleton } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { StatTile } from '@/components/StatTile'
 import { StatusBadge } from '@/components/StatusBadge'
+import { BreakdownBars } from '@/components/BreakdownBars'
 import { ReportTypeBadge } from '@/components/ReportTypeBadge'
 import {
   MATCH_STATUSES,
   MATCH_STATUSES_AWAITING_STAFF,
   REPORT_STATUSES,
+  REPORT_STATUS_BARS,
   REPORT_STATUS_LABELS,
   REPORT_STATUS_ORDER,
 } from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
 import { matchService, petService } from '@/services'
 import { formatRelativeTime } from '@/utils/date'
-
-const STATUS_BARS = {
-  [REPORT_STATUSES.ACTIVE]: 'bg-status-active',
-  [REPORT_STATUSES.POSSIBLE_MATCH]: 'bg-status-match',
-  [REPORT_STATUSES.RETURNED]: 'bg-status-returned',
-  [REPORT_STATUSES.CLOSED]: 'bg-status-closed',
-}
 
 async function loadStaffOverview() {
   const [reports, suggested, awaiting] = await Promise.all([
@@ -266,39 +261,17 @@ function ReportThumb({ report }) {
  * numbers would be a dependency the project has to justify at a defence.
  */
 function StatusBreakdown({ reports }) {
-  const total = reports.length
+  const rows = REPORT_STATUS_ORDER.map((status) => ({
+    key: status,
+    label: REPORT_STATUS_LABELS[status],
+    value: reports.filter((report) => report.status === status).length,
+    barClassName: REPORT_STATUS_BARS[status],
+  }))
 
   return (
     <section className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold text-fg">Where reports stand</h2>
-
-      <dl className="flex flex-col gap-3 rounded-card border border-border bg-panel p-5">
-        {REPORT_STATUS_ORDER.map((status) => {
-          const count = reports.filter((report) => report.status === status).length
-          const share = total === 0 ? 0 : Math.round((count / total) * 100)
-
-          return (
-            <div key={status} className="flex items-center gap-4">
-              <dt className="w-36 shrink-0 text-sm text-fg">{REPORT_STATUS_LABELS[status]}</dt>
-              <dd className="flex flex-1 items-center gap-3">
-                {/* Decorative — the number beside it is the actual value. */}
-                <span
-                  aria-hidden="true"
-                  className="h-2 flex-1 overflow-hidden rounded-pill bg-surface-muted"
-                >
-                  <span
-                    className={`block h-full rounded-pill ${STATUS_BARS[status]}`}
-                    style={{ width: `${share}%` }}
-                  />
-                </span>
-                <span className="w-8 shrink-0 text-right font-medium text-fg tabular-nums">
-                  {count}
-                </span>
-              </dd>
-            </div>
-          )
-        })}
-      </dl>
+      <BreakdownBars rows={rows} total={reports.length} className="rounded-card border border-border bg-panel p-5" />
     </section>
   )
 }

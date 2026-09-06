@@ -2,11 +2,8 @@
  * Pet report data access.
  *
  * This is the only way the UI reads or writes lost/found reports — components
- * never import from `src/mock/`. When Supabase arrives, the bodies of these
- * functions change and their signatures do not (CLAUDE.md §9).
- *
- * The functions are `async` even though the data is local, so swapping in real
- * network calls later does not change how pages call them.
+ * never import from `src/mock/`. These call the PHP API; the boundary is why
+ * moving off mock data changed nothing above it (CLAUDE.md §9).
  */
 
 import { REPORT_STATUSES, REPORT_TYPES } from '@/constants'
@@ -220,6 +217,24 @@ export async function updateReportStatus(id, status, context = {}) {
  * a page of results stays small — so the feed came out empty. This asks the
  * server for exactly the feed instead.
  */
+/**
+ * The figures the staff and administrator dashboards report on.
+ *
+ * Counted by the database, not here. `getReports()` is paginated, so totalling
+ * its rows in the browser would report on one page rather than on the table.
+ *
+ * Coordinators and administrators only; the API refuses anyone else.
+ */
+export async function getReportStats() {
+  const payload = await apiFetch('/reports/stats')
+
+  return {
+    totals: payload.data.totals,
+    monthly: payload.data.monthly,
+    bySpecies: payload.data.by_species,
+  }
+}
+
 export async function getRecentActivity(limit = 6) {
   const payload = await apiFetch(`/reports/activity${queryString({ limit })}`)
 

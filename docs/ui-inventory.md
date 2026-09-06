@@ -8,7 +8,7 @@ If what you need is close to something below, extend that component with a prop
 rather than forking it. If you add a component, add its row here in the same
 commit.
 
-_Last updated: Navbar refinement — 2026-08-30_
+_Last updated: dashboard charts — 2026-09-06_
 
 Colours, shape tokens and the accessibility rules live in
 [design-system.md](design-system.md). Components must use semantic tokens, never
@@ -47,7 +47,9 @@ raw Tailwind colours.
 | `DemoRoleSelector` | `components/DemoRoleSelector.jsx` | **Development only.** Delete when real authentication lands. |
 | `ReportForm` | `components/report-form/ReportForm.jsx` | The lost/found wizard. One component for both types **and** for editing — pass `reportType` to create, or `report` to edit. Steps, validation and the value↔service mapping live in `reportFormModel.js`. |
 | `Avatar` | `components/Avatar.jsx` | A person drawn from their initials, on one of five tints picked from the name so the same person is the same colour everywhere. Decoration only — `aria-hidden`, and the name is always beside it. Used where the staff and admin workspaces list people. There are no profile photographs and none are planned. |
-| `StatTile` | `components/StatTile.jsx` | One number plus its label on a dashboard. Deliberately plain — no charts or trend arrows. **Staff and admin only** — the customer dashboard shows cases, not counts. Pass `emphasis` for the one or two numbers that mean someone has to act; if every tile is emphasised, none is. |
+| `StatTile` | `components/StatTile.jsx` | One number plus its label on a dashboard. The tile itself stays plain — no sparkline or trend arrow inside it; charts are separate components below. **Staff and admin only** — the customer dashboard shows cases, not counts. Pass `emphasis` for the one or two numbers that mean someone has to act; if every tile is emphasised, none is. |
+| `BreakdownBars` | `components/BreakdownBars.jsx` | A labelled list of proportion bars — "where reports stand", "most reported animals". Takes `rows` of `{key, label, value, barClassName}` and an optional `total`. The bar is `aria-hidden`; the number beside it is the real value. Used by both the staff and administrator dashboards, which is why the status colours live in `REPORT_STATUS_BARS` in constants rather than in either page. |
+| `MonthlyReportsChart` | `components/MonthlyReportsChart.jsx` | Reports filed per month, lost beside found, over six months. Plain elements, no charting library (CLAUDE.md §15). Bars are measured against the tallest single value so the two series stay comparable. Carries an `sr-only` table of the same figures — the drawing alone is not readable. |
 | `MatchCard` + `MatchActions` | `components/MatchCard.jsx` | The evidence comparison: two large photographs side by side with the score between them, then every signal ticked or crossed — matched **and** unmatched. Used by the customer dashboard, My Matches, the report detail page, the staff match queue and verification, so all five show a coordinator and a reporter the same thing. Never claims two reports are the same animal. |
 | `ReportMap` + `KeepMapSized` | `components/ReportMap.jsx` | Leaflet map of one or many reports, with popups. `showApproximateArea` draws the privacy circle. Always include `KeepMapSized` in a new map, or tiles go missing after a resize. |
 | `LocationPicker` | `components/LocationPicker.jsx` | Click-to-drop pin for the report form. Optional by design. |

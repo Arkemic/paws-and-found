@@ -4,7 +4,7 @@
  * THIS FILE IS TEMPORARY. The production database is deliberately not built yet
  * (CLAUDE.md §8), so this stands in for it while the frontend is developed.
  * When the real backend arrives, the services in this folder swap their
- * internals for Supabase calls and this file is deleted.
+ * internals for API calls and this file is deleted.
  *
  * State lives in module scope: changes survive navigation and reset on a full
  * page reload, so a demo always starts from the same seed data.
