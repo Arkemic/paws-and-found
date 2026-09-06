@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="920" viewBox="0 0 1420 920" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+  <rect width="1420" height="920" fill="#FFFFFF"/>
+
+  <text x="710" y="36" text-anchor="middle" font-size="24" font-weight="700" fill="#21302F">Paws&amp;Found Revised Entity Relationship Diagram</text>
+  <text x="710" y="58" text-anchor="middle" font-size="13" fill="#667573">11 tables · 20 foreign keys · MySQL / MariaDB. Shaded rows are primary keys; italics are foreign keys.</text>
+
+  <!-- ================= pet_categories ================= -->
+  <g>
+    <rect x="40" y="90" width="200" height="86" rx="6" fill="#FFFFFF" stroke="#8FA9A6" stroke-width="1.2"/>
+    <rect x="40" y="90" width="200" height="24" rx="6" fill="#0E5D5B"/>
+    <rect x="40" y="106" width="200" height="8" fill="#0E5D5B"/>
+    <text x="52" y="107" font-size="12.5" font-weight="700" fill="#FFFFFF">pet_categories</text>
+    <rect x="40" y="114" width="200" height="16" fill="#EDF4F3"/>
+    <text x="52" y="126" font-size="11" font-weight="700" fill="#21302F">category_id  PK</text>
+    <text x="52" y="142" font-size="11" fill="#3C4A49">category_code  UNIQUE</text>
+    <text x="52" y="157" font-size="11" fill="#3C4A49">category_name</text>
+    <text x="52" y="172" font-size="11" fill="#3C4A49">is_active</text>
+  </g>
+
+  <!-- ================= pet_breeds ================= -->
+  <g>
+    <rect x="40" y="212" width="200" height="72" rx="6" fill="#FFFFFF" stroke="#8FA9A6" stroke-width="1.2"/>
+    <rect x="40" y="212" width="200" height="24" rx="6" fill="#0E5D5B"/>
+    <rect x="40" y="228" width="200" height="8" fill="#0E5D5B"/>
+    <text x="52" y="229" font-size="12.5" font-weight="700" fill="#FFFFFF">pet_breeds</text>
+    <rect x="40" y="236" width="200" height="16" fill="#EDF4F3"/>
+    <text x="52" y="248" font-size="11" font-weight="700" fill="#21302F">breed_id  PK</text>
+    <text x="52" y="264" font-size="11" font-style="italic" fill="#0E5D5B">category_id  FK</text>
+    <text x="52" y="279" font-size="11" fill="#3C4A49">breed_name</text>
+  </g>
+
+  <!-- ================= locations ================= -->
+  <g>
+    <rect x="40" y="320" width="200" height="118" rx="6" fill="#FFFFFF" stroke="#8FA9A6" stroke-width="1.2"/>
+    <rect x="40" y="320" width="200" height="24" rx="6" fill="#0E5D5B"/>
+    <rect x="40" y="336" width="200" height="8" fill="#0E5D5B"/>
+    <text x="52" y="337" font-size="12.5" font-weight="700" fill="#FFFFFF">locations</text>
+    <rect x="40" y="344" width="200" height="16" fill="#EDF4F3"/>
+    <text x="52" y="356" font-size="11" font-weight="700" fill="#21302F">location_id  PK</text>
+    <text x="52" y="372" font-size="11" fill="#3C4A49">label</text>
+    <text x="52" y="387" font-size="11" fill="#3C4A49">city</text>
+    <text x="52" y="402" font-size="11" fill="#3C4A49">province</text>
+    <text x="52" y="417" font-size="11" fill="#3C4A49">latitude / longitude</text>
+    <text x="52" y="432" font-size="11" fill="#3C4A49">precision</text>
+  </g>
+
+  <!-- ================= users ================= -->
+  <g>
+    <rect x="40" y="600" width="200" height="148" rx="6" fill="#FFFFFF" stroke="#B8862F" stroke-width="1.6"/>
+    <rect x="40" y="600" width="200" height="24" rx="6" fill="#9A620F"/>
+    <rect x="40" y="616" width="200" height="8" fill="#9A620F"/>
+    <text x="52" y="617" font-size="12.5" font-weight="700" fill="#FFFFFF">users</text>
+    <rect x="40" y="624" width="200" height="16" fill="#FBF3E4"/>
+    <text x="52" y="636" font-size="11" font-weight="700" fill="#21302F">user_id  PK</text>
+    <text x="52" y="652" font-size="11" fill="#3C4A49">full_name</text>
+    <text x="52" y="667" font-size="11" fill="#3C4A49">email  UNIQUE</text>
+    <text x="52" y="682" font-size="11" fill="#3C4A49">password_hash</text>
+    <text x="52" y="697" font-size="11" fill="#3C4A49">contact_number</text>
+    <text x="52" y="712" font-size="11" fill="#3C4A49">role</text>
+    <text x="52" y="727" font-size="11" fill="#3C4A49">account_status</text>
+    <text x="52" y="742" font-size="11" fill="#3C4A49">preferred_location</text>
+  </g>
+
+  <!-- ================= pet_reports (centre) ================= -->
+  <g>
+    <rect x="390" y="150" width="230" height="330" rx="6" fill="#FFFFFF" stroke="#157A78" stroke-width="2"/>
+    <rect x="390" y="150" width="230" height="26" rx="6" fill="#157A78"/>
+    <rect x="390" y="168" width="230" height="8" fill="#157A78"/>
+    <text x="402" y="168" font-size="13" font-weight="700" fill="#FFFFFF">pet_reports</text>
+    <rect x="390" y="176" width="230" height="16" fill="#E2F1EF"/>
+    <text x="402" y="188" font-size="11" font-weight="700" fill="#21302F">report_id  PK</text>
+    <text x="402" y="204" font-size="11" font-style="italic" fill="#0E5D5B">user_id  FK</text>
+    <text x="402" y="219" font-size="11" font-style="italic" fill="#0E5D5B">category_id  FK</text>
+    <text x="402" y="234" font-size="11" font-style="italic" fill="#0E5D5B">breed_id  FK  (nullable)</text>
+    <text x="402" y="249" font-size="11" font-style="italic" fill="#0E5D5B">location_id  FK</text>
+    <text x="402" y="264" font-size="11" font-style="italic" fill="#0E5D5B">assigned_staff_id  FK</text>
+    <text x="402" y="281" font-size="11" fill="#3C4A49">report_type</text>
+    <text x="402" y="296" font-size="11" fill="#3C4A49">status</text>
+    <text x="402" y="311" font-size="11" fill="#3C4A49">pet_name</text>
+    <text x="402" y="326" font-size="11" fill="#3C4A49">pet_size</text>
+    <text x="402" y="341" font-size="11" fill="#3C4A49">pet_sex</text>
+    <text x="402" y="356" font-size="11" fill="#3C4A49">primary_color</text>
+    <text x="402" y="371" font-size="11" fill="#3C4A49">secondary_color</text>
+    <text x="402" y="386" font-size="11" fill="#3C4A49">distinct_features</text>
+    <text x="402" y="401" font-size="11" fill="#3C4A49">description</text>
+    <text x="402" y="416" font-size="11" fill="#3C4A49">has_collar</text>
+    <text x="402" y="431" font-size="11" fill="#3C4A49">pet_condition</text>
+    <text x="402" y="446" font-size="11" fill="#3C4A49">incident_date / _time</text>
+    <text x="402" y="461" font-size="11" fill="#3C4A49">allow_platform_contact</text>
+    <text x="402" y="476" font-size="11" fill="#3C4A49">show_phone / show_email</text>
+  </g>
+
+  <!-- ================= report_images ================= -->
+  <g>
+    <rect x="760" y="90" width="210" height="102" rx="6" fill="#FFFFFF" stroke="#8FA9A6" stroke-width="1.2"/>
+    <rect x="760" y="90" width="210" height="24" rx="6" fill="#0E5D5B"/>
+    <rect x="760" y="106" width="210" height="8" fill="#0E5D5B"/>
+    <text x="772" y="107" font-size="12.5" font-weight="700" fill="#FFFFFF">report_images</text>
+    <rect x="760" y="114" width="210" height="16" fill="#EDF4F3"/>
+    <text x="772" y="126" font-size="11" font-weight="700" fill="#21302F">image_id  PK</text>
+    <text x="772" y="142" font-size="11" font-style="italic" fill="#0E5D5B">report_id  FK</text>
+    <text x="772" y="157" font-size="11" fill="#3C4A49">image_path</text>
+    <text x="772" y="172" font-size="11" fill="#3C4A49">alt_text</text>
+    <text x="772" y="187" font-size="11" fill="#3C4A49">is_primary_photo</text>
+  </g>
+
+  <!-- ================= status_logs ================= -->
+  <g>
+    <rect x="760" y="228" width="210" height="102" rx="6" fill="#FFFFFF" stroke="#8FA9A6" stroke-width="1.2"/>
+    <rect x="760" y="228" width="210" height="24" rx="6" fill="#0E5D5B"/>
+    <rect x="760" y="244" width="210" height="8" fill="#0E5D5B"/>
+    <text x="772" y="245" font-size="12.5" font-weight="700" fill="#FFFFFF">status_logs</text>
+    <rect x="760" y="252" width="210" height="16" fill="#EDF4F3"/>
+    <text x="772" y="264" font-size="11" font-weight="700" fill="#21302F">log_id  PK</text>
+    <text x="772" y="280" font-size="11" font-style="italic" fill="#0E5D5B">report_id  FK</text>
+    <text x="772" y="295" font-size="11" font-style="italic" fill="#0E5D5B">updated_by_user_id  FK</text>
+    <text x="772" y="310" font-size="11" fill="#3C4A49">previous_status / new_status</text>
+    <text x="772" y="325" font-size="11" fill="#3C4A49">note</text>
+  </g>
+
+  <!-- ================= match_claims ================= -->
+  <g>
+    <rect x="760" y="366" width="210" height="148" rx="6" fill="#FFFFFF" stroke="#157A78" stroke-width="1.6"/>
+    <rect x="760" y="366" width="210" height="24" rx="6" fill="#157A78"/>
+    <rect x="760" y="382" width="210" height="8" fill="#157A78"/>
+    <text x="772" y="383" font-size="12.5" font-weight="700" fill="#FFFFFF">match_claims</text>
+    <rect x="760" y="390" width="210" height="16" fill="#E2F1EF"/>
+    <text x="772" y="402" font-size="11" font-weight="700" fill="#21302F">match_id  PK</text>
+    <text x="772" y="418" font-size="11" font-style="italic" fill="#0E5D5B">lost_report_id  FK</text>
+    <text x="772" y="433" font-size="11" font-style="italic" fill="#0E5D5B">found_report_id  FK</text>
+    <text x="772" y="448" font-size="11" font-style="italic" fill="#0E5D5B">submitted_by_user_id  FK</text>
+    <text x="772" y="463" font-size="11" font-style="italic" fill="#0E5D5B">reviewed_by_user_id  FK</text>
+    <text x="772" y="478" font-size="11" fill="#3C4A49">match_score</text>
+    <text x="772" y="493" font-size="11" fill="#3C4A49">match_status</text>
+    <text x="772" y="508" font-size="11" fill="#3C4A49">proof_notes / staff_notes</text>
+  </g>
+
+  <!-- ================= match_signals ================= -->
+  <g>
+    <rect x="1105" y="366" width="230" height="102" rx="6" fill="#FFFFFF" stroke="#157A78" stroke-width="1.6"/>
+    <rect x="1105" y="366" width="230" height="24" rx="6" fill="#157A78"/>
+    <rect x="1105" y="382" width="230" height="8" fill="#157A78"/>
+    <text x="1117" y="383" font-size="12.5" font-weight="700" fill="#FFFFFF">match_signals</text>
+    <rect x="1105" y="390" width="230" height="16" fill="#E2F1EF"/>
+    <text x="1117" y="402" font-size="11" font-weight="700" fill="#21302F">signal_id  PK</text>
+    <text x="1117" y="418" font-size="11" font-style="italic" fill="#0E5D5B">match_id  FK</text>
+    <text x="1117" y="433" font-size="11" fill="#3C4A49">signal_key</text>
+    <text x="1117" y="448" font-size="11" fill="#3C4A49">is_matched</text>
+    <text x="1117" y="463" font-size="11" fill="#3C4A49">weight / detail</text>
+  </g>
+
+  <!-- ================= notifications ================= -->
+  <g>
+    <rect x="450" y="600" width="215" height="132" rx="6" fill="#FFFFFF" stroke="#8FA9A6" stroke-width="1.2"/>
+    <rect x="450" y="600" width="215" height="24" rx="6" fill="#0E5D5B"/>
+    <rect x="450" y="616" width="215" height="8" fill="#0E5D5B"/>
+    <text x="462" y="617" font-size="12.5" font-weight="700" fill="#FFFFFF">notifications</text>
+    <rect x="450" y="624" width="215" height="16" fill="#EDF4F3"/>
+    <text x="462" y="636" font-size="11" font-weight="700" fill="#21302F">notification_id  PK</text>
+    <text x="462" y="652" font-size="11" font-style="italic" fill="#0E5D5B">user_id  FK</text>
+    <text x="462" y="667" font-size="11" font-style="italic" fill="#0E5D5B">report_id  FK  (nullable)</text>
+    <text x="462" y="682" font-size="11" font-style="italic" fill="#0E5D5B">match_id  FK  (nullable)</text>
+    <text x="462" y="697" font-size="11" fill="#3C4A49">notification_type</text>
+    <text x="462" y="712" font-size="11" fill="#3C4A49">title / body</text>
+    <text x="462" y="727" font-size="11" fill="#3C4A49">is_read</text>
+  </g>
+
+  <!-- ================= moderation_cases ================= -->
+  <g>
+    <rect x="830" y="600" width="230" height="148" rx="6" fill="#FFFFFF" stroke="#8FA9A6" stroke-width="1.2"/>
+    <rect x="830" y="600" width="230" height="24" rx="6" fill="#0E5D5B"/>
+    <rect x="830" y="616" width="230" height="8" fill="#0E5D5B"/>
+    <text x="842" y="617" font-size="12.5" font-weight="700" fill="#FFFFFF">moderation_cases</text>
+    <rect x="830" y="624" width="230" height="16" fill="#EDF4F3"/>
+    <text x="842" y="636" font-size="11" font-weight="700" fill="#21302F">case_id  PK</text>
+    <text x="842" y="652" font-size="11" font-style="italic" fill="#0E5D5B">report_id  FK</text>
+    <text x="842" y="667" font-size="11" font-style="italic" fill="#0E5D5B">reported_by_user_id  FK</text>
+    <text x="842" y="682" font-size="11" font-style="italic" fill="#0E5D5B">resolved_by_admin_id  FK</text>
+    <text x="842" y="697" font-size="11" fill="#3C4A49">reason</text>
+    <text x="842" y="712" font-size="11" fill="#3C4A49">details</text>
+    <text x="842" y="727" font-size="11" fill="#3C4A49">case_status</text>
+    <text x="842" y="742" font-size="11" fill="#3C4A49">resolution_note</text>
+  </g>
+
+  <!-- ================= RELATIONSHIP LINES ================= -->
+  <g stroke="#5C7370" stroke-width="1.4" fill="none">
+    <!-- categories -> breeds -->
+    <path d="M140 176 L140 212"/>
+    <!-- categories -> reports -->
+    <path d="M240 133 L315 133 L315 219 L390 219"/>
+    <!-- breeds -> reports -->
+    <path d="M240 248 L315 248 L315 234 L390 234"/>
+    <!-- locations -> reports -->
+    <path d="M240 379 L340 379 L340 249 L390 249"/>
+    <!-- users -> reports (user_id) -->
+    <path d="M240 636 L300 636 L300 204 L390 204"/>
+    <!-- users -> reports (assigned_staff_id) -->
+    <path d="M240 660 L270 660 L270 264 L390 264"/>
+    <!-- reports -> report_images -->
+    <path d="M620 200 L690 200 L690 140 L760 140"/>
+    <!-- reports -> status_logs -->
+    <path d="M620 260 L690 260 L690 280 L760 280"/>
+    <!-- reports -> match_claims (lost) -->
+    <path d="M620 300 L660 300 L660 418 L760 418"/>
+    <!-- reports -> match_claims (found) -->
+    <path d="M620 320 L640 320 L640 433 L760 433"/>
+    <!-- match_claims -> match_signals -->
+    <path d="M970 418 L1105 418"/>
+    <!-- users -> status_logs — routed under the bottom row, then up the clear
+         channel between moderation_cases and the legend -->
+    <path d="M180 748 L180 780 L1078 780 L1078 295 L970 295"/>
+    <!-- users -> match_claims (submitted_by / reviewed_by) -->
+    <path d="M210 748 L210 800 L1092 800 L1092 463 L970 463"/>
+    <!-- users -> notifications -->
+    <path d="M240 652 L450 652"/>
+    <!-- reports -> notifications -->
+    <path d="M505 480 L505 600"/>
+    <!-- match_claims -> notifications -->
+    <path d="M865 514 L865 560 L600 560 L600 600"/>
+    <!-- reports -> moderation -->
+    <path d="M580 480 L580 540 L920 540 L920 600"/>
+    <!-- users -> moderation -->
+    <path d="M240 742 L780 742 L780 667 L830 667"/>
+  </g>
+
+  <!-- crow's-foot style "many" ticks at the child end -->
+  <g stroke="#5C7370" stroke-width="1.4" fill="none">
+    <path d="M384 204 l-8 -5 M384 204 l-8 5"/>
+    <path d="M754 140 l-8 -5 M754 140 l-8 5"/>
+    <path d="M754 280 l-8 -5 M754 280 l-8 5"/>
+    <path d="M754 418 l-8 -5 M754 418 l-8 5"/>
+    <path d="M1099 418 l-8 -5 M1099 418 l-8 5"/>
+    <path d="M444 652 l-8 -5 M444 652 l-8 5"/>
+    <path d="M824 667 l-8 -5 M824 667 l-8 5"/>
+  </g>
+
+  <!-- ================= LEGEND ================= -->
+  <rect x="1105" y="600" width="275" height="148" rx="6" fill="#F8FAFA" stroke="#DDE6E4"/>
+  <text x="1118" y="622" font-size="12" font-weight="700" fill="#21302F">Key relationships</text>
+  <text x="1118" y="643" font-size="10.5" fill="#3C4A49">One user files many pet_reports</text>
+  <text x="1118" y="659" font-size="10.5" fill="#3C4A49">One report holds many report_images</text>
+  <text x="1118" y="675" font-size="10.5" fill="#3C4A49">One report holds many status_logs</text>
+  <text x="1118" y="691" font-size="10.5" fill="#3C4A49">One match_claim links exactly two reports</text>
+  <text x="1118" y="707" font-size="10.5" fill="#3C4A49">One match_claim holds seven match_signals</text>
+  <text x="1118" y="723" font-size="10.5" fill="#3C4A49">One category has many breeds and reports</text>
+  <text x="1118" y="739" font-size="10.5" fill="#3C4A49">One user receives many notifications</text>
+
+  <!-- ================= NOTE ================= -->
+  <rect x="40" y="822" width="1340" height="76" rx="6" fill="#FFF8EC" stroke="#E5BE85"/>
+  <text x="56" y="844" font-size="12" font-weight="700" fill="#9A620F">Changes from the initial ERD</text>
+  <text x="56" y="864" font-size="11.5" fill="#3C4A49">Three tables were added: match_signals (stores why each pairing scored what it did, so matching is explainable rather than a black box),</text>
+  <text x="56" y="880" font-size="11.5" fill="#3C4A49">notifications (the events users are told about), and moderation_cases (community flags and the administrator's decision). The users table gained</text>
+  <text x="56" y="896" font-size="11.5" fill="#3C4A49">account_status for suspension, and pet_reports gained the three contact-preference flags that keep private details out of public listings.</text>
+</svg>

@@ -142,4 +142,5 @@ refusals, not only the successes.
 
 ## Still to build
 
-Moderation decisions, category management, and photo upload.
+Category management and photo upload. Both have working interfaces that
+still write to mock data rather than the database.
