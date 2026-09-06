@@ -35,6 +35,12 @@ management, and a moderation queue with the four approved decisions.
 **Maps work.** Explore has a list/map toggle, each report shows its approximate
 area, and reporters can drop a pin when filing. Leaflet + OpenStreetMap.
 
+**Accounts are real.** You can register, and you can sign in with an email
+address and password. Passwords are hashed with bcrypt, the session is a PHP
+session, and a new account is always an ordinary user — the role is never taken
+from the request. The development role selector is kept alongside the form as a
+shortcut for the demonstration.
+
 Still on mock data: category management and photo upload. See
 [`docs/feature-status.md`](docs/feature-status.md) for the current picture.
 
@@ -48,16 +54,21 @@ Start Apache and MySQL from the XAMPP Control Panel, then create and fill the
 database:
 
 ```bash
-mysql -u root -P 3307 -h 127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS pawsandfound"
+mysql -u root -P 3307 -h 127.0.0.1 --default-character-set=utf8mb4 -e "CREATE DATABASE IF NOT EXISTS pawsandfound CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 ```
 
 ```bash
-mysql -u root -P 3307 -h 127.0.0.1 pawsandfound -e "source database/schema.sql"
+mysql -u root -P 3307 -h 127.0.0.1 --default-character-set=utf8mb4 pawsandfound < database/schema.sql
 ```
 
 ```bash
-mysql -u root -P 3307 -h 127.0.0.1 pawsandfound -e "source database/seed.sql"
+mysql -u root -P 3307 -h 127.0.0.1 --default-character-set=utf8mb4 pawsandfound < database/seed.sql
 ```
+
+**Do not leave out `--default-character-set=utf8mb4`.** On Windows the client
+otherwise reads the files in the console code page, and every curly apostrophe
+in the seed descriptions is stored as `ÔÇÖ`. Nothing errors — the corruption is
+silent, and only shows up on the page.
 
 > **Check your MySQL port first.** The machine this was built on runs XAMPP's
 > MariaDB on **3307**, because a separate MySQL 8.0 Windows service already held

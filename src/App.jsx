@@ -40,12 +40,12 @@ import { NotFoundPage } from '@/pages/system/NotFoundPage'
 import { UnauthorizedPage } from '@/pages/system/UnauthorizedPage'
 
 /**
- * Routes and the simulated session.
+ * Routes and the session.
  *
- * `role` is the development stand-in for authentication (CLAUDE.md §6.1), and
- * `null` means signed out — the state a first-time visitor arrives in. Changing
- * it swaps which seed account the services treat as signed in, which is why the
- * two are updated together here rather than in separate places.
+ * `user` is whoever the server says the session cookie belongs to, and `null`
+ * means signed out — the state a first-time visitor arrives in. Signing in and
+ * registering both hand back an account, which is all this component stores;
+ * the session itself lives on the server.
  *
  * Browsing is public: anyone can read the homepage, search reports and open a
  * report. Filing a report, and every workspace, requires signing in.
@@ -108,8 +108,11 @@ export default function App() {
           <Route path="/pet/:id" element={<PetDetailPage role={role} />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/help" element={<HelpPage />} />
-          <Route path="/login" element={<LoginPage onSignIn={changeRole} />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/login"
+            element={<LoginPage onSignedIn={setUser} onDemoSignIn={changeRole} />}
+          />
+          <Route path="/register" element={<RegisterPage onSignedIn={setUser} />} />
 
           {/* Filing a report requires an account, so a report can be traced
               back to a person and followed up. Any signed-in role may file. */}

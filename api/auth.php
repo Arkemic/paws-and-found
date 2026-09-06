@@ -17,6 +17,10 @@ function handle_auth(string $method, ?string $action): never
         auth_login();
     }
 
+    if ($method === 'POST' && $action === 'register') {
+        auth_register();
+    }
+
     if ($method === 'POST' && $action === 'logout') {
         auth_logout();
     }
@@ -71,6 +75,95 @@ function auth_login(): never
             'role' => $user['role'],
         ],
     ]);
+}
+
+function auth_register(): never
+{
+    $body = request_body();
+    $fullName = trim((string) ($body['full_name'] ?? ''));
+    $email = trim((string) ($body['email'] ?? ''));
+    $password = (string) ($body['password'] ?? '');
+    $contact = trim((string) ($body['contact_number'] ?? ''));
+
+    // Every problem is collected before answering, so the form can mark all of
+    // the bad fields at once instead of revealing them one submission at a time.
+    $errors = [];
+
+    if ($fullName === '') {
+        $errors['full_name'] = 'Enter your name.';
+    } elseif (mb_strlen($fullName) > 120) {
+        $errors['full_name'] = 'That name is too long (120 characters maximum).';
+    }
+
+    if ($email === '') {
+        $errors['email'] = 'Enter your email address.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 190) {
+        $errors['email'] = 'Enter a valid email address.';
+    }
+
+    if (strlen($password) < 8) {
+        $errors['password'] = 'Use at least 8 characters.';
+    } elseif (strlen($password) > 72) {
+        // bcrypt ignores everything past 72 bytes, so a longer password would
+        // not mean what the person choosing it thinks it means.
+        $errors['password'] = 'Use 72 characters or fewer.';
+    }
+
+    if ($contact !== '' && mb_strlen($contact) > 30) {
+        $errors['contact_number'] = 'That phone number is too long.';
+    }
+
+    if ($errors !== []) {
+        json_error('Please check the highlighted fields.', 422, ['fields' => $errors]);
+    }
+
+    // The role is never read from the request body. A new account is always an
+    // ordinary user; accepting a role here would let anyone register as an
+    // administrator by adding one line to the request.
+    $statement = db()->prepare(
+        "INSERT INTO users (full_name, email, password_hash, contact_number, role, account_status)
+              VALUES (:full_name, :email, :password_hash, :contact_number, 'user', 'active')"
+    );
+
+    try {
+        $statement->execute([
+            ':full_name' => $fullName,
+            ':email' => $email,
+            // Never the password itself. PASSWORD_DEFAULT is bcrypt here, the
+            // same algorithm the seeded accounts were hashed with.
+            ':password_hash' => password_hash($password, PASSWORD_DEFAULT),
+            ':contact_number' => $contact === '' ? null : $contact,
+        ]);
+    } catch (PDOException $exception) {
+        // 23000 is the integrity-constraint class, which here can only be the
+        // unique index on email. Letting the database decide closes the gap
+        // between checking and inserting, where two people registering the same
+        // address at the same moment would both pass a prior SELECT.
+        if ($exception->getCode() === '23000') {
+            json_error('An account already uses that email address.', 409, [
+                'fields' => ['email' => 'An account already uses that email address.'],
+            ]);
+        }
+
+        throw $exception;
+    }
+
+    $userId = (int) db()->lastInsertId();
+
+    // Registering signs you in, so nobody has to retype the password they just
+    // chose. Same fresh session id as auth_login(), for the same reason.
+    start_session();
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = $userId;
+
+    json_response([
+        'user' => [
+            'user_id' => $userId,
+            'full_name' => $fullName,
+            'email' => $email,
+            'role' => 'user',
+        ],
+    ], 201);
 }
 
 function auth_logout(): never

@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: moderation API + second report batch — 2026-08-30_
+_Last updated: sign-in and registration wired to the API — 2026-09-06_
 
 ## Foundation
 
@@ -28,7 +28,8 @@ _Last updated: moderation API + second report batch — 2026-08-30_
 
 | Item | Status | Phase |
 | --- | --- | --- |
-| Authentication | `[x]` | **Real.** PHP sessions, `password_hash`/`password_verify`, session ID regenerated on login, HttpOnly cookies. Guest by default; browsing stays public. Every seeded account uses `demo1234`. |
+| Authentication | `[x]` | **Real, and reachable from the interface.** The sign-in form posts to `POST /api/auth/login`; PHP sessions, `password_hash`/`password_verify`, session ID regenerated on sign-in, HttpOnly cookies. Guest by default; browsing stays public. Every seeded account uses `demo1234`. The development role selector is kept as a demonstration shortcut. |
+| Registration | `[x]` | `POST /api/auth/register` — server-side validation, bcrypt hashing, duplicate email rejected by the unique index (409), and the new account is signed in on success. **The role is never read from the request**, so an account cannot register itself as staff or admin. |
 | Lost report | `[x]` | 3 — multi-step form, validation, submits via `petService` |
 | Found report | `[x]` | 3 — same form, found-specific fields, no pet name |
 | Photo upload | `[~]` | 3 — local preview only. **Not yet persisted**; needs a PHP upload endpoint writing to `api/uploads/`. |

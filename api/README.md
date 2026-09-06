@@ -12,7 +12,7 @@ in a sitting, because every member has to be able to explain the whole system.
 | `config.php` | Database credentials, allowed origins, page sizes. |
 | `db.php` | The PDO connection. |
 | `helpers.php` | JSON responses, request input, sessions, and the authorisation guards. |
-| `auth.php` | `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`. |
+| `auth.php` | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`. |
 | `reports.php` | `GET /reports` (search, filter, sort, page) and `GET /reports/{id}`. |
 | `categories.php` | `GET /categories`. |
 | `moderation.php` | `GET /moderation`, `POST /moderation`, `PATCH /moderation/{id}`. |
@@ -23,7 +23,7 @@ The API is developed in this repository but served by Apache. A directory
 junction links it into `htdocs` so there is only one copy:
 
 ```
-mklink /J "C:\xampp\htdocs\pawsandfound\api" "C:\Projects\PawsAndFound\api"
+mklink /J "C:\xampp\htdocs\pawsandfound\api" "C:\Projects\paws-and-found\api"
 ```
 
 Then start **Apache** and **MySQL** in the XAMPP Control Panel and visit
@@ -41,6 +41,8 @@ without worrying about origins.
 ```
 GET    /api/                     what this API offers
 
+POST   /api/auth/register        { full_name, email, password, contact_number? }
+                                 -> creates an ordinary user and signs them in (201)
 POST   /api/auth/login           { email, password } -> user, sets a session cookie
 POST   /api/auth/logout          ends the session
 GET    /api/auth/me              the signed-in user, or { user: null }

@@ -1,9 +1,11 @@
 /**
- * User and simulated-session data access.
+ * User and session data access.
  *
- * AUTHENTICATION IS SIMULATED (CLAUDE.md §6.1). There are no passwords and no
- * security here — `getCurrentUser()` returns whichever seed account the demo
- * role selector has chosen. Real authentication comes with the backend.
+ * Authentication is real. `signIn()` and `register()` post to the PHP API,
+ * which verifies or hashes the password with bcrypt and answers with a session
+ * cookie; `getCurrentUser()` then asks the server who that cookie belongs to.
+ * Nothing here decides access on its own — every protected endpoint checks the
+ * session again for itself (see `api/helpers.php`).
  */
 
 import { ROLES } from '@/constants'
@@ -66,6 +68,48 @@ export async function getCurrentUser() {
     accountStatus: 'active',
     preferredLocation: payload.user.preferred_location ?? '',
   }
+}
+
+/**
+ * Sign in with an email address and password.
+ *
+ * The API replies with a session cookie. The account itself is read back from
+ * /auth/me so that `getCurrentUser()` stays the single place that shapes a user
+ * for the interface.
+ */
+export async function signIn(email, password) {
+  await apiFetch('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+
+  return getCurrentUser()
+}
+
+/** End the session. Returns null so callers can assign the result directly. */
+export async function signOut() {
+  await apiFetch('/auth/logout', { method: 'POST' })
+  return null
+}
+
+/**
+ * Create an account and sign in as it.
+ *
+ * The role is deliberately not sent: the API always creates an ordinary user,
+ * so a crafted request cannot register an administrator.
+ */
+export async function register({ fullName, email, password, phone = '' }) {
+  await apiFetch('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      full_name: fullName,
+      email,
+      password,
+      contact_number: phone,
+    }),
+  })
+
+  return getCurrentUser()
 }
 
 export async function setCurrentUser(userId) {
