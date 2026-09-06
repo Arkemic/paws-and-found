@@ -76,7 +76,8 @@ function fromApi(row) {
 }
 
 /**
- * List reports, newest first.
+ * List one page of reports, newest first, with the paging figures.
+ *
  *
  * Every filter is optional, and they combine with AND. Keep it that way — a
  * caller that passes nothing must still get everything.
@@ -93,9 +94,11 @@ function fromApi(row) {
  *   dateTo      incident on or before this ISO date
  *   reporterId  reports filed by one user
  *   sort        'newest' (default) | 'oldest'
- *   limit       cap the number returned
+ *   page        which page to return, 1-based
+ *   perPage     rows per page (the API caps this at 50)
+ *   limit       cap the number returned, for callers that want a short list
  */
-export async function getReports(query = {}) {
+export async function getReportsPage(query = {}) {
   const search = queryString({
     q: query.text,
     type: query.reportType,
@@ -108,12 +111,30 @@ export async function getReports(query = {}) {
     date_to: query.dateTo,
     reporter_id: query.reporterId,
     sort: query.sort === 'oldest' ? 'oldest' : 'newest',
+    page: query.page,
     // The pages that use `limit` want a short list, not a page of results.
-    per_page: query.limit ?? 50,
+    per_page: query.perPage ?? query.limit ?? 50,
   })
 
   const payload = await apiFetch(`/reports${search}`)
-  return payload.data.map(fromApi)
+
+  return {
+    reports: payload.data.map(fromApi),
+    page: payload.meta.page,
+    perPage: payload.meta.per_page,
+    total: payload.meta.total,
+    totalPages: payload.meta.total_pages,
+  }
+}
+
+/**
+ * The same list without the paging figures, for the callers that want "the
+ * reports" and nothing else. Implemented on top of `getReportsPage` so there is
+ * only ever one place that builds the query and maps the rows.
+ */
+export async function getReports(query = {}) {
+  const { reports } = await getReportsPage(query)
+  return reports
 }
 
 export async function getReportById(id) {

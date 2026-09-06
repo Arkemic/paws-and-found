@@ -8,7 +8,7 @@ If what you need is close to something below, extend that component with a prop
 rather than forking it. If you add a component, add its row here in the same
 commit.
 
-_Last updated: dashboard charts — 2026-09-06_
+_Last updated: pagination — 2026-09-06_
 
 Colours, shape tokens and the accessibility rules live in
 [design-system.md](design-system.md). Components must use semantic tokens, never
@@ -50,6 +50,7 @@ raw Tailwind colours.
 | `StatTile` | `components/StatTile.jsx` | One number plus its label on a dashboard. The tile itself stays plain — no sparkline or trend arrow inside it; charts are separate components below. **Staff and admin only** — the customer dashboard shows cases, not counts. Pass `emphasis` for the one or two numbers that mean someone has to act; if every tile is emphasised, none is. |
 | `BreakdownBars` | `components/BreakdownBars.jsx` | A labelled list of proportion bars — "where reports stand", "most reported animals". Takes `rows` of `{key, label, value, barClassName}` and an optional `total`. The bar is `aria-hidden`; the number beside it is the real value. Used by both the staff and administrator dashboards, which is why the status colours live in `REPORT_STATUS_BARS` in constants rather than in either page. |
 | `MonthlyReportsChart` | `components/MonthlyReportsChart.jsx` | Reports filed per month, lost beside found, over six months. Plain elements, no charting library (CLAUDE.md §15). Bars are measured against the tallest single value so the two series stay comparable. Carries an `sr-only` table of the same figures — the drawing alone is not readable. |
+| `Pagination` | `components/Pagination.jsx` | Numbered page links for a paged list — previous, page numbers, next. Renders nothing when everything fits on one page. Shows every page up to seven, then windows to first/last/current±1 with an ellipsis. `nav` with its own label, `aria-current` on the current page, and Previous/Next keep their words for screen readers when the viewport hides them. |
 | `MatchCard` + `MatchActions` | `components/MatchCard.jsx` | The evidence comparison: two large photographs side by side with the score between them, then every signal ticked or crossed — matched **and** unmatched. Used by the customer dashboard, My Matches, the report detail page, the staff match queue and verification, so all five show a coordinator and a reporter the same thing. Never claims two reports are the same animal. |
 | `ReportMap` + `KeepMapSized` | `components/ReportMap.jsx` | Leaflet map of one or many reports, with popups. `showApproximateArea` draws the privacy circle. Always include `KeepMapSized` in a new map, or tiles go missing after a resize. |
 | `LocationPicker` | `components/LocationPicker.jsx` | Click-to-drop pin for the report form. Optional by design. |
