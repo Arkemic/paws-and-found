@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { List, Map as MapIcon, Search, SlidersHorizontal } from 'lucide-react'
 import emptyReportsImage from '@/assets/empty-no-reports.png'
 import headerIllustration from '@/assets/img-008-explore-header-illustration.jpg'
 import { Button, Container, EmptyState, LoadingSkeleton, Modal } from '@/components/ui'
 import { PetCard } from '@/components/PetCard'
+import { Pagination } from '@/components/Pagination'
 import { ReportMap } from '@/components/LazyMaps'
 import { cn } from '@/utils/cn'
 import { hasCoordinates } from '@/utils/location'
@@ -26,8 +27,15 @@ const EMPTY_FILTERS = {
   dateTo: '',
 }
 
-/** How many cards to add each time "Show more" is pressed. */
+/** Cards per page in the list view. Matches the API's own default. */
 const PAGE_SIZE = 9
+
+/**
+ * The map draws every matching report rather than one page, so it asks for the
+ * largest page the API allows. 50 is that cap (`MAX_PAGE_SIZE` in the API's
+ * config); beyond it the map would need its own endpoint.
+ */
+const MAP_RESULT_LIMIT = 50
 
 const loadActiveCategories = () => categoryService.getActiveCategories()
 
@@ -45,17 +53,33 @@ export function ExplorePage() {
   }))
   const [searchDraft, setSearchDraft] = useState(() => searchParams.get('q') ?? '')
   const [sort, setSort] = useState('newest')
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [page, setPage] = useState(1)
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
   const [view, setView] = useState('list')
 
-  // Re-runs whenever a filter or the sort changes — no page reload, which is
-  // the asynchronous behaviour this page is meant to demonstrate.
+  // Re-runs whenever a filter, the sort or the page changes — no page reload,
+  // which is the asynchronous behaviour this page is meant to demonstrate.
+  //
+  // Paging is done by the database (LIMIT/OFFSET), not by slicing a full list
+  // in the browser: the point of paginating is to stop fetching rows nobody is
+  // going to look at. The map is the exception — it needs every pin, so it asks
+  // for one large page instead.
+  const isMapView = view === 'map'
   const loadReports = useCallback(
-    () => petService.getReports({ ...filters, sort }),
-    [filters, sort],
+    () =>
+      petService.getReportsPage({
+        ...filters,
+        sort,
+        page: isMapView ? 1 : page,
+        perPage: isMapView ? MAP_RESULT_LIMIT : PAGE_SIZE,
+      }),
+    [filters, sort, page, isMapView],
   )
-  const { data: reports, error, isLoading } = useAsync(loadReports)
+  const { data, error, isLoading } = useAsync(loadReports)
+
+  const reports = data?.reports
+  const total = data?.total ?? 0
+  const totalPages = data?.totalPages ?? 1
   const { data: categories } = useAsync(loadActiveCategories)
 
   const speciesOptions = (categories ?? []).map((category) => ({
@@ -71,13 +95,18 @@ export function ExplorePage() {
 
   const changeFilter = (field, value) => {
     setFilters((current) => ({ ...current, [field]: value }))
-    setVisibleCount(PAGE_SIZE) // A new filter means a new result set: start again.
+    setPage(1) // A new filter means a new result set: start again.
   }
 
   const clearFilters = () => {
     setFilters(EMPTY_FILTERS)
     setSearchDraft('')
-    setVisibleCount(PAGE_SIZE)
+    setPage(1)
+  }
+
+  const changeSort = (value) => {
+    setSort(value)
+    setPage(1) // Page 3 of one ordering is not page 3 of another.
   }
 
   const submitSearch = (event) => {
@@ -85,9 +114,33 @@ export function ExplorePage() {
     changeFilter('text', searchDraft.trim())
   }
 
-  const visibleReports = reports?.slice(0, visibleCount) ?? []
-  const hasMore = (reports?.length ?? 0) > visibleCount
-  const unpinnedCount = (reports ?? []).filter((report) => !hasCoordinates(report)).length
+  const visibleReports = reports ?? []
+  const unpinnedCount = visibleReports.filter((report) => !hasCoordinates(report)).length
+
+  // Moving to another page leaves you at the bottom of the previous one, which
+  // reads as though nothing happened. Put the top of the results back in view —
+  // but not on the first render, where the page has not moved.
+  //
+  // This waits for the arriving page rather than the button press, so the jump
+  // lands against the finished layout rather than the loading state.
+  //
+  // The move is instant, not smoothed: an animated scroll would have to be
+  // suppressed under `prefers-reduced-motion`, and there is nothing to see on
+  // the way past a list you have already read.
+  const resultsRef = useRef(null)
+  const loadedPage = data?.page
+  const hasPaged = useRef(false)
+
+  useEffect(() => {
+    if (loadedPage === undefined) return
+
+    if (!hasPaged.current) {
+      hasPaged.current = true
+      return
+    }
+
+    resultsRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' })
+  }, [loadedPage])
 
   return (
     <Container className="flex flex-col gap-6 pb-6 sm:pb-12">
@@ -163,12 +216,14 @@ export function ExplorePage() {
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
+        {/* scroll-mt clears the sticky header, or paging lands with the first
+            row of cards hidden underneath it. */}
+        <div ref={resultsRef} className="flex min-w-0 flex-1 scroll-mt-24 flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
             <p className="text-lg font-semibold text-fg" aria-live="polite">
-              {isLoading
-                ? 'Searching…'
-                : `${reports?.length ?? 0} ${reports?.length === 1 ? 'pet' : 'pets'} found`}
+              {/* The whole result set, not this page: "9 pets found" beside a
+                  four-page pager would contradict itself. */}
+              {isLoading ? 'Searching…' : `${total} ${total === 1 ? 'pet' : 'pets'} found`}
             </p>
 
             <div className="flex items-center gap-2">
@@ -224,7 +279,7 @@ export function ExplorePage() {
                   <select
                     id="explore-sort"
                     value={sort}
-                    onChange={(event) => setSort(event.target.value)}
+                    onChange={(event) => changeSort(event.target.value)}
                     className="h-10 rounded-control border border-border-strong bg-panel px-3 text-sm text-fg"
                   >
                     <option value="newest">Newest first</option>
@@ -286,8 +341,9 @@ export function ExplorePage() {
 
               {unpinnedCount > 0 && (
                 <p className="text-sm text-fg-muted">
-                  {unpinnedCount} of these {reports.length} reports {unpinnedCount === 1 ? 'has' : 'have'}{' '}
-                  no map pin and {unpinnedCount === 1 ? 'is' : 'are'} only in the list.
+                  {unpinnedCount} of these {visibleReports.length} reports{' '}
+                  {unpinnedCount === 1 ? 'has' : 'have'} no map pin and{' '}
+                  {unpinnedCount === 1 ? 'is' : 'are'} only in the list.
                 </p>
               )}
             </>
@@ -303,19 +359,15 @@ export function ExplorePage() {
                 ))}
               </ul>
 
-              {hasMore && (
-                <div className="flex flex-col items-center gap-2 pt-2">
-                  <p className="text-sm text-fg-muted">
-                    Showing {visibleReports.length} of {reports.length}
+              {totalPages > 1 && (
+                <div className="flex flex-col items-center gap-3 pt-2">
+                  {/* Announced, because after pressing a page number the count
+                      is the only thing that confirms the list moved. */}
+                  <p role="status" className="text-sm text-fg-muted">
+                    Showing {(page - 1) * PAGE_SIZE + 1}–{(page - 1) * PAGE_SIZE + visibleReports.length}{' '}
+                    of {total} · page {page} of {totalPages}
                   </p>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="min-w-56"
-                    onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-                  >
-                    Show more reports
-                  </Button>
+                  <Pagination page={page} totalPages={totalPages} onChange={setPage} />
                 </div>
               )}
             </>
@@ -329,7 +381,7 @@ export function ExplorePage() {
         title="Filters"
         footer={
           <Button onClick={() => setIsFilterDialogOpen(false)}>
-            Show {reports?.length ?? 0} results
+            Show {total} results
           </Button>
         }
       >

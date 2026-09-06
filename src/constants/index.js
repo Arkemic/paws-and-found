@@ -48,6 +48,18 @@ export const REPORT_STATUS_LABELS = {
   [REPORT_STATUSES.CLOSED]: 'Closed',
 }
 
+/**
+ * Bar fill for each status, used by the breakdowns on the staff and
+ * administrator dashboards. Here rather than in either page, so the two cannot
+ * end up colouring the same status differently.
+ */
+export const REPORT_STATUS_BARS = {
+  [REPORT_STATUSES.ACTIVE]: 'bg-status-active',
+  [REPORT_STATUSES.POSSIBLE_MATCH]: 'bg-status-match',
+  [REPORT_STATUSES.RETURNED]: 'bg-status-returned',
+  [REPORT_STATUSES.CLOSED]: 'bg-status-closed',
+}
+
 /** Order used by queues and filter chips. */
 export const REPORT_STATUS_ORDER = [
   REPORT_STATUSES.ACTIVE,

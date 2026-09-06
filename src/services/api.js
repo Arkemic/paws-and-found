@@ -55,7 +55,14 @@ export async function apiFetch(path, options = {}) {
 
   if (!response.ok) {
     // The API always answers errors as { error: "..." }, written for a person.
-    throw new Error(payload?.error ?? 'The request failed.')
+    const error = new Error(payload?.error ?? 'The request failed.')
+
+    // A 422 also names the fields that failed, so a form can mark them
+    // individually. Attached to the error rather than wrapped in an error class
+    // of its own (CLAUDE.md §15).
+    if (payload?.fields) error.fields = payload.fields
+
+    throw error
   }
 
   return payload

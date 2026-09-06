@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: moderation API + second report batch — 2026-08-30_
+_Last updated: pagination on Explore — 2026-09-06_
 
 ## Foundation
 
@@ -28,7 +28,8 @@ _Last updated: moderation API + second report batch — 2026-08-30_
 
 | Item | Status | Phase |
 | --- | --- | --- |
-| Authentication | `[x]` | **Real.** PHP sessions, `password_hash`/`password_verify`, session ID regenerated on login, HttpOnly cookies. Guest by default; browsing stays public. Every seeded account uses `demo1234`. |
+| Authentication | `[x]` | **Real, and reachable from the interface.** The sign-in form posts to `POST /api/auth/login`; PHP sessions, `password_hash`/`password_verify`, session ID regenerated on sign-in, HttpOnly cookies. Guest by default; browsing stays public. Every seeded account uses `demo1234`. The development role selector is kept as a demonstration shortcut. |
+| Registration | `[x]` | `POST /api/auth/register` — server-side validation, bcrypt hashing, duplicate email rejected by the unique index (409), and the new account is signed in on success. **The role is never read from the request**, so an account cannot register itself as staff or admin. |
 | Lost report | `[x]` | 3 — multi-step form, validation, submits via `petService` |
 | Found report | `[x]` | 3 — same form, found-specific fields, no pet name |
 | Photo upload | `[~]` | 3 — local preview only. **Not yet persisted**; needs a PHP upload endpoint writing to `api/uploads/`. |
@@ -64,6 +65,6 @@ _Last updated: moderation API + second report batch — 2026-08-30_
 | Real database | `[x]` | MySQL, 11 tables, verified on MariaDB 10.4.32 via XAMPP. `database/schema.sql`. |
 | Prepared statements everywhere | `[x]` | PDO with `ATTR_EMULATE_PREPARES => false`. Injection tested with three payloads. |
 | Category management | `[~]` | Admin UI works but still writes to mock data — not persisted. |
-| Pagination | `[~]` | The API supports `page`/`per_page`; the frontend still uses "Show more". |
-| Charts on dashboards | `[ ]` | Required by the project guide. Not started. |
+| Pagination | `[x]` | Explore pages through the database with `LIMIT`/`OFFSET`, nine to a page — one request per page, not a full list sliced in the browser. Numbered links, a "Showing 10–18 of 32" status, and the page resets when a filter or the sort changes. **The map view is deliberately not paged**: it asks for one large page so every pin is drawn, capped at the API's 50-row maximum. |
+| Charts on dashboards | `[x]` | `GET /api/reports/stats` — three SQL `GROUP BY` queries behind a staff/admin-only endpoint. The administrator overview shows reports filed per month (lost vs found, six months), where reports stand, and most-reported animals; the coordinator overview shares the same breakdown component. No charting library. **The seed clusters 28 of 32 reports in August**, so the monthly chart is honest but lopsided until the dates are spread. |
 | Deployment | `[ ]` | Local XAMPP only — team decision, 2026-08-19. |

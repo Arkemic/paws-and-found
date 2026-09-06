@@ -2,11 +2,8 @@
  * Pet report data access.
  *
  * This is the only way the UI reads or writes lost/found reports — components
- * never import from `src/mock/`. When Supabase arrives, the bodies of these
- * functions change and their signatures do not (CLAUDE.md §9).
- *
- * The functions are `async` even though the data is local, so swapping in real
- * network calls later does not change how pages call them.
+ * never import from `src/mock/`. These call the PHP API; the boundary is why
+ * moving off mock data changed nothing above it (CLAUDE.md §9).
  */
 
 import { REPORT_STATUSES, REPORT_TYPES } from '@/constants'
@@ -79,7 +76,8 @@ function fromApi(row) {
 }
 
 /**
- * List reports, newest first.
+ * List one page of reports, newest first, with the paging figures.
+ *
  *
  * Every filter is optional, and they combine with AND. Keep it that way — a
  * caller that passes nothing must still get everything.
@@ -96,9 +94,11 @@ function fromApi(row) {
  *   dateTo      incident on or before this ISO date
  *   reporterId  reports filed by one user
  *   sort        'newest' (default) | 'oldest'
- *   limit       cap the number returned
+ *   page        which page to return, 1-based
+ *   perPage     rows per page (the API caps this at 50)
+ *   limit       cap the number returned, for callers that want a short list
  */
-export async function getReports(query = {}) {
+export async function getReportsPage(query = {}) {
   const search = queryString({
     q: query.text,
     type: query.reportType,
@@ -111,12 +111,30 @@ export async function getReports(query = {}) {
     date_to: query.dateTo,
     reporter_id: query.reporterId,
     sort: query.sort === 'oldest' ? 'oldest' : 'newest',
+    page: query.page,
     // The pages that use `limit` want a short list, not a page of results.
-    per_page: query.limit ?? 50,
+    per_page: query.perPage ?? query.limit ?? 50,
   })
 
   const payload = await apiFetch(`/reports${search}`)
-  return payload.data.map(fromApi)
+
+  return {
+    reports: payload.data.map(fromApi),
+    page: payload.meta.page,
+    perPage: payload.meta.per_page,
+    total: payload.meta.total,
+    totalPages: payload.meta.total_pages,
+  }
+}
+
+/**
+ * The same list without the paging figures, for the callers that want "the
+ * reports" and nothing else. Implemented on top of `getReportsPage` so there is
+ * only ever one place that builds the query and maps the rows.
+ */
+export async function getReports(query = {}) {
+  const { reports } = await getReportsPage(query)
+  return reports
 }
 
 export async function getReportById(id) {
@@ -220,6 +238,24 @@ export async function updateReportStatus(id, status, context = {}) {
  * a page of results stays small — so the feed came out empty. This asks the
  * server for exactly the feed instead.
  */
+/**
+ * The figures the staff and administrator dashboards report on.
+ *
+ * Counted by the database, not here. `getReports()` is paginated, so totalling
+ * its rows in the browser would report on one page rather than on the table.
+ *
+ * Coordinators and administrators only; the API refuses anyone else.
+ */
+export async function getReportStats() {
+  const payload = await apiFetch('/reports/stats')
+
+  return {
+    totals: payload.data.totals,
+    monthly: payload.data.monthly,
+    bySpecies: payload.data.by_species,
+  }
+}
+
 export async function getRecentActivity(limit = 6) {
   const payload = await apiFetch(`/reports/activity${queryString({ limit })}`)
 
