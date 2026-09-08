@@ -202,6 +202,9 @@ function auth_me(): never
             'contact_number' => $user['contact_number'],
             'role' => $user['role'],
             'preferred_location' => $user['preferred_location'],
+            'notify_matches' => (bool) $user['notify_matches'],
+            'notify_status' => (bool) $user['notify_status'],
+            'notify_staff' => (bool) $user['notify_staff'],
         ],
     ]);
 }

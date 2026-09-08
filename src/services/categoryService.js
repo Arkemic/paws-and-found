@@ -1,84 +1,74 @@
 /**
  * Pet categories — the species list reports are filed under.
  *
- * Administrators manage this list. A category's `id` is what gets stored on a
- * report, so renaming is always safe; removing one is not, which is why it is
- * only allowed while nothing uses it.
+ * Administrators manage this list and the changes are kept in MySQL. A
+ * category's `id` is its code ('dog'), which is what a report actually stores,
+ * so renaming one is always safe; removing one is not, which is why the API
+ * refuses while any report still uses it.
  */
 
 import { apiFetch } from './api'
-import { NotFoundError, getTable, sortBy } from './mockDb'
 
-/** Every category, active or not. */
-export async function getCategories() {
-  return sortBy(getTable('categories'), (category) => category.label, 'asc')
-}
-
-/** Only the ones that should appear in a dropdown. */
-export async function getActiveCategories() {
-  const payload = await apiFetch('/categories')
-
-  // The interface keys species off `id`, and the API's stable species key is
-  // its code ('dog'), not the numeric primary key — that is what a report's
-  // `species` field holds.
-  return payload.data.map((row) => ({
+/** An API category in the shape the interface already reads. */
+function categoryFromApi(row) {
+  return {
     id: row.code,
     categoryId: row.category_id,
     label: row.label,
-    isActive: true,
-  }))
-}
-
-export async function getCategoryUsage() {
-  const reports = getTable('petReports')
-
-  return Object.fromEntries(
-    getTable('categories').map((category) => [
-      category.id,
-      reports.filter((report) => report.species === category.id).length,
-    ]),
-  )
+    isActive: row.is_active ?? true,
+    reportCount: row.report_count ?? 0,
+  }
 }
 
 /**
- * Add a category. The id is derived from the label so that reports store
- * something readable rather than a random string.
+ * Every category, active or not, with the number of reports filed against
+ * each. Administrators only — the API refuses anyone else.
+ */
+export async function getCategories() {
+  const payload = await apiFetch('/categories?all=1')
+  return payload.data.map(categoryFromApi)
+}
+
+/** Only the ones that should appear in a dropdown. Public. */
+export async function getActiveCategories() {
+  const payload = await apiFetch('/categories')
+  return payload.data.map(categoryFromApi)
+}
+
+/**
+ * How many reports use each category, keyed by code.
  *
- * @param {string} label
+ * Derived from the same request as the list rather than counted separately:
+ * the API already returns the figure, and asking twice invites the two to
+ * disagree.
+ */
+export async function getCategoryUsage() {
+  const categories = await getCategories()
+
+  return Object.fromEntries(categories.map((category) => [category.id, category.reportCount]))
+}
+
+/**
+ * Add a category. The code stored on reports is derived from the label by the
+ * server, so that both sides cannot disagree about how it is spelled.
  */
 export async function createCategory(label) {
-  const trimmed = label.trim()
-  if (!trimmed) throw new Error('A category needs a name.')
+  const payload = await apiFetch('/categories', {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  })
 
-  const id = trimmed
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-
-  const rows = getTable('categories')
-  if (rows.some((category) => category.id === id)) {
-    throw new Error(`There is already a category called "${trimmed}".`)
-  }
-
-  const category = { id, label: trimmed, isActive: true, createdAt: new Date().toISOString() }
-  rows.push(category)
-
-  return category
+  return categoryFromApi(payload.data)
 }
 
-/**
- * Rename a category. Safe at any time — reports reference the id, not the label.
- */
+/** Rename a category. Safe at any time — reports reference the code, not the label. */
 export async function renameCategory(id, label) {
-  const trimmed = label.trim()
-  if (!trimmed) throw new Error('A category needs a name.')
+  const payload = await apiFetch(`/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  })
 
-  const category = getTable('categories').find((row) => row.id === id)
-  if (!category) throw new NotFoundError('Category', id)
-
-  category.label = trimmed
-
-  return category
+  return categoryFromApi(payload.data)
 }
 
 /**
@@ -86,29 +76,18 @@ export async function renameCategory(id, label) {
  * use it. This is the safe alternative to deleting.
  */
 export async function setCategoryActive(id, isActive) {
-  const category = getTable('categories').find((row) => row.id === id)
-  if (!category) throw new NotFoundError('Category', id)
+  const payload = await apiFetch(`/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active: isActive }),
+  })
 
-  category.isActive = isActive
-
-  return category
+  return categoryFromApi(payload.data)
 }
 
 /**
- * Delete a category outright — refused while any report still uses it, because
- * that would leave those reports pointing at a species that no longer exists.
+ * Delete a category outright. The API refuses while any report still uses it,
+ * and says how many are in the way.
  */
 export async function deleteCategory(id) {
-  const usage = await getCategoryUsage()
-  if (usage[id] > 0) {
-    throw new Error(
-      `${usage[id]} report${usage[id] === 1 ? '' : 's'} still use this category. Deactivate it instead.`,
-    )
-  }
-
-  const rows = getTable('categories')
-  const index = rows.findIndex((row) => row.id === id)
-  if (index === -1) throw new NotFoundError('Category', id)
-
-  rows.splice(index, 1)
+  await apiFetch(`/categories/${id}`, { method: 'DELETE' })
 }

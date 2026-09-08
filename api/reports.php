@@ -29,7 +29,7 @@ const REPORT_SORTS = [
     'updated' => 'r.updated_at DESC',
 ];
 
-function handle_reports(string $method, ?string $identifier): never
+function handle_reports(string $method, ?string $identifier, ?string $sub = null): never
 {
     if ($method === 'GET' && $identifier === null) {
         reports_list();
@@ -51,9 +51,13 @@ function handle_reports(string $method, ?string $identifier): never
     if (ctype_digit((string) $identifier)) {
         $id = (int) $identifier;
 
-        if ($method === 'GET') report_detail($id);
-        if ($method === 'PUT') report_update($id);
-        if ($method === 'PATCH') report_set_status($id);
+        if ($method === 'POST' && $sub === 'photos') report_add_photos($id);
+
+        if ($sub === null) {
+            if ($method === 'GET') report_detail($id);
+            if ($method === 'PUT') report_update($id);
+            if ($method === 'PATCH') report_set_status($id);
+        }
     }
 
     json_error('No such endpoint.', 404);
@@ -427,6 +431,176 @@ function reports_stats(): never
         'monthly' => array_values($window),
         'by_species' => $species,
     ]]);
+}
+
+/** Photographs a report may carry, and what counts as one. */
+const PHOTO_MAX_PER_REPORT = 5;
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const PHOTO_TYPES = [
+    IMAGETYPE_JPEG => 'jpg',
+    IMAGETYPE_PNG => 'png',
+    IMAGETYPE_WEBP => 'webp',
+];
+
+/**
+ * Attach photographs to a report.
+ *
+ * Sent as multipart/form-data rather than JSON, because a file is bytes and
+ * base64 in a JSON body would inflate it by a third for no benefit.
+ *
+ * The upload is never trusted. Its filename, its extension and the content
+ * type the browser claims are all discarded; what the file actually IS decides.
+ * A PHP script called cat.jpg fails getimagesize(), and the name it would be
+ * stored under is generated here, so nothing a caller sends ever reaches the
+ * filesystem as a path.
+ */
+function report_add_photos(int $id): never
+{
+    $user = require_login();
+    $report = find_report_or_404($id);
+
+    if ((int) $report['user_id'] !== (int) $user['user_id']) {
+        json_error('Only the person who filed a report can add photographs to it.', 403);
+    }
+
+    if (empty($_FILES['photos'])) {
+        json_error('No photographs were received.', 422);
+    }
+
+    // PHP shapes a multiple-file upload as parallel arrays, one per property.
+    $files = $_FILES['photos'];
+    $count = is_array($files['name']) ? count($files['name']) : 0;
+
+    if ($count === 0) {
+        json_error('No photographs were received.', 422);
+    }
+
+    $existing = db()->prepare('SELECT COUNT(*) FROM report_images WHERE report_id = :id');
+    $existing->execute([':id' => $id]);
+    $already = (int) $existing->fetchColumn();
+
+    if ($already + $count > PHOTO_MAX_PER_REPORT) {
+        json_error('A report can have at most ' . PHOTO_MAX_PER_REPORT . ' photographs.', 422);
+    }
+
+    $directory = __DIR__ . '/uploads';
+    if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+        error_log('[pawsandfound] could not create the uploads directory');
+        json_error('The server could not store the photographs.', 500);
+    }
+
+    $altText = $_POST['alt'] ?? [];
+    $accepted = [];
+    $written = [];
+
+    for ($i = 0; $i < $count; $i++) {
+        $error = $files['error'][$i];
+
+        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+            cleanup_uploads($written);
+            json_error('That photograph is too large.', 422);
+        }
+
+        if ($error !== UPLOAD_ERR_OK) {
+            cleanup_uploads($written);
+            json_error('One of the photographs did not upload correctly.', 422);
+        }
+
+        $temporary = $files['tmp_name'][$i];
+
+        // Guards against a caller naming a file that is already on the server.
+        if (!is_uploaded_file($temporary)) {
+            cleanup_uploads($written);
+            json_error('That file was not uploaded.', 422);
+        }
+
+        if ($files['size'][$i] > PHOTO_MAX_BYTES) {
+            cleanup_uploads($written);
+            json_error('Each photograph must be 5 MB or smaller.', 422);
+        }
+
+        // This reads the file's own header. It is the check that matters:
+        // anything that is not really an image fails here, whatever it is
+        // called and whatever content type the browser announced.
+        $info = @getimagesize($temporary);
+
+        if ($info === false || !isset(PHOTO_TYPES[$info[2]])) {
+            cleanup_uploads($written);
+            json_error('Photographs must be JPEG, PNG or WebP images.', 422);
+        }
+
+        // The stored name is generated, never taken from the upload. A caller
+        // cannot choose the extension, the folder, or anything else about it.
+        $filename = bin2hex(random_bytes(16)) . '.' . PHOTO_TYPES[$info[2]];
+        $destination = $directory . '/' . $filename;
+
+        if (!move_uploaded_file($temporary, $destination)) {
+            cleanup_uploads($written);
+            error_log('[pawsandfound] move_uploaded_file failed for report ' . $id);
+            json_error('The server could not store the photographs.', 500);
+        }
+
+        $written[] = $destination;
+        $accepted[] = [
+            'filename' => $filename,
+            'alt' => blank_to_null($altText[$i] ?? null),
+        ];
+    }
+
+    // The rows and the files have to agree. If a row fails to insert, the files
+    // written during this request are removed rather than left on disk with
+    // nothing pointing at them.
+    $pdo = db();
+    $pdo->beginTransaction();
+
+    try {
+        $insert = $pdo->prepare(
+            'INSERT INTO report_images (report_id, image_path, alt_text, is_primary_photo)
+                  VALUES (:report, :path, :alt, :primary)'
+        );
+
+        foreach ($accepted as $index => $photo) {
+            $insert->execute([
+                ':report' => $id,
+                ':path' => $photo['filename'],
+                ':alt' => $photo['alt'],
+                // The first photograph on a report that had none becomes the
+                // one shown on cards and in search results.
+                ':primary' => ($already === 0 && $index === 0) ? 1 : 0,
+            ]);
+        }
+
+        $pdo->commit();
+    } catch (PDOException $exception) {
+        $pdo->rollBack();
+        cleanup_uploads($written);
+        throw $exception;
+    }
+
+    $rows = $pdo->prepare(
+        'SELECT image_id, image_path, alt_text, is_primary_photo
+           FROM report_images
+          WHERE report_id = :id
+          ORDER BY is_primary_photo DESC, image_id ASC'
+    );
+    $rows->execute([':id' => $id]);
+
+    json_response(['data' => array_map(fn ($r) => [
+        'image_id' => (int) $r['image_id'],
+        'path' => $r['image_path'],
+        'alt' => $r['alt_text'],
+        'is_primary' => (bool) $r['is_primary_photo'],
+    ], $rows->fetchAll())], 201);
+}
+
+/** Remove files written earlier in a request that is now failing. */
+function cleanup_uploads(array $paths): void
+{
+    foreach ($paths as $path) {
+        if (is_file($path)) {
+            @unlink($path);
+        }
+    }
 }
 
 // -----------------------------------------------------------------------------

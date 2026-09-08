@@ -67,6 +67,11 @@ export async function getCurrentUser() {
     role: payload.user.role,
     accountStatus: 'active',
     preferredLocation: payload.user.preferred_location ?? '',
+    notificationPreferences: {
+      possibleMatches: payload.user.notify_matches ?? true,
+      statusUpdates: payload.user.notify_status ?? true,
+      staffMessages: payload.user.notify_staff ?? true,
+    },
   }
 }
 
@@ -146,16 +151,28 @@ export async function getDemoAccounts() {
  * Patch a user's own profile fields. Role and account status are left out —
  * changing those is an administrator action, below.
  */
+/**
+ * Save the signed-in account's own details.
+ *
+ * The `id` argument is ignored on purpose: the server takes the account from
+ * the session, so this can only ever edit your own profile. Passing somebody
+ * else's id would change nothing.
+ */
 export async function updateUser(id, changes) {
-  const rows = getTable('users')
-  const index = rows.findIndex((u) => u.id === id)
-  if (index === -1) throw new NotFoundError('User', id)
+  const payload = await apiFetch('/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      full_name: changes.fullName,
+      email: changes.email,
+      contact_number: changes.phone ?? '',
+      preferred_location: changes.preferredLocation ?? '',
+      notify_matches: changes.notificationPreferences?.possibleMatches,
+      notify_status: changes.notificationPreferences?.statusUpdates,
+      notify_staff: changes.notificationPreferences?.staffMessages,
+    }),
+  })
 
-  const { id: _id, role: _role, accountStatus: _status, createdAt: _createdAt, ...editable } = changes
-
-  rows[index] = { ...rows[index], ...editable }
-
-  return rows[index]
+  return userFromApi(payload.data)
 }
 
 /** Administrator action: suspend or reinstate an account. */

@@ -28,6 +28,14 @@ function handle_users(string $method, ?string $identifier): never
         if ($method === 'PATCH') user_update($id);
     }
 
+    // Your own details. Deliberately a separate route from PATCH /users/{id}:
+    // that one is an administrator changing somebody else's role, this one is
+    // a person editing their own contact details, and they must never be the
+    // same endpoint.
+    if ($method === 'PATCH' && $identifier === 'me') {
+        profile_update();
+    }
+
     json_error('No such endpoint.', 404);
 }
 
@@ -100,6 +108,89 @@ function user_detail(int $id): never
         || (int) $viewer['user_id'] === $id;
 
     json_response(['data' => shape_user($user, $privileged)]);
+}
+
+/**
+ * Update the signed-in account's own details.
+ *
+ * The id comes from the session, never from the request, so this cannot be
+ * pointed at somebody else's account. Role and account_status are not readable
+ * here at all: an account may not promote or un-suspend itself.
+ */
+function profile_update(): never
+{
+    $user = require_login();
+    $body = request_body();
+    $id = (int) $user['user_id'];
+
+    $errors = [];
+
+    $fullName = trim((string) ($body['full_name'] ?? ''));
+    if ($fullName === '') {
+        $errors['full_name'] = 'Enter your name.';
+    } elseif (mb_strlen($fullName) > 120) {
+        $errors['full_name'] = 'That name is too long (120 characters maximum).';
+    }
+
+    $email = trim((string) ($body['email'] ?? ''));
+    if ($email === '') {
+        $errors['email'] = 'Enter your email address.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 190) {
+        $errors['email'] = 'Enter a valid email address.';
+    }
+
+    $phone = trim((string) ($body['contact_number'] ?? ''));
+    if (mb_strlen($phone) > 30) {
+        $errors['contact_number'] = 'That phone number is too long.';
+    }
+
+    $location = trim((string) ($body['preferred_location'] ?? ''));
+    if (mb_strlen($location) > 120) {
+        $errors['preferred_location'] = 'That location is too long.';
+    }
+
+    if ($errors !== []) {
+        json_error('Please check the highlighted fields.', 422, ['fields' => $errors]);
+    }
+
+    $statement = db()->prepare(
+        'UPDATE users
+            SET full_name = :name,
+                email = :email,
+                contact_number = :phone,
+                preferred_location = :location,
+                notify_matches = :matches,
+                notify_status = :status,
+                notify_staff = :staff
+          WHERE user_id = :id'
+    );
+
+    try {
+        $statement->execute([
+            ':name' => $fullName,
+            ':email' => $email,
+            ':phone' => $phone === '' ? null : $phone,
+            ':location' => $location === '' ? null : $location,
+            // Absent means "leave as it is", so an update that only changes a
+            // phone number does not silently switch every notification off.
+            ':matches' => array_key_exists('notify_matches', $body) ? (int) (bool) $body['notify_matches'] : (int) $user['notify_matches'],
+            ':status' => array_key_exists('notify_status', $body) ? (int) (bool) $body['notify_status'] : (int) $user['notify_status'],
+            ':staff' => array_key_exists('notify_staff', $body) ? (int) (bool) $body['notify_staff'] : (int) $user['notify_staff'],
+            ':id' => $id,
+        ]);
+    } catch (PDOException $exception) {
+        // The unique index on email decides, so two people cannot claim the
+        // same address by saving at the same moment.
+        if ($exception->getCode() === '23000') {
+            json_error('Another account already uses that email address.', 409, [
+                'fields' => ['email' => 'Another account already uses that email address.'],
+            ]);
+        }
+
+        throw $exception;
+    }
+
+    user_detail($id);
 }
 
 /** Change a role or suspend an account. Administrators only. */

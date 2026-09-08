@@ -27,3 +27,8 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Uploaded photographs are user data, not source. The folder and its rules are
+# tracked; what people upload into it is not.
+api/uploads/*
+!api/uploads/.htaccess

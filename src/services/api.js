@@ -46,9 +46,14 @@ export function assetUrl(filename) {
  * every request would look anonymous and the workspaces would 401.
  */
 export async function apiFetch(path, options = {}) {
+  // A FormData body must set its own Content-Type: the browser adds the
+  // multipart boundary, and naming the type here would strip it and leave the
+  // server unable to parse the upload.
+  const isUpload = options.body instanceof FormData
+
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
-    headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: options.body && !isUpload ? { 'Content-Type': 'application/json' } : undefined,
     ...options,
   })
 

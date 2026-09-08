@@ -50,6 +50,7 @@ export function ReportForm({ reportType, report }) {
   const [stepIndex, setStepIndex] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [photoWarning, setPhotoWarning] = useState(null)
   const [createdReport, setCreatedReport] = useState(null)
 
   // Species come from the managed category list, not a hard-coded constant, so
@@ -119,6 +120,19 @@ export function ReportForm({ reportType, report }) {
 
       const user = await userService.getCurrentUser()
       const created = await petService.createReport(toReportInput(values, user.id))
+
+      // The photographs go up separately, once the report has an id. A failure
+      // here is reported on its own rather than as a failed submission: the
+      // report exists and is searchable, and saying otherwise would send
+      // somebody away thinking they still have to file it.
+      try {
+        await petService.uploadReportPhotos(created.id, values.photos)
+      } catch (uploadFailed) {
+        setPhotoWarning(
+          uploadFailed instanceof Error ? uploadFailed.message : String(uploadFailed),
+        )
+      }
+
       setCreatedReport(created)
     } catch (caught) {
       setSubmitError(caught instanceof Error ? caught : new Error(String(caught)))
@@ -128,7 +142,7 @@ export function ReportForm({ reportType, report }) {
   }
 
   if (createdReport) {
-    return <SubmissionSuccess report={createdReport} />
+    return <SubmissionSuccess report={createdReport} photoWarning={photoWarning} />
   }
 
   return (
@@ -297,7 +311,7 @@ function Stepper({ steps, currentIndex }) {
   )
 }
 
-function SubmissionSuccess({ report }) {
+function SubmissionSuccess({ report, photoWarning }) {
   const isLost = report.reportType === REPORT_TYPES.LOST
 
   return (
@@ -306,6 +320,18 @@ function SubmissionSuccess({ report }) {
         <CircleCheck size={40} className="text-success" aria-hidden="true" />
 
         <h2 className="text-xl font-semibold text-fg">Report submitted</h2>
+
+        {/* The report saved; only the photographs did not. Said plainly, with
+            what to do about it, rather than hidden behind a generic error. */}
+        {photoWarning && (
+          <p
+            role="alert"
+            className="max-w-prose rounded-control border border-border bg-accent-soft px-3 py-2 text-sm text-fg"
+          >
+            Your report was saved, but the photographs could not be uploaded:{' '}
+            {photoWarning} You can add them by editing the report.
+          </p>
+        )}
 
         <p className="max-w-prose text-sm text-fg-muted">
           {isLost

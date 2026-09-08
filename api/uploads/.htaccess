@@ -1,0 +1,44 @@
+# Uploaded photographs live here. Nothing in this folder may ever run.
+#
+# The upload endpoint already refuses anything that is not a real image, and
+# names every file itself. This is the second line: if that check were ever
+# wrong, or were bypassed by some future change, a file landing here still
+# cannot be executed — it can only be served as bytes.
+#
+# A writable folder inside the web root that will happily run a script is how
+# a file upload turns into a remote shell. That is worth two defences.
+
+# Never hand a request in this folder to PHP or any other interpreter.
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+  php_flag engine off
+</IfModule>
+
+# Belt and braces for servers where the modules above are not what runs PHP:
+# strip every handler and refuse the extensions outright.
+<IfModule mod_mime.c>
+  RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .cgi .pl .py .sh
+  RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+</IfModule>
+
+<FilesMatch "\.(php|phtml|php[0-9]|phar|cgi|pl|py|sh|htaccess)$">
+  Require all denied
+</FilesMatch>
+
+# Serve only what this folder is for.
+<FilesMatch "\.(jpe?g|png|webp)$">
+  Require all granted
+</FilesMatch>
+
+# A browser should not be persuaded to treat a stored file as something else.
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# No directory listing.
+Options -Indexes -ExecCGI

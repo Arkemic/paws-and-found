@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Paws&Found — MySQL schema
--- ITS122P – AM2 Final Project · Phase 2 (Database + Backend)
+-- ITS122P – AM5 · Group 3 · Final Project (Database + Backend)
 --
 -- Target: MariaDB 10.4+ (what XAMPP ships) or MySQL 8, via phpMyAdmin.
 -- Verified imported on MariaDB 10.4.32 (XAMPP) on 2026-08-19:
@@ -61,6 +61,13 @@ CREATE TABLE users (
   role            ENUM('user','staff','admin') NOT NULL DEFAULT 'user',
   account_status  ENUM('active','suspended')   NOT NULL DEFAULT 'active',
   preferred_location VARCHAR(120)   NULL,
+
+  -- Which updates this person wants to be told about. Three booleans rather
+  -- than a table: there are exactly three, every account has all three, and a
+  -- join table would add work without adding meaning (CLAUDE.md §15).
+  notify_matches    BOOLEAN       NOT NULL DEFAULT TRUE,
+  notify_status     BOOLEAN       NOT NULL DEFAULT TRUE,
+  notify_staff      BOOLEAN       NOT NULL DEFAULT TRUE,
   created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (user_id),

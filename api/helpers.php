@@ -129,7 +129,8 @@ function current_user(): ?array
 
     $statement = db()->prepare(
         'SELECT user_id, full_name, email, contact_number, role, account_status,
-                preferred_location, created_at
+                preferred_location, notify_matches, notify_status, notify_staff,
+                created_at
            FROM users
           WHERE user_id = :id'
     );

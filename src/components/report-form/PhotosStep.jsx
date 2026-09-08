@@ -41,6 +41,9 @@ export function PhotosStep({ values, onChange }) {
 
       accepted.push({
         id: createId('photo'),
+        // The file itself is kept, not only its preview: it is what gets
+        // uploaded once the report has an id to attach it to.
+        file,
         url: URL.createObjectURL(file),
         alt: '',
         // The first photo added becomes the primary one by default.

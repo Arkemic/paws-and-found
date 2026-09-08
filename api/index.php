@@ -12,6 +12,7 @@
  *   POST   /api/auth/login        sign in
  *   POST   /api/auth/logout       sign out
  *   GET    /api/auth/me           who am I
+ *   POST   /api/reports/12/photos  attach photographs to a report
  *   GET    /api/categories        species list
  */
 
@@ -29,6 +30,8 @@ $segments = array_values(array_filter(explode('/', trim((string) $route, '/')), 
 
 $resource = $segments[0] ?? '';
 $identifier = $segments[1] ?? null;
+// A third segment, for the one route that needs it: /reports/12/photos.
+$sub = $segments[2] ?? null;
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 try {
@@ -45,7 +48,7 @@ try {
 
         case 'reports':
             require __DIR__ . '/reports.php';
-            handle_reports($method, $identifier);
+            handle_reports($method, $identifier, $sub);
 
         case 'matches':
             require __DIR__ . '/matches.php';

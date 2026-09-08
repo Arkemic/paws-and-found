@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: deployable build — 2026-09-08_
+_Last updated: photo upload, category and profile persistence — 2026-09-08_
 
 ## Foundation
 
@@ -30,9 +30,10 @@ _Last updated: deployable build — 2026-09-08_
 | --- | --- | --- |
 | Authentication | `[x]` | **Real, and reachable from the interface.** The sign-in form posts to `POST /api/auth/login`; PHP sessions, `password_hash`/`password_verify`, session ID regenerated on sign-in, HttpOnly cookies. Guest by default; browsing stays public. Every seeded account uses `demo1234`. The development role selector is kept as a demonstration shortcut. |
 | Registration | `[x]` | `POST /api/auth/register` — server-side validation, bcrypt hashing, duplicate email rejected by the unique index (409), and the new account is signed in on success. **The role is never read from the request**, so an account cannot register itself as staff or admin. |
+| Profile | `[x]` | `PATCH /api/users/me` — name, email, phone, preferred location and the three notification preferences. The account comes from the session, so it can only ever edit your own; `role` and `account_status` are not readable there, so an account cannot promote or un-suspend itself. |
 | Lost report | `[x]` | 3 — multi-step form, validation, submits via `petService` |
 | Found report | `[x]` | 3 — same form, found-specific fields, no pet name |
-| Photo upload | `[~]` | 3 — local preview only. **Not yet persisted**; needs a PHP upload endpoint writing to `api/uploads/`. |
+| Photo upload | `[x]` | 3 — `POST /api/reports/{id}/photos`, multipart. Owner only. Validated by what the file *is* (`getimagesize`), not by its name or the type the browser claims; a PHP script renamed `.jpg` is refused. Stored under a generated name in `api/uploads/`, which is configured never to execute anything. |
 | Search | `[x]` | 4 — free text across name, breed, colours, markings, description, place |
 | Filters | `[x]` | 4 — type, species, size, colour, city, status, date range; chips, clear, sort, load-more |
 | Pet report detail | `[x]` | 5 — photos, details, location, possible matches, privacy-safe contact |
@@ -64,7 +65,7 @@ _Last updated: deployable build — 2026-09-08_
 | Empty / loading / error states | `[~]` | `EmptyState` and `LoadingSkeleton` built and in use; applied per page as pages are built |
 | Real database | `[x]` | MySQL, 11 tables, verified on MariaDB 10.4.32 via XAMPP. `database/schema.sql`. |
 | Prepared statements everywhere | `[x]` | PDO with `ATTR_EMULATE_PREPARES => false`. Injection tested with three payloads. |
-| Category management | `[~]` | Admin UI works but still writes to mock data — not persisted. |
+| Category management | `[x]` | `GET/POST /api/categories`, `PATCH/DELETE /api/categories/{code}`. Administrator only. Report counts come from SQL; deleting is refused while any report uses the category, and retiring it is offered instead. Verified to survive a reload. |
 | Pagination | `[x]` | Explore pages through the database with `LIMIT`/`OFFSET`, nine to a page — one request per page, not a full list sliced in the browser. Numbered links, a "Showing 10–18 of 32" status, and the page resets when a filter or the sort changes. **The map view is deliberately not paged**: it asks for one large page so every pin is drawn, capped at the API's 50-row maximum. |
 | Charts on dashboards | `[x]` | `GET /api/reports/stats` — three SQL `GROUP BY` queries behind a staff/admin-only endpoint. The administrator overview shows reports filed per month (lost vs found, six months), where reports stand, and most-reported animals; the coordinator overview shares the same breakdown component. No charting library. **The seed clusters 28 of 32 reports in August**, so the monthly chart is honest but lopsided until the dates are spread. |
 | Deployment | `[x]` | The build deploys to `htdocs/pawsandfound/` and runs from Apache alone — no dev server, no proxy, one origin for the site and the API. Deep links and refreshes work via `public/.htaccess`. Still a local XAMPP deployment; no public hosting, which remains the team decision of 2026-08-19. |

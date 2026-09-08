@@ -204,6 +204,35 @@ export async function createReport(input) {
   return fromApi(payload.data)
 }
 
+/**
+ * Attach photographs to a report that already exists.
+ *
+ * Separate from createReport() because the two send different things: the
+ * report is JSON, the photographs are files. They also need the report's id,
+ * which does not exist until the report has been created.
+ *
+ * Entries without a file are skipped — an edited report carries photographs it
+ * already had, and those are on the server, not in the browser.
+ */
+export async function uploadReportPhotos(reportId, photos = []) {
+  const pending = photos.filter((photo) => photo.file)
+  if (pending.length === 0) return []
+
+  const form = new FormData()
+  for (const photo of pending) {
+    form.append('photos[]', photo.file)
+    // Sent in step with the files, so the server can pair them up.
+    form.append('alt[]', photo.alt ?? '')
+  }
+
+  const payload = await apiFetch(`/reports/${reportId}/photos`, {
+    method: 'POST',
+    body: form,
+  })
+
+  return payload.data
+}
+
 export async function updateReport(id, changes) {
   const payload = await apiFetch(`/reports/${id}`, {
     method: 'PUT',
