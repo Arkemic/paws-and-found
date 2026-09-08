@@ -30,8 +30,13 @@ function userFromApi(row) {
 /**
  * Every seeded demonstration account shares this password (see
  * `database/seed.sql`). It exists so the development role selector can sign in
- * for real rather than pretending — the app now holds a genuine PHP session,
- * not a variable.
+ * for real rather than pretending.
+ *
+ * It is only ever read inside an `import.meta.env.DEV` branch. Vite replaces
+ * that with `false` when building, so the branch becomes dead code and this
+ * string is dropped from the production bundle — which is the point. Shipping
+ * a working password beside a one-click "sign in as Administrator" control
+ * would hand the deployed site to anyone who opened the file.
  */
 const DEMO_PASSWORD = 'demo1234'
 
@@ -117,20 +122,19 @@ export async function register({ fullName, email, password, phone = '' }) {
   return getCurrentUser()
 }
 
-export async function setCurrentUser(userId) {
-  if (userId === null) {
-    await apiFetch('/auth/logout', { method: 'POST' })
-    return null
-  }
-
-  // The selector knows the account by its demo id; the API signs in by email.
-  // getDemoAccounts() returns an object keyed by role, not an array.
-  const account = Object.values(await getDemoAccounts()).find((user) => user?.id === userId)
-  if (!account) throw new NotFoundError('User', userId)
+/**
+ * DEVELOPMENT ONLY — sign in as a seeded account without its password.
+ *
+ * Guarded rather than merely left uncalled: the guard is what lets the bundler
+ * remove this function, and DEMO_PASSWORD with it, from a production build. In
+ * a build the call does nothing and returns null.
+ */
+export async function signInAsDemoAccount(email) {
+  if (!import.meta.env.DEV) return null
 
   await apiFetch('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email: account.email, password: DEMO_PASSWORD }),
+    body: JSON.stringify({ email, password: DEMO_PASSWORD }),
   })
 
   return getCurrentUser()

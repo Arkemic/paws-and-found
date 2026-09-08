@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: photo upload, category and profile persistence — 2026-09-08_
+_Last updated: demo sign-in removed from production builds — 2026-09-08_
 
 ## Foundation
 
@@ -22,13 +22,14 @@ _Last updated: photo upload, category and profile persistence — 2026-09-08_
 | Seed data | `[x]` | 32 reports across 4 statuses, 4 species and 15 cities. Generated from `src/mock/` by `scripts/gen-seed.mjs`. |
 | Image assets | `[~]` | 24 pet photographs delivered. The second batch (reports 025-032) has none yet — IMG-011 in `docs/image-requirements.md`; they render the placeholder. |
 | Routing & navigation | `[x]` | All 25 routes, navbar, mobile nav, footer, sidebar, breadcrumb, 404, unauthorized |
-| Role-aware navigation + route guards | `[x]` | Demo role selector; guards are UI-only, not security |
+| Role-aware navigation + route guards | `[x]` | Route guards keep the interface coherent; they are not security — every endpoint checks the session again. The demo role selector is **development only** and is removed from production builds along with the demo password (see below). |
 
 ## Core workflows
 
 | Item | Status | Phase |
 | --- | --- | --- |
 | Authentication | `[x]` | **Real, and reachable from the interface.** The sign-in form posts to `POST /api/auth/login`; PHP sessions, `password_hash`/`password_verify`, session ID regenerated on sign-in, HttpOnly cookies. Guest by default; browsing stays public. Every seeded account uses `demo1234`. The development role selector is kept as a demonstration shortcut. |
+| Demo sign-in removed from builds | `[x]` | The role selector and the one-click "Development sign-in" panel are behind `import.meta.env.DEV`, so a production build contains neither them nor the demo password. Verified by searching the built bundle: `demo1234` no longer appears. Signing out is a separate action and works in both builds. |
 | Registration | `[x]` | `POST /api/auth/register` — server-side validation, bcrypt hashing, duplicate email rejected by the unique index (409), and the new account is signed in on success. **The role is never read from the request**, so an account cannot register itself as staff or admin. |
 | Profile | `[x]` | `PATCH /api/users/me` — name, email, phone, preferred location and the three notification preferences. The account comes from the session, so it can only ever edit your own; `role` and `account_status` are not readable there, so an account cannot promote or un-suspend itself. |
 | Lost report | `[x]` | 3 — multi-step form, validation, submits via `petService` |

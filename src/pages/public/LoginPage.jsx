@@ -121,32 +121,37 @@ export function LoginPage({ onSignedIn, onDemoSignIn }) {
         </CardBody>
       </Card>
 
-      <Card>
-        <CardBody className="flex flex-col gap-3">
-          <div>
-            <h2 className="font-semibold text-fg">Development sign-in</h2>
-            <p className="text-sm text-fg-muted">
-              A shortcut for the demonstration. These sign in as the seeded accounts, so you
-              can see what each kind of user is allowed to do without typing their passwords.
-            </p>
-          </div>
+      {/* Development scaffolding. Removed from the production bundle rather
+          than hidden: these buttons sign in without a password, which must not
+          reach a deployed site. */}
+      {import.meta.env.DEV && (
+        <Card>
+          <CardBody className="flex flex-col gap-3">
+            <div>
+              <h2 className="font-semibold text-fg">Development sign-in</h2>
+              <p className="text-sm text-fg-muted">
+                A shortcut for the demonstration. These sign in as the seeded accounts, so you
+                can see what each kind of user is allowed to do without typing their passwords.
+              </p>
+            </div>
 
-          <div className="flex flex-col gap-2">
-            {Object.values(ROLES).map((role) => (
-              <Button
-                key={role}
-                variant="secondary"
-                fullWidth
-                onClick={() => signInAs(role)}
-                className="justify-between"
-              >
-                <span>{accounts?.[role]?.fullName ?? ROLE_LABELS[role]}</span>
-                <span className="text-fg-muted">{ROLE_LABELS[role]}</span>
-              </Button>
-            ))}
-          </div>
-        </CardBody>
-      </Card>
+            <div className="flex flex-col gap-2">
+              {Object.values(ROLES).map((role) => (
+                <Button
+                  key={role}
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => signInAs(role)}
+                  className="justify-between"
+                >
+                  <span>{accounts?.[role]?.fullName ?? ROLE_LABELS[role]}</span>
+                  <span className="text-fg-muted">{ROLE_LABELS[role]}</span>
+                </Button>
+              ))}
+            </div>
+          </CardBody>
+        </Card>
+      )}
     </Container>
   )
 }

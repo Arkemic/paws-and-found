@@ -43,7 +43,7 @@ const triggerClasses =
  * @param {(role: string|null) => void} props.onRoleChange
  * @param {Object|null} props.user  The signed-in account; null when signed out.
  */
-export function Navbar({ role, onRoleChange, user }) {
+export function Navbar({ role, onRoleChange, onSignOut, user }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
   const workspace = role ? WORKSPACE_BY_ROLE[role] : null
@@ -122,7 +122,7 @@ export function Navbar({ role, onRoleChange, user }) {
                     type="button"
                     onClick={() => {
                       close()
-                      onRoleChange(null)
+                      onSignOut()
                     }}
                   >
                     <LogOut size={15} aria-hidden="true" />
@@ -137,13 +137,19 @@ export function Navbar({ role, onRoleChange, user }) {
             </Button>
           )}
 
-          <span className="h-6 w-px bg-border" aria-hidden="true" />
-
-          {/* Development scaffolding, labelled as such. */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-fg-muted">Demo:</span>
-            <DemoRoleSelector role={role} onRoleChange={onRoleChange} hideLabel />
-          </div>
+          {/* Development scaffolding. Removed from the production bundle, not
+              merely hidden: it signs in without a password, which must not
+              exist on a deployed site. The divider goes with it, or it would
+              be left separating nothing. */}
+          {import.meta.env.DEV && (
+            <>
+              <span className="h-6 w-px bg-border" aria-hidden="true" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-fg-muted">Demo:</span>
+                <DemoRoleSelector role={role} onRoleChange={onRoleChange} hideLabel />
+              </div>
+            </>
+          )}
         </div>
 
         <button
@@ -221,7 +227,7 @@ export function Navbar({ role, onRoleChange, user }) {
                     variant="secondary"
                     onClick={() => {
                       closeMenu()
-                      onRoleChange(null)
+                      onSignOut()
                     }}
                   >
                     <LogOut size={14} aria-hidden="true" />
@@ -234,10 +240,13 @@ export function Navbar({ role, onRoleChange, user }) {
                 </Button>
               )}
 
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-fg-muted">Demo:</span>
-                <DemoRoleSelector role={role} onRoleChange={onRoleChange} hideLabel />
-              </div>
+              {/* Development scaffolding — see the note on the desktop copy. */}
+              {import.meta.env.DEV && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-fg-muted">Demo:</span>
+                  <DemoRoleSelector role={role} onRoleChange={onRoleChange} hideLabel />
+                </div>
+              )}
             </div>
           </Container>
         </div>

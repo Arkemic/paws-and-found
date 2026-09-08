@@ -138,7 +138,10 @@ Every seeded account uses the password **`demo1234`**.
 | Pet Coordinator | `patricia.lim@example.com` |
 | Administrator | `grace.bautista@example.com` |
 
-The demo role selector in the navigation bar switches between them quickly.
+The demo role selector in the navigation bar switches between them quickly
+**while running `npm run dev`**. It is development scaffolding: it signs in
+without asking for a password, so it is removed from production builds along
+with the password itself. On a built site everyone signs in through the form.
 
 | Script | Does |
 | --- | --- |

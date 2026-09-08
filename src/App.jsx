@@ -73,20 +73,33 @@ export default function App() {
     }
   }, [])
 
+  /** Sign out. A real action, available in every build. */
+  const signOut = useCallback(async () => {
+    await userService.signOut()
+    setUser(null)
+  }, [])
+
   /**
-   * The development role selector. It signs in and out for real now, so the
-   * server session and the interface cannot disagree.
+   * The development role selector.
+   *
+   * Development scaffolding: it signs in as a seeded account without asking
+   * for the password, which is convenient while building and unacceptable on
+   * a deployed site. `import.meta.env.DEV` is replaced with `false` when the
+   * project is built, so this whole branch — and the demo password it uses —
+   * is removed from the production bundle rather than merely hidden.
    */
   const changeRole = useCallback(async (nextRole) => {
+    if (!import.meta.env.DEV) return
+
     if (!nextRole) {
-      await userService.setCurrentUser(null)
+      await userService.signOut()
       setUser(null)
       return
     }
 
     const accounts = await userService.getDemoAccounts()
     const account = accounts[nextRole]
-    setUser(await userService.setCurrentUser(account.id))
+    setUser(await userService.signInAsDemoAccount(account.email))
   }, [])
 
   const role = user?.role ?? null
@@ -103,7 +116,7 @@ export default function App() {
     // starts; without this every route would be matched against the wrong path.
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route element={<RootLayout role={role} onRoleChange={changeRole} user={user} />}>
+        <Route element={<RootLayout role={role} onRoleChange={changeRole} onSignOut={signOut} user={user} />}>
           {/* Public */}
           <Route path="/" element={<HomePage />} />
           <Route path="/explore" element={<ExplorePage />} />
