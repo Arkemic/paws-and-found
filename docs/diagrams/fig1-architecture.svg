@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="760" viewBox="0 0 1100 760" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+  <rect width="1100" height="760" fill="#FFFFFF"/>
+
+  <text x="550" y="40" text-anchor="middle" font-size="26" font-weight="700" fill="#21302F">Paws&amp;Found System Architecture</text>
+  <text x="550" y="64" text-anchor="middle" font-size="14" fill="#667573">Three-tier web architecture — React client, PHP REST API, MySQL database</text>
+
+  <!-- ============ USERS ============ -->
+  <rect x="60" y="90" width="980" height="76" rx="10" fill="#F4F7F6" stroke="#C7D5D2"/>
+  <text x="80" y="114" font-size="13" font-weight="700" fill="#0E5D5B" letter-spacing="1">USERS</text>
+  <rect x="90" y="122" width="290" height="34" rx="6" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="235" y="144" text-anchor="middle" font-size="13" fill="#21302F">Pet Owners / Finders</text>
+  <rect x="405" y="122" width="290" height="34" rx="6" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="550" y="144" text-anchor="middle" font-size="13" fill="#21302F">Staff / Pet Coordinators</text>
+  <rect x="720" y="122" width="290" height="34" rx="6" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="865" y="144" text-anchor="middle" font-size="13" fill="#21302F">Administrators</text>
+
+  <path d="M550 166 L550 190" stroke="#157A78" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- ============ PRESENTATION ============ -->
+  <rect x="60" y="196" width="980" height="118" rx="10" fill="#E2F1EF" stroke="#157A78"/>
+  <text x="80" y="220" font-size="13" font-weight="700" fill="#0E5D5B" letter-spacing="1">PRESENTATION LAYER</text>
+  <text x="80" y="241" font-size="14" font-weight="600" fill="#21302F">Paws&amp;Found Web Application (browser)</text>
+
+  <rect x="80" y="252" width="180" height="46" rx="6" fill="#FFFFFF" stroke="#9CC7C4"/>
+  <text x="170" y="272" text-anchor="middle" font-size="12.5" fill="#21302F">React 19 + Vite 8</text>
+  <text x="170" y="289" text-anchor="middle" font-size="11" fill="#667573">Components, routing</text>
+
+  <rect x="272" y="252" width="180" height="46" rx="6" fill="#FFFFFF" stroke="#9CC7C4"/>
+  <text x="362" y="272" text-anchor="middle" font-size="12.5" fill="#21302F">Tailwind CSS 4</text>
+  <text x="362" y="289" text-anchor="middle" font-size="11" fill="#667573">Responsive interface</text>
+
+  <rect x="464" y="252" width="180" height="46" rx="6" fill="#FFFFFF" stroke="#9CC7C4"/>
+  <text x="554" y="272" text-anchor="middle" font-size="12.5" fill="#21302F">Service layer</text>
+  <text x="554" y="289" text-anchor="middle" font-size="11" fill="#667573">The only data boundary</text>
+
+  <rect x="656" y="252" width="180" height="46" rx="6" fill="#FFFFFF" stroke="#9CC7C4"/>
+  <text x="746" y="272" text-anchor="middle" font-size="12.5" fill="#21302F">Leaflet map</text>
+  <text x="746" y="289" text-anchor="middle" font-size="11" fill="#667573">OpenStreetMap tiles</text>
+
+  <rect x="848" y="252" width="172" height="46" rx="6" fill="#FFFFFF" stroke="#9CC7C4"/>
+  <text x="934" y="272" text-anchor="middle" font-size="12.5" fill="#21302F">Route guards</text>
+  <text x="934" y="289" text-anchor="middle" font-size="11" fill="#667573">Interface only</text>
+
+  <path d="M550 314 L550 348" stroke="#157A78" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="392" y="318" width="316" height="24" rx="12" fill="#FFFFFF" stroke="#157A78"/>
+  <text x="550" y="335" text-anchor="middle" font-size="12" fill="#0E5D5B" font-weight="600">HTTP · Fetch / AJAX · JSON · session cookie</text>
+
+  <!-- ============ APPLICATION ============ -->
+  <rect x="60" y="354" width="980" height="150" rx="10" fill="#FFF1D6" stroke="#F4A340"/>
+  <text x="80" y="378" font-size="13" font-weight="700" fill="#9A620F" letter-spacing="1">APPLICATION LAYER</text>
+  <text x="80" y="399" font-size="14" font-weight="600" fill="#21302F">PHP 8.2 REST API — our own, no framework</text>
+
+  <rect x="80" y="410" width="150" height="46" rx="6" fill="#FFFFFF" stroke="#E5BE85"/>
+  <text x="155" y="430" text-anchor="middle" font-size="12.5" fill="#21302F">Front controller</text>
+  <text x="155" y="447" text-anchor="middle" font-size="11" fill="#667573">index.php routing</text>
+
+  <rect x="242" y="410" width="150" height="46" rx="6" fill="#FFFFFF" stroke="#E5BE85"/>
+  <text x="317" y="430" text-anchor="middle" font-size="12.5" fill="#21302F">Authentication</text>
+  <text x="317" y="447" text-anchor="middle" font-size="11" fill="#667573">Sessions, bcrypt</text>
+
+  <rect x="404" y="410" width="150" height="46" rx="6" fill="#FFFFFF" stroke="#E5BE85"/>
+  <text x="479" y="430" text-anchor="middle" font-size="12.5" fill="#21302F">Authorization</text>
+  <text x="479" y="447" text-anchor="middle" font-size="11" fill="#667573">Role enforcement</text>
+
+  <rect x="566" y="410" width="150" height="46" rx="6" fill="#FFFFFF" stroke="#E5BE85"/>
+  <text x="641" y="430" text-anchor="middle" font-size="12.5" fill="#21302F">Validation</text>
+  <text x="641" y="447" text-anchor="middle" font-size="11" fill="#667573">Server-side checks</text>
+
+  <rect x="728" y="410" width="150" height="46" rx="6" fill="#FFFFFF" stroke="#E5BE85"/>
+  <text x="803" y="430" text-anchor="middle" font-size="12.5" fill="#21302F">Matching logic</text>
+  <text x="803" y="447" text-anchor="middle" font-size="11" fill="#667573">Weighted, explainable</text>
+
+  <rect x="890" y="410" width="130" height="46" rx="6" fill="#FFFFFF" stroke="#E5BE85"/>
+  <text x="955" y="430" text-anchor="middle" font-size="12.5" fill="#21302F">Privacy filter</text>
+  <text x="955" y="447" text-anchor="middle" font-size="11" fill="#667573">Contact details</text>
+
+  <text x="80" y="482" font-size="11.5" fill="#7A5A22">Endpoints: /auth · /reports · /matches · /users · /notifications · /categories · /moderation</text>
+
+  <path d="M550 504 L550 538" stroke="#157A78" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="415" y="508" width="270" height="24" rx="12" fill="#FFFFFF" stroke="#157A78"/>
+  <text x="550" y="525" text-anchor="middle" font-size="12" fill="#0E5D5B" font-weight="600">PDO · prepared statements only</text>
+
+  <!-- ============ DATA ============ -->
+  <rect x="60" y="544" width="980" height="130" rx="10" fill="#F4F7F6" stroke="#C7D5D2"/>
+  <text x="80" y="568" font-size="13" font-weight="700" fill="#0E5D5B" letter-spacing="1">DATA LAYER</text>
+  <text x="80" y="589" font-size="14" font-weight="600" fill="#21302F">MySQL / MariaDB — 11 related tables</text>
+
+  <rect x="80" y="600" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="144" y="620" text-anchor="middle" font-size="11.5" fill="#21302F">users</text>
+  <rect x="220" y="600" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="284" y="620" text-anchor="middle" font-size="11.5" fill="#21302F">pet_reports</text>
+  <rect x="360" y="600" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="424" y="620" text-anchor="middle" font-size="11.5" fill="#21302F">report_images</text>
+  <rect x="500" y="600" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="564" y="620" text-anchor="middle" font-size="11.5" fill="#21302F">match_claims</text>
+  <rect x="640" y="600" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="704" y="620" text-anchor="middle" font-size="11.5" fill="#21302F">match_signals</text>
+  <rect x="780" y="600" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="844" y="620" text-anchor="middle" font-size="11.5" fill="#21302F">status_logs</text>
+  <rect x="920" y="600" width="100" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="970" y="620" text-anchor="middle" font-size="11.5" fill="#21302F">locations</text>
+
+  <rect x="80" y="638" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="144" y="658" text-anchor="middle" font-size="11.5" fill="#21302F">notifications</text>
+  <rect x="220" y="638" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="284" y="658" text-anchor="middle" font-size="11.5" fill="#21302F">pet_categories</text>
+  <rect x="360" y="638" width="128" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="424" y="658" text-anchor="middle" font-size="11.5" fill="#21302F">pet_breeds</text>
+  <rect x="500" y="638" width="150" height="30" rx="5" fill="#FFFFFF" stroke="#DDE6E4"/>
+  <text x="575" y="658" text-anchor="middle" font-size="11.5" fill="#21302F">moderation_cases</text>
+
+  <text x="680" y="658" font-size="11.5" fill="#667573">Photographs are stored on the server filesystem;</text>
+  <text x="680" y="672" font-size="11.5" fill="#667573">only the path is kept in report_images.</text>
+
+  <!-- ============ ENVIRONMENT BRACKET ============ -->
+  <rect x="60" y="690" width="980" height="46" rx="10" fill="#FFFFFF" stroke="#C7D5D2" stroke-dasharray="5 4"/>
+  <text x="550" y="712" text-anchor="middle" font-size="13.5" font-weight="700" fill="#21302F">Hosting environment: XAMPP</text>
+  <text x="550" y="729" text-anchor="middle" font-size="12" fill="#667573">Apache serves the PHP API · MariaDB provides MySQL · phpMyAdmin administers the database</text>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#157A78"/>
+    </marker>
+  </defs>
+</svg>
