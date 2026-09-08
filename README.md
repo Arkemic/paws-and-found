@@ -99,6 +99,35 @@ npm run dev
 Open `http://localhost:5173`. Vite proxies `/api` to Apache, so both servers
 must be running.
 
+### 4. Deploying the built site
+
+Development runs two servers. A deployment runs one: Apache serves the built
+site and the API from the same address, so there is no proxy and no CORS.
+
+```bash
+npm run build
+```
+
+Copy everything in `dist/` into `C:\xampp\htdocs\pawsandfound\`, beside the
+`api` junction that is already there. Then open
+<http://localhost/pawsandfound/>.
+
+That is the whole deployment. Three details make it work, and all three live in
+the repository rather than being typed on the server:
+
+- `vite.config.js` sets `base` to `/pawsandfound/` for a build, so the page asks
+  for `/pawsandfound/assets/...` rather than `/assets/...`.
+- `src/services/api.js` builds its URLs from `import.meta.env.BASE_URL`, so the
+  same code calls `/api` through the proxy in development and
+  `/pawsandfound/api` in production.
+- `public/.htaccess` is copied into `dist/` by the build. It hands back
+  `index.html` for any address that is not a real file, which is what lets
+  someone open `/pawsandfound/explore` directly or refresh while on it. It
+  leaves `/pawsandfound/api/...` to the API's own `.htaccess`.
+
+Do not serve `dist/` from the htdocs root: the API lives under
+`/pawsandfound/api`, and a site at the root would ask for `/api` and get a 404.
+
 ### Signing in
 
 Every seeded account uses the password **`demo1234`**.

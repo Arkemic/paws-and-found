@@ -99,7 +99,9 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
+    // Served from a sub-folder in production, so the router is told where it
+    // starts; without this every route would be matched against the wrong path.
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route element={<RootLayout role={role} onRoleChange={changeRole} user={user} />}>
           {/* Public */}

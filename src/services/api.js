@@ -24,10 +24,19 @@ const photoByFilename = Object.fromEntries(
   Object.entries(bundledPhotos).map(([path, url]) => [path.split('/').pop(), url]),
 )
 
+/**
+ * Where the API lives, relative to wherever the site itself is served from.
+ *
+ * Vite sets BASE_URL to '/' in development and '/pawsandfound/' in a build, so
+ * the same code reaches the proxy during development and Apache in production
+ * without either being hard-coded here.
+ */
+const API_BASE = `${import.meta.env.BASE_URL}api`
+
 /** Resolve a stored image filename to something an `<img src>` can load. */
 export function assetUrl(filename) {
   if (!filename) return null
-  return photoByFilename[filename] ?? `/api/uploads/${filename}`
+  return photoByFilename[filename] ?? `${API_BASE}/uploads/${filename}`
 }
 
 /**
@@ -37,7 +46,7 @@ export function assetUrl(filename) {
  * every request would look anonymous and the workspaces would 401.
  */
 export async function apiFetch(path, options = {}) {
-  const response = await fetch(`/api${path}`, {
+  const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
     headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
     ...options,

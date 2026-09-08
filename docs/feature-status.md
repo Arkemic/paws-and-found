@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: pagination on Explore — 2026-09-06_
+_Last updated: deployable build — 2026-09-08_
 
 ## Foundation
 
@@ -67,4 +67,4 @@ _Last updated: pagination on Explore — 2026-09-06_
 | Category management | `[~]` | Admin UI works but still writes to mock data — not persisted. |
 | Pagination | `[x]` | Explore pages through the database with `LIMIT`/`OFFSET`, nine to a page — one request per page, not a full list sliced in the browser. Numbered links, a "Showing 10–18 of 32" status, and the page resets when a filter or the sort changes. **The map view is deliberately not paged**: it asks for one large page so every pin is drawn, capped at the API's 50-row maximum. |
 | Charts on dashboards | `[x]` | `GET /api/reports/stats` — three SQL `GROUP BY` queries behind a staff/admin-only endpoint. The administrator overview shows reports filed per month (lost vs found, six months), where reports stand, and most-reported animals; the coordinator overview shares the same breakdown component. No charting library. **The seed clusters 28 of 32 reports in August**, so the monthly chart is honest but lopsided until the dates are spread. |
-| Deployment | `[ ]` | Local XAMPP only — team decision, 2026-08-19. |
+| Deployment | `[x]` | The build deploys to `htdocs/pawsandfound/` and runs from Apache alone — no dev server, no proxy, one origin for the site and the API. Deep links and refreshes work via `public/.htaccess`. Still a local XAMPP deployment; no public hosting, which remains the team decision of 2026-08-19. |

@@ -1,0 +1,41 @@
+# Apache rules for the built site.
+#
+# Vite copies everything in public/ into dist/, so this file ends up beside
+# index.html and travels with the build. Deploying is then a matter of copying
+# dist/ into htdocs/pawsandfound/ — nothing has to be written by hand on the
+# server.
+#
+# The React app does its own routing. Apache only has to hand it index.html for
+# any address that is not a real file, and stay out of the way of the API.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /pawsandfound/
+
+  # The API is PHP and has its own .htaccess. Leave every /api/... request to
+  # it. Without this rule the fallback below would swallow them, because
+  # /pawsandfound/api/reports is not a file on disk either.
+  RewriteRule ^api/ - [L]
+
+  # A real file or folder — an asset, a photograph — is served as it is.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Anything else is a route inside the application: /explore, /pet/12,
+  # /dashboard. Hand back index.html and let React decide what to show.
+  # Opening one of those addresses directly, or refreshing the page while on
+  # it, would otherwise produce Apache's 404.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Hashed filenames change whenever the contents change, so they can be cached
+# hard. index.html must not be, or a browser keeps loading an old build.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|jpg|png|webp|svg|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "index\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

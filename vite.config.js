@@ -3,8 +3,20 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
-// https://vite.dev/config/
-export default defineConfig({
+/**
+ * `base` differs between the two ways this project runs.
+ *
+ * In development Vite serves the app at the root of localhost:5173 and proxies
+ * /api to Apache, so the base is '/'. A production build is served by Apache
+ * from htdocs/pawsandfound/ alongside the API, so every asset and API path has
+ * to be prefixed with that folder — otherwise the built page asks for
+ * /assets/... and /api/... at the domain root, where nothing answers.
+ *
+ * https://vite.dev/config/
+ */
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/pawsandfound/' : '/',
+
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -24,4 +36,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))
