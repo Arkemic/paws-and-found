@@ -2,20 +2,14 @@
  * Match suggestion data access.
  *
  * Reads, generates and updates match suggestions. The comparison itself lives
- * in matchScoring.js; this file is the data access and the workflow around it.
+ * on the server in api/matching.php, which runs whenever a report is filed;
+ * this file is the data access and the workflow around it.
  *
  * Language rule (CLAUDE.md §6.5): a match is always a *possible* match. Nothing
  * in this layer, or any UI built on it, may present one as a certainty.
  */
 
-import {
-  MATCH_STATUSES,
-  REPORT_STATUSES,
-  REPORT_TYPES,
-} from '@/constants'
-import { createId } from '@/utils/id'
-import { getTable } from './mockDb'
-import { compareReports, isWorthSuggesting } from './matchScoring'
+import { MATCH_STATUSES, REPORT_STATUSES } from '@/constants'
 import * as petService from './petService'
 
 import { apiFetch, queryString } from './api'
@@ -68,9 +62,6 @@ function matchFromApi(row) {
   }
 }
 
-
-/** Statuses a report must be in to be worth matching: still being looked for. */
-const OPEN_STATUSES = [REPORT_STATUSES.ACTIVE, REPORT_STATUSES.POSSIBLE_MATCH]
 
 /** A suggestion the user or staff has already dealt with is not offered again. */
 const SETTLED_STATUSES = [MATCH_STATUSES.REJECTED, MATCH_STATUSES.DISMISSED]
@@ -132,18 +123,21 @@ export async function confirmMatch(id, context = {}) {
   return decide(id, 'confirm', context.note)
 }
 
+/**
+ * The reporter says their pet is home.
+ *
+ * This used to look for an open pairing first and confirm it, but that branch
+ * could never run: it read pairings from mock data, whose ids never equal the
+ * numeric ones the API returns. Pointing it at real data would not have fixed
+ * it either — confirming a pairing is a coordinator's decision, so an owner
+ * marking their own pet returned would have started failing with 403.
+ *
+ * So it now does what it has always actually done: set the status. An open
+ * pairing stays open for a coordinator to settle. Whether marking a pet
+ * returned should also dismiss one is a decision for the team, not something
+ * to infer from dead code.
+ */
 export async function markReportReturned(reportId, actorId) {
-  const open = getTable('matches').filter(
-    (match) =>
-      (match.lostReportId === reportId || match.foundReportId === reportId) &&
-      !SETTLED_STATUSES.includes(match.status),
-  )
-
-  if (open.length === 1) {
-    await confirmMatch(open[0].id, { actorId })
-    return { report: await petService.getReportById(reportId), confirmedMatchId: open[0].id }
-  }
-
   const report = await petService.updateReportStatus(reportId, REPORT_STATUSES.RETURNED, {
     actorId,
     note: 'Marked as returned by the reporter.',
@@ -186,50 +180,6 @@ export async function getMatchesWithReports(query = {}) {
   )
 }
 
-export async function generateMatchesForReport(reportId) {
-  const report = await petService.getReportById(reportId)
-  if (!OPEN_STATUSES.includes(report.status)) return []
-
-  const isLost = report.reportType === REPORT_TYPES.LOST
-  const oppositeType = isLost ? REPORT_TYPES.FOUND : REPORT_TYPES.LOST
-
-  const alreadyPaired = new Set(
-    getTable('matches')
-      .filter((match) => match.lostReportId === reportId || match.foundReportId === reportId)
-      .map((match) => (match.lostReportId === reportId ? match.foundReportId : match.lostReportId)),
-  )
-
-  const candidates = getTable('petReports').filter(
-    (candidate) =>
-      candidate.reportType === oppositeType &&
-      OPEN_STATUSES.includes(candidate.status) &&
-      !alreadyPaired.has(candidate.id),
-  )
-
-  return candidates
-    .map((candidate) => {
-      const lost = isLost ? report : candidate
-      const found = isLost ? candidate : report
-      const comparison = compareReports(lost, found)
-      const { score, signals } = comparison
-
-      return {
-        worthSuggesting: isWorthSuggesting(comparison),
-        id: `suggestion-${lost.id}-${found.id}`,
-        lostReportId: lost.id,
-        foundReportId: found.id,
-        score,
-        signals,
-        status: MATCH_STATUSES.SUGGESTED,
-        reviewedByStaffId: null,
-        staffNotes: '',
-        isSuggestion: true,
-      }
-    })
-    .filter((suggestion) => suggestion.worthSuggesting)
-    .sort((a, b) => b.score - a.score)
-}
-
 /**
  * Stored matches plus freshly generated suggestions for every report a user
  * filed — what the "Possible matches" page shows.
@@ -244,25 +194,4 @@ export async function getSuggestionsForUser(userId) {
   return payload.data
     .map(matchFromApi)
     .filter((match) => !SETTLED_STATUSES.includes(match.status))
-}
-
-export async function saveSuggestion(suggestion, status) {
-  const now = new Date().toISOString()
-
-  const match = {
-    id: createId('match'),
-    lostReportId: suggestion.lostReportId,
-    foundReportId: suggestion.foundReportId,
-    score: suggestion.score,
-    status,
-    signals: suggestion.signals,
-    reviewedByStaffId: null,
-    staffNotes: '',
-    createdAt: now,
-    updatedAt: now,
-  }
-
-  getTable('matches').push(match)
-
-  return match
 }

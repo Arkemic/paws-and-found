@@ -34,16 +34,16 @@ INSERT IGNORE INTO pet_breeds (breed_id, category_id, breed_name) VALUES
 
 -- 10 accounts: 7 community members, 2 coordinators, 1 administrator.
 INSERT INTO users (user_id, full_name, email, password_hash, contact_number, role, account_status, preferred_location, created_at) VALUES
-  (1, 'Maria Santos', 'maria.santos@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0101', 'user', 'active', 'Makati City, Metro Manila', '2026-03-14 02:11:00'),
-  (2, 'Jomar Dela Cruz', 'jomar.delacruz@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0102', 'user', 'active', 'Quezon City, Metro Manila', '2026-04-02 07:45:00'),
-  (3, 'Liza Ocampo', 'liza.ocampo@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0103', 'user', 'active', 'Makati City, Metro Manila', '2026-05-19 11:02:00'),
-  (4, 'Aileen Reyes', 'aileen.reyes@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0104', 'user', 'active', 'Cebu City, Cebu', '2026-06-01 05:30:00'),
-  (5, 'Kenneth Villanueva', 'kenneth.villanueva@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0105', 'user', 'active', 'Davao City, Davao del Sur', '2026-06-22 09:18:00'),
-  (6, 'Noel Aguilar', 'noel.aguilar@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0106', 'user', 'active', 'Quezon City, Metro Manila', '2026-07-08 13:55:00'),
-  (7, 'Rico Panganiban', 'rico.panganiban@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0107', 'user', 'suspended', 'Manila, Metro Manila', '2026-07-30 16:04:00'),
-  (8, 'Patricia Lim', 'patricia.lim@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0201', 'staff', 'active', 'Metro Manila', '2026-02-10 01:00:00'),
-  (9, 'Rafael Mendoza', 'rafael.mendoza@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0202', 'staff', 'active', 'Cebu City, Cebu', '2026-02-10 01:05:00'),
-  (10, 'Grace Bautista', 'grace.bautista@example.com', '$2y$10$gO7.xhLn3jI88se/BG2weuM0uhI.UgAuS8m5Wc3Sd6Aw9WG9YYE8i', '+63 917 010 0301', 'admin', 'active', 'Metro Manila', '2026-01-05 00:30:00');
+  (1, 'Maria Santos', 'maria.santos@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0101', 'user', 'active', 'Makati City, Metro Manila', '2026-03-14 02:11:00'),
+  (2, 'Jomar Dela Cruz', 'jomar.delacruz@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0102', 'user', 'active', 'Quezon City, Metro Manila', '2026-04-02 07:45:00'),
+  (3, 'Liza Ocampo', 'liza.ocampo@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0103', 'user', 'active', 'Makati City, Metro Manila', '2026-05-19 11:02:00'),
+  (4, 'Aileen Reyes', 'aileen.reyes@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0104', 'user', 'active', 'Cebu City, Cebu', '2026-06-01 05:30:00'),
+  (5, 'Kenneth Villanueva', 'kenneth.villanueva@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0105', 'user', 'active', 'Davao City, Davao del Sur', '2026-06-22 09:18:00'),
+  (6, 'Noel Aguilar', 'noel.aguilar@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0106', 'user', 'active', 'Quezon City, Metro Manila', '2026-07-08 13:55:00'),
+  (7, 'Rico Panganiban', 'rico.panganiban@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0107', 'user', 'suspended', 'Manila, Metro Manila', '2026-07-30 16:04:00'),
+  (8, 'Patricia Lim', 'patricia.lim@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0201', 'staff', 'active', 'Metro Manila', '2026-02-10 01:00:00'),
+  (9, 'Rafael Mendoza', 'rafael.mendoza@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0202', 'staff', 'active', 'Cebu City, Cebu', '2026-02-10 01:05:00'),
+  (10, 'Grace Bautista', 'grace.bautista@example.com', '$2y$10$nulLMz3ub6Ap0Uc9ZGDu0.3SRsfoXcSpr8jp/gaVpi4HRI/C9DaG6', '+63 917 010 0301', 'admin', 'active', 'Metro Manila', '2026-01-05 00:30:00');
 
 -- One location per report. Coordinates are barangay-level (approximate).
 INSERT INTO locations (location_id, label, city, province, latitude, longitude, `precision`) VALUES
@@ -148,7 +148,7 @@ INSERT INTO match_claims (match_id, lost_report_id, found_report_id, submitted_b
   (1, 1, 2, NULL, 8, 85, 'verification_requested', NULL, 'Owner was asked to describe the collar tag and the bent ear before any contact details are shared. Awaiting reply.', '2026-08-11 03:40:00', '2026-08-12 01:15:00'),
   (2, 3, 4, NULL, NULL, 75, 'suggested', NULL, NULL, '2026-08-15 12:30:00', '2026-08-15 12:30:00'),
   (3, 7, 10, NULL, 9, 100, 'confirmed', NULL, 'Owner correctly described the engraving on the collar tag and provided an earlier photo. Handover completed at the barangay hall.', '2026-08-01 02:15:00', '2026-08-02 07:30:00'),
-  (4, 25, 26, NULL, NULL, 95, 'suggested', NULL, NULL, '2026-08-29 02:15:00', '2026-08-29 02:15:00');
+  (4, 25, 26, NULL, NULL, 100, 'suggested', NULL, NULL, '2026-08-29 02:15:00', '2026-08-29 02:15:00');
 
 -- Why each match scored what it scored — one row per compared characteristic.
 -- This is what makes the matching explainable rather than a black box.
@@ -180,7 +180,7 @@ INSERT INTO match_signals (match_id, signal_key, is_matched, weight, detail) VAL
   (4, 'color', TRUE, 15, 'Both reports say brown with white.'),
   (4, 'size', TRUE, 10, 'Both reports say medium.'),
   (4, 'date', TRUE, 10, 'Found two days after the pet was reported lost.'),
-  (4, 'characteristics', FALSE, 5, 'The white face marking and white front paws appear in both. The lost report also mentions a kink in the tail, which the finder describes as a bend at the tip — similar, but not the same wording, so this is left for a person to judge.');
+  (4, 'characteristics', TRUE, 5, 'Both mention: white, tail.');
 
 -- Case history. Appended to, never overwritten, so a case stays auditable.
 INSERT INTO status_logs (report_id, updated_by_user_id, previous_status, new_status, note, created_at) VALUES

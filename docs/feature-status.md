@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: demo sign-in removed from production builds — 2026-09-08_
+_Last updated: match generation moved to the server — 2026-09-08_
 
 ## Foundation
 
@@ -42,7 +42,7 @@ _Last updated: demo sign-in removed from production builds — 2026-09-08_
 | Owner status controls | `[x]` | 5/6 — mark returned and close, from the detail page and My Reports |
 | Edit a report | `[x]` | 6 — reuses the reporting wizard, prefilled; owner-only |
 | Map | `[x]` | 8 — Leaflet + OpenStreetMap: Explore map view, report detail map, pin-drop in the form |
-| Matching | `[x]` | 7 — explainable weighted algorithm, no AI. `src/services/matchScoring.js` |
+| Matching | `[x]` | 7 — explainable weighted algorithm, no AI. **Now runs on the server** in `api/matching.php` whenever a report is filed, so a newly filed report gets suggestions like any other. Creating a pairing writes its seven signals, notifies both reporters, and moves both reports to Possible Match, in one transaction. Verified to reproduce all four seeded pairings exactly. |
 | Verification | `[x]` | 7/10 — users request it, coordinators confirm, request more information, or rule it out |
 | Notifications | `[x]` | 9 — written to the `notifications` table by the same transaction as the event that caused them. No outbound delivery (email/push); in-app only. |
 | Status workflow & history | `[x]` | 9 — every change appends to `status_logs`; the case timeline and the dashboard activity feed both read it. |

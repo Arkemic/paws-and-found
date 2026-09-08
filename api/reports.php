@@ -177,6 +177,20 @@ function report_create(): never
         throw $exception;
     }
 
+    // Look for possible matches now that the report exists.
+    //
+    // Deliberately after the commit and in its own try: the report is filed,
+    // and a fault in the matching must not take it back. Somebody who has just
+    // lost a pet should not be told their report failed because the comparison
+    // did. The failure is logged and the coordinator's queue picks the case up
+    // from the report itself.
+    try {
+        require_once __DIR__ . '/matching.php';
+        generate_matches_for_report($reportId);
+    } catch (Throwable $exception) {
+        error_log('[pawsandfound] matching failed for report ' . $reportId . ': ' . $exception->getMessage());
+    }
+
     report_detail($reportId);
 }
 

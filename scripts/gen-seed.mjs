@@ -8,10 +8,13 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { pathToFileURL, fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
-const ROOT = 'C:/Projects/PawsAndFound'
+// Derived from this file's own location, not hard-coded: the folder is named
+// differently on different machines, and a fixed path meant the generator only
+// ran on the computer it was written on.
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..').split(path.sep).join('/')
 const TMP = path.join(process.env.TEMP || '.', 'pawsseed')
 fs.mkdirSync(TMP, { recursive: true })
 

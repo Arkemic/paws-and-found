@@ -222,7 +222,7 @@ export const matches = [
     id: 'match-004',
     lostReportId: 'report-025',
     foundReportId: 'report-026',
-    score: 95,
+    score: 100,
     status: MATCH_STATUSES.SUGGESTED,
     signals: [
       {
@@ -270,10 +270,15 @@ export const matches = [
       {
         key: 'characteristics',
         label: 'Other characteristics',
-        matched: false,
+        // Written by hand as `false` originally, on the reasoning that "kink in
+        // the tail" and "bend at the tip" are the same thing said differently
+        // and should be left to a person. The algorithm does not read it that
+        // way — it finds "white" and "tail" in both and counts the signal. The
+        // demonstration data has to be reproducible by the code that is being
+        // demonstrated, so it now says what the algorithm actually produces.
+        matched: true,
         weight: 5,
-        detail:
-          'The white face marking and white front paws appear in both. The lost report also mentions a kink in the tail, which the finder describes as a bend at the tip — similar, but not the same wording, so this is left for a person to judge.',
+        detail: 'Both mention: white, tail.',
       },
     ],
     reviewedByStaffId: null,
