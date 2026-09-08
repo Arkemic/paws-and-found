@@ -89,6 +89,17 @@ function match_decide(int $id): never
         json_error('Only someone involved in this pairing can do that.', 403);
     }
 
+    // A decided pairing is final. Without this, confirming twice runs the whole
+    // cascade a second time: both reporters are told again, and each case
+    // history gains a meaningless "returned -> returned" entry.
+    // `moderation_decide` already refuses a second decision the same way.
+    //
+    // Checked after the role guards, so an unauthorised caller still gets 403
+    // rather than learning what state the pairing is in.
+    if (in_array($match['match_status'], ['confirmed', 'rejected', 'dismissed'], true)) {
+        json_error('That pairing has already been decided.', 409);
+    }
+
     // Requesting more information needs the note: it is what gets sent.
     if ($action === 'request_information' && $note === null) {
         json_error('Write what you need from the reporters before asking.', 422);
