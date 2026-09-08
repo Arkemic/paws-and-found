@@ -304,7 +304,8 @@ function matches_list(): never
     $statement = db()->prepare(
         "SELECT m.match_id, m.lost_report_id, m.found_report_id, m.match_score,
                 m.match_status, m.proof_notes, m.created_at, m.updated_at,
-                m.reviewed_by_user_id
+                m.reviewed_by_user_id,
+                lr.user_id AS lost_user_id, fr.user_id AS found_user_id
            FROM match_claims m
            JOIN pet_reports lr ON lr.report_id = m.lost_report_id
            JOIN pet_reports fr ON fr.report_id = m.found_report_id
@@ -314,16 +315,24 @@ function matches_list(): never
     $statement->execute($params);
     $rows = $statement->fetchAll();
 
-    json_response(['data' => array_map('with_signals', $rows)]);
+    // Read once, not per row: with_signals() would otherwise re-query the
+    // account for every pairing in the list.
+    $viewer = current_user();
+
+    json_response(['data' => array_map(fn ($row) => with_signals($row, $viewer), $rows)]);
 }
 
 function match_detail(int $id): never
 {
     $statement = db()->prepare(
-        'SELECT match_id, lost_report_id, found_report_id, match_score, match_status,
-                proof_notes, created_at, updated_at, reviewed_by_user_id
-           FROM match_claims
-          WHERE match_id = :id'
+        'SELECT m.match_id, m.lost_report_id, m.found_report_id, m.match_score,
+                m.match_status, m.proof_notes, m.created_at, m.updated_at,
+                m.reviewed_by_user_id,
+                lr.user_id AS lost_user_id, fr.user_id AS found_user_id
+           FROM match_claims m
+           JOIN pet_reports lr ON lr.report_id = m.lost_report_id
+           JOIN pet_reports fr ON fr.report_id = m.found_report_id
+          WHERE m.match_id = :id'
     );
     $statement->execute([':id' => $id]);
     $row = $statement->fetch();
@@ -332,11 +341,42 @@ function match_detail(int $id): never
         json_error('That match does not exist.', 404);
     }
 
-    json_response(['data' => with_signals($row)]);
+    json_response(['data' => with_signals($row, current_user())]);
 }
 
-/** Attach the per-characteristic comparison rows to a match. */
-function with_signals(array $row): array
+/**
+ * May this viewer read the proof a claimant offered?
+ *
+ * Only the two people whose reports are paired, and the coordinators who have
+ * to judge the claim. The pairing itself is public — both reports already are,
+ * and the signals only restate what those reports say — but the identifying
+ * detail somebody gives to prove ownership is exactly what an impostor would
+ * need in order to repeat it (CLAUDE.md §6.6).
+ */
+function may_read_proof(array $row, ?array $viewer): bool
+{
+    if ($viewer === null) {
+        return false;
+    }
+
+    if (in_array($viewer['role'], ['staff', 'admin'], true)) {
+        return true;
+    }
+
+    $viewerId = (int) $viewer['user_id'];
+
+    return $viewerId === (int) $row['lost_user_id']
+        || $viewerId === (int) $row['found_user_id'];
+}
+
+/**
+ * Attach the per-characteristic comparison rows to a match.
+ *
+ * `staff_notes` is never selected at all. `proof_notes` is included only for
+ * the people entitled to it — the key is left out entirely rather than sent as
+ * null, so the response never hints that there is something to see.
+ */
+function with_signals(array $row, ?array $viewer = null): array
 {
     $signals = db()->prepare(
         'SELECT signal_key, is_matched, weight, detail
@@ -346,13 +386,12 @@ function with_signals(array $row): array
     );
     $signals->execute([':id' => $row['match_id']]);
 
-    return [
+    $shaped = [
         'match_id' => (int) $row['match_id'],
         'lost_report_id' => (int) $row['lost_report_id'],
         'found_report_id' => (int) $row['found_report_id'],
         'score' => (int) $row['match_score'],
         'status' => $row['match_status'],
-        'proof_notes' => $row['proof_notes'],
         'reviewed_by_user_id' => $row['reviewed_by_user_id'] === null
             ? null : (int) $row['reviewed_by_user_id'],
         'created_at' => $row['created_at'],
@@ -364,4 +403,10 @@ function with_signals(array $row): array
             'detail' => $s['detail'],
         ], $signals->fetchAll()),
     ];
+
+    if (may_read_proof($row, $viewer)) {
+        $shaped['proof_notes'] = $row['proof_notes'];
+    }
+
+    return $shaped;
 }
