@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: match generation moved to the server — 2026-09-08_
+_Last updated: responsive verified at all four widths — 2026-09-10_
 
 ## Foundation
 
@@ -61,7 +61,7 @@ _Last updated: match generation moved to the server — 2026-09-08_
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Responsive (390 / 768 / 1366 / 1920) | `[~]` | Navigation and layouts verified; each page re-checked as it is built |
+| Responsive (390 / 768 / 1366 / 1920) | `[x]` | Eight representative pages measured at all four widths against the deployed build — homepage, Explore, report detail, report form, customer dashboard, coordinator comparison, admin dashboard and admin table. No horizontal overflow anywhere. Explore overflowed by 16px at 390px until the results controls were allowed to wrap. |
 | Accessibility | `[~]` | Focus ring, skip link, labels, `aria-describedby`, breadcrumb `aria-current`, reduced motion |
 | Empty / loading / error states | `[~]` | `EmptyState` and `LoadingSkeleton` built and in use; applied per page as pages are built |
 | Real database | `[x]` | MySQL, 11 tables, verified on MariaDB 10.4.32 via XAMPP. `database/schema.sql`. |

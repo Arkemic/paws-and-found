@@ -226,7 +226,10 @@ export function ExplorePage() {
               {isLoading ? 'Searching…' : `${total} ${total === 1 ? 'pet' : 'pets'} found`}
             </p>
 
-            <div className="flex items-center gap-2">
+            {/* Wraps: at 390px the view toggle, the Filters button and the sort
+                control do not fit on one line, and without this the sort
+                control pushed the page 16px wider than the screen. */}
+            <div className="flex flex-wrap items-center gap-2">
               <div className="flex rounded-control border border-border-strong bg-panel p-1" role="group" aria-label="View">
                 {[
                   { id: 'list', label: 'List', icon: List },
