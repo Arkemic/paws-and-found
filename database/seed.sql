@@ -34,16 +34,16 @@ INSERT IGNORE INTO pet_breeds (breed_id, category_id, breed_name) VALUES
 
 -- 10 accounts: 7 community members, 2 coordinators, 1 administrator.
 INSERT INTO users (user_id, full_name, email, password_hash, contact_number, role, account_status, preferred_location, created_at) VALUES
-  (1, 'Maria Santos', 'maria.santos@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0101', 'user', 'active', 'Makati City, Metro Manila', '2026-03-14 02:11:00'),
-  (2, 'Jomar Dela Cruz', 'jomar.delacruz@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0102', 'user', 'active', 'Quezon City, Metro Manila', '2026-04-02 07:45:00'),
-  (3, 'Liza Ocampo', 'liza.ocampo@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0103', 'user', 'active', 'Makati City, Metro Manila', '2026-05-19 11:02:00'),
-  (4, 'Aileen Reyes', 'aileen.reyes@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0104', 'user', 'active', 'Cebu City, Cebu', '2026-06-01 05:30:00'),
-  (5, 'Kenneth Villanueva', 'kenneth.villanueva@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0105', 'user', 'active', 'Davao City, Davao del Sur', '2026-06-22 09:18:00'),
-  (6, 'Noel Aguilar', 'noel.aguilar@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0106', 'user', 'active', 'Quezon City, Metro Manila', '2026-07-08 13:55:00'),
-  (7, 'Rico Panganiban', 'rico.panganiban@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0107', 'user', 'suspended', 'Manila, Metro Manila', '2026-07-30 16:04:00'),
-  (8, 'Patricia Lim', 'patricia.lim@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0201', 'staff', 'active', 'Metro Manila', '2026-02-10 01:00:00'),
-  (9, 'Rafael Mendoza', 'rafael.mendoza@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0202', 'staff', 'active', 'Cebu City, Cebu', '2026-02-10 01:05:00'),
-  (10, 'Grace Bautista', 'grace.bautista@example.com', '$2y$10$57gPK2l6xLCkGwgCBFbEDOLE3Nu7qqC/OV5C5NzTFtuTeMyi59InK', '+63 917 010 0301', 'admin', 'active', 'Metro Manila', '2026-01-05 00:30:00');
+  (1, 'Maria Santos', 'maria.santos@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0101', 'user', 'active', 'Makati City, Metro Manila', '2026-03-14 02:11:00'),
+  (2, 'Jomar Dela Cruz', 'jomar.delacruz@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0102', 'user', 'active', 'Quezon City, Metro Manila', '2026-04-02 07:45:00'),
+  (3, 'Liza Ocampo', 'liza.ocampo@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0103', 'user', 'active', 'Makati City, Metro Manila', '2026-05-19 11:02:00'),
+  (4, 'Aileen Reyes', 'aileen.reyes@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0104', 'user', 'active', 'Cebu City, Cebu', '2026-06-01 05:30:00'),
+  (5, 'Kenneth Villanueva', 'kenneth.villanueva@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0105', 'user', 'active', 'Davao City, Davao del Sur', '2026-06-22 09:18:00'),
+  (6, 'Noel Aguilar', 'noel.aguilar@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0106', 'user', 'active', 'Quezon City, Metro Manila', '2026-07-08 13:55:00'),
+  (7, 'Rico Panganiban', 'rico.panganiban@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0107', 'user', 'suspended', 'Manila, Metro Manila', '2026-07-30 16:04:00'),
+  (8, 'Patricia Lim', 'patricia.lim@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0201', 'staff', 'active', 'Metro Manila', '2026-02-10 01:00:00'),
+  (9, 'Rafael Mendoza', 'rafael.mendoza@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0202', 'staff', 'active', 'Cebu City, Cebu', '2026-02-10 01:05:00'),
+  (10, 'Grace Bautista', 'grace.bautista@example.com', '$2y$10$7IaXvl2d0zUgC.MXv7I1zOtgL278LpgO8AzSrXIfmk5bXTsS9XPAi', '+63 917 010 0301', 'admin', 'active', 'Metro Manila', '2026-01-05 00:30:00');
 
 -- One location per report. Coordinates are barangay-level (approximate).
 INSERT INTO locations (location_id, label, city, province, latitude, longitude, `precision`) VALUES
@@ -115,7 +115,7 @@ INSERT INTO pet_reports (report_id, user_id, category_id, breed_id, location_id,
   (31, 1, 2, 8, 31, 'lost', 'active', 'Tuna', 'medium', 'female', 'Cream', NULL, 'Flat face, very thick cream coat, and one eye that waters constantly. Recently shaved along her back for a skin treatment.', 'Tuna is an indoor cat and got out through a window screen that had come loose. She is not used to the outside and will most likely be hiding somewhere close rather than roaming far.', 'unknown', NULL, '2026-08-22', '11:20:00', TRUE, FALSE, TRUE, '2026-08-22 05:45:00', '2026-08-22 05:45:00'),
   (32, 2, 1, 2, 32, 'found', 'active', NULL, 'small', 'unknown', 'White', 'Grey', 'Small white and grey shih tzu, badly matted coat, nails long enough that it has been loose a while.', 'Wandering along the service road near the market, going up to people for food. The coat is matted and the nails are long, so it has probably been out for some time rather than lost today.', 'unknown', 'Underweight with a matted coat. Nervous but not aggressive. Needs a groomer and a vet check.', '2026-09-08', '09:30:00', TRUE, FALSE, TRUE, '2026-09-08 03:10:00', '2026-09-08 03:10:00');
 
--- 32 photographs. report-009 has none: the scam report was filed
+-- 33 photographs. report-009 has none: the scam report was filed
 -- without one, which is part of why it was flagged.
 INSERT INTO report_images (report_id, image_path, alt_text, is_primary_photo) VALUES
   (1, 'pet-001-milo-1.jpg', 'Small brown Shih Tzu with a white chest patch, sitting on a tiled floor', TRUE),
@@ -142,6 +142,7 @@ INSERT INTO report_images (report_id, image_path, alt_text, is_primary_photo) VA
   (22, 'pet-022-cookie.jpg', 'Small fluffy orange Pomeranian with a pink collar', TRUE),
   (23, 'pet-023-cat.jpg', 'Grey tabby cat with a notched right ear', TRUE),
   (24, 'pet-024-tabby.jpg', 'Large brown tabby cat with a missing left ear tip', TRUE),
+  (9, 'pet-009-rex.png', 'Large black and tan dog with upright ears and a long muzzle, lying on a concrete driveway beside potted plants', TRUE),
   (25, 'pet-025-chico.png', 'Brown Aspin with a white blaze down the muzzle, a white chest and white front socks, standing in a concrete alley beside potted plants', TRUE),
   (26, 'pet-026-dog.png', 'Brown and white Aspin seen from its left side on a residential street, with a white face stripe, white paws and a curled tail', TRUE),
   (27, 'pet-027-pilo.png', 'Orange tabby cat with a white chin, chest and front paws, sitting on a concrete step beside a potted plant', TRUE),

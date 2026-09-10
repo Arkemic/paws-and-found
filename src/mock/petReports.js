@@ -36,6 +36,7 @@ import photo005Bantay from '@/assets/pet-005-bantay.jpg'
 import photo006Bird from '@/assets/pet-006-bird.jpg'
 import photo007Mochi from '@/assets/pet-007-mochi.jpg'
 import photo008Coco from '@/assets/pet-008-coco.jpg'
+import photo009Rex from '@/assets/pet-009-rex.png'
 import photo010Cat from '@/assets/pet-010-cat.jpg'
 import photo011Nala from '@/assets/pet-011-nala.jpg'
 import photo012Dog from '@/assets/pet-012-dog.jpg'
@@ -1333,7 +1334,14 @@ export const petReports = [
     },
     condition: '',
     hasCollar: null,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-009a',
+        url: photo009Rex,
+        alt: 'Large black and tan dog with upright ears and a long muzzle, lying on a concrete driveway beside potted plants',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-007',
     contactPreferences: {
       allowPlatformContact: false,
