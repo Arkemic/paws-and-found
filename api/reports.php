@@ -834,7 +834,14 @@ function reports_list(): never
                    (SELECT i.image_path FROM report_images i
                      WHERE i.report_id = r.report_id
                      ORDER BY i.is_primary_photo DESC, i.image_id ASC
-                     LIMIT 1) AS primary_image
+                     LIMIT 1) AS primary_image,
+                   -- Its description travels with it. Without this the cards
+                   -- on Explore and the dashboards carry an empty alt, and a
+                   -- screen reader is told nothing about the photograph.
+                   (SELECT i.alt_text FROM report_images i
+                     WHERE i.report_id = r.report_id
+                     ORDER BY i.is_primary_photo DESC, i.image_id ASC
+                     LIMIT 1) AS primary_image_alt
             {$from_sql}{$clause}
             ORDER BY {$orderBy}
             LIMIT :limit OFFSET :offset";
@@ -959,5 +966,6 @@ function shape_report_row(array $row): array
             'lng' => $row['longitude'] === null ? null : (float) $row['longitude'],
         ],
         'primary_image' => $row['primary_image'] ?? null,
+        'primary_image_alt' => $row['primary_image_alt'] ?? null,
     ];
 }

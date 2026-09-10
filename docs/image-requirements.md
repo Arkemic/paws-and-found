@@ -23,6 +23,8 @@ Assets in `src/assets/` and wired up.
 | IMG-003 | `empty-no-reports.png` | `EmptyState` illustration, homepage and Explore | Delivered |
 | IMG-004 | `pet-photo-placeholder.png` | `PetCard`, when a report has no photo | Delivered |
 | IMG-005 | `pet-0NN-*.jpg` (24 files) | Every seeded report | Delivered |
+| IMG-011 | `pet-025-chico.png` … `pet-032-dog.png` (8 files) | The second batch of seeded reports | Delivered |
+| IMG-012 | `img-012-help-header-illustration.png` | Help — the header band, built like IMG-008 | Delivered |
 | IMG-006 | `img-006-homepage-hero.jpg` | Homepage hero | Delivered |
 | IMG-007 | `img-007-about-intro.jpg` | About — "Why Paws&Found exists" | Delivered |
 | IMG-008 | `img-008-explore-header-illustration.jpg` | Explore — the whole header band | Delivered |
@@ -41,10 +43,9 @@ replaced it in the redesign and the file has been deleted.
 
 | ID | File | Used by | Priority | Status |
 | --- | --- | --- | --- | --- |
-| IMG-011 | `pet-025-chico.jpg` … `pet-032-dog.jpg` (8 files) | The second batch of seeded reports | High | Needed |
-| IMG-012 | `img-012-help-header-illustration.jpg` | Help — the header band, matching IMG-008 | Low | Needed |
+| IMG-013 | `pet-009-rex.jpg` | Report 009 (Rex) — the only seeded report still without a photograph | Medium | Needed |
 
-### IMG-011 — the second batch of pet photographs
+### IMG-011 — the second batch of pet photographs  *(delivered)*
 
 Eight reports were added on 2026-08-30 so the demonstration does not open on a
 page where the newest case is a fortnight old. They currently render the neutral
@@ -70,7 +71,7 @@ When the files land in `src/assets/`, add the `photos` entries to reports 025-03
 in `src/mock/petReports.js`, re-run `node scripts/gen-seed.mjs`, and re-import
 `database/seed.sql`.
 
-### IMG-012 — a Help header band
+### IMG-012 — a Help header band  *(delivered)*
 
 Optional. The Help page currently leads with the logo mark as artwork, which
 works but makes it the only public page without a photograph or an
@@ -138,3 +139,16 @@ Three brand PNGs remain unoptimised: `pawsfound-logo-mark.png` (564 KB),
 `pet-photo-placeholder.png` (800 KB) and `empty-no-reports.png` (1.3 MB). The
 logo needs transparency so it has to stay PNG, but resizing would cut most of
 the weight. Not done without approval, since it alters supplied files.
+
+### IMG-013 — a photograph for report 009 (Rex)
+
+The only seeded report still showing the paw placeholder. Reports 001–008 and
+010–032 all have one.
+
+| Field | Value |
+| --- | --- |
+| Subject | A lost dog. The report describes Rex without naming a breed. |
+| Orientation | Landscape, roughly 4:3 — the card crops to that aspect |
+| Size | About 1400×1050, in line with the delivered set |
+| Transparent background | No |
+| Notes | An ordinary Philippine street or yard setting, matching the rest. No identifiable people. |

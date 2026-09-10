@@ -51,6 +51,14 @@ import photo021Dog from '@/assets/pet-021-dog.jpg'
 import photo022Cookie from '@/assets/pet-022-cookie.jpg'
 import photo023Cat from '@/assets/pet-023-cat.jpg'
 import photo024Tabby from '@/assets/pet-024-tabby.jpg'
+import photo025Chico from '@/assets/pet-025-chico.png'
+import photo026Dog from '@/assets/pet-026-dog.png'
+import photo027Pilo from '@/assets/pet-027-pilo.png'
+import photo028Cat from '@/assets/pet-028-cat.png'
+import photo029Sabel from '@/assets/pet-029-sabel.png'
+import photo030Rabbit from '@/assets/pet-030-rabbit.png'
+import photo031Tuna from '@/assets/pet-031-tuna.png'
+import photo032Dog from '@/assets/pet-032-dog.png'
 
 export const petReports = [
   // --- The match-demo pair -------------------------------------------------
@@ -1391,7 +1399,14 @@ export const petReports = [
     },
     condition: '',
     hasCollar: null,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-025a',
+        url: photo025Chico,
+        alt: 'Brown Aspin with a white blaze down the muzzle, a white chest and white front socks, standing in a concrete alley beside potted plants',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-002',
     contactPreferences: { allowPlatformContact: true, showPhone: true, showEmail: false },
     statusHistory: [
@@ -1440,7 +1455,14 @@ export const petReports = [
     },
     condition: 'Healthy, well fed, no injuries. No collar.',
     hasCollar: false,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-026a',
+        url: photo026Dog,
+        alt: 'Brown and white Aspin seen from its left side on a residential street, with a white face stripe, white paws and a curled tail',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-006',
     contactPreferences: { allowPlatformContact: true, showPhone: false, showEmail: true },
     statusHistory: [
@@ -1489,7 +1511,14 @@ export const petReports = [
     },
     condition: '',
     hasCollar: null,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-027a',
+        url: photo027Pilo,
+        alt: 'Orange tabby cat with a white chin, chest and front paws, sitting on a concrete step beside a potted plant',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-004',
     contactPreferences: { allowPlatformContact: true, showPhone: false, showEmail: true },
     statusHistory: [
@@ -1531,7 +1560,14 @@ export const petReports = [
     },
     condition: 'Thin and cold when found, warming up and eating well now. No injuries.',
     hasCollar: true,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-028a',
+        url: photo028Cat,
+        alt: 'Long-haired grey and white cat wearing a blue collar, standing on a concrete path with its bushy tail raised',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-007',
     contactPreferences: { allowPlatformContact: true, showPhone: true, showEmail: false },
     statusHistory: [
@@ -1573,7 +1609,14 @@ export const petReports = [
     },
     condition: '',
     hasCollar: true,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-029a',
+        url: photo029Sabel,
+        alt: 'Tricolour beagle with a white-tipped tail, wearing a red collar with a small brass bell, standing on grass',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-003',
     contactPreferences: { allowPlatformContact: true, showPhone: true, showEmail: true },
     statusHistory: [
@@ -1614,7 +1657,14 @@ export const petReports = [
     },
     condition: 'Alert and eating. No visible injuries.',
     hasCollar: false,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-030a',
+        url: photo030Rabbit,
+        alt: 'White lop-eared rabbit with grey ears and a grey patch over one eye, sitting inside a wire cage',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-005',
     contactPreferences: { allowPlatformContact: true, showPhone: false, showEmail: false },
     statusHistory: [
@@ -1656,7 +1706,14 @@ export const petReports = [
     },
     condition: '',
     hasCollar: null,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-031a',
+        url: photo031Tuna,
+        alt: 'Cream Persian cat with a flat face and a thick ruff, its body coat clipped short, sitting on a concrete floor',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-001',
     contactPreferences: { allowPlatformContact: true, showPhone: false, showEmail: true },
     statusHistory: [
@@ -1699,7 +1756,14 @@ export const petReports = [
     condition:
       'Underweight with a matted coat. Nervous but not aggressive. Needs a groomer and a vet check.',
     hasCollar: false,
-    photos: [],
+    photos: [
+      {
+        id: 'photo-032a',
+        url: photo032Dog,
+        alt: 'Small white and grey shih tzu with a badly matted coat, standing on a damp concrete path',
+        isPrimary: true,
+      },
+    ],
     reporterId: 'user-002',
     contactPreferences: { allowPlatformContact: true, showPhone: false, showEmail: true },
     statusHistory: [

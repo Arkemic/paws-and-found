@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: demonstration dates spread across six months — 2026-09-10_
+_Last updated: second photograph batch and the Help header wired in — 2026-09-10_
 
 ## Foundation
 
@@ -20,7 +20,7 @@ _Last updated: demonstration dates spread across six months — 2026-09-10_
 | UI primitives (button, inputs, card, modal) | `[x]` | `src/components/ui/` |
 | Service abstraction | `[x]` | `src/services/` — now calls the PHP API. The boundary is why the UI did not change when the data source did. |
 | Seed data | `[x]` | 32 reports across 4 statuses, 4 species, 15 cities and **six months** (April–September: 3, 3, 4, 6, 9, 7). Generated from `src/mock/` by `scripts/gen-seed.mjs`. Matched pairs were shifted by identical offsets, so every seeded match score is unchanged — verified against the algorithm afterwards. |
-| Image assets | `[~]` | 24 pet photographs delivered. The second batch (reports 025-032) has none yet — IMG-011 in `docs/image-requirements.md`; they render the placeholder. |
+| Image assets | `[~]` | 32 of 33 delivered. Every seeded report carries a photograph except report 009 (Rex), which still renders the placeholder — IMG-013 in `docs/image-requirements.md`. The Help header band (IMG-012) is in place. |
 | Routing & navigation | `[x]` | All 25 routes, navbar, mobile nav, footer, sidebar, breadcrumb, 404, unauthorized |
 | Role-aware navigation + route guards | `[x]` | Route guards keep the interface coherent; they are not security — every endpoint checks the session again. The demo role selector is **development only** and is removed from production builds along with the demo password (see below). |
 

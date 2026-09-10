@@ -61,7 +61,14 @@ function fromApi(row) {
         }))
       : // The list endpoint sends only the primary photo's filename.
         row.primary_image
-        ? [{ id: `photo-${row.report_id}`, url: assetUrl(row.primary_image), alt: '', isPrimary: true }]
+        ? [
+            {
+              id: `photo-${row.report_id}`,
+              url: assetUrl(row.primary_image),
+              alt: row.primary_image_alt ?? '',
+              isPrimary: true,
+            },
+          ]
         : [],
     statusHistory: (row.history ?? []).map((entry) => ({
       id: `log-${entry.log_id}`,

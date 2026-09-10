@@ -12,7 +12,7 @@ import {
   TriangleAlert,
   Users,
 } from 'lucide-react'
-import logoMark from '@/assets/pawsfound-logo-mark.png'
+import headerIllustration from '@/assets/img-012-help-header-illustration.png'
 import { Container } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { SectionHeading } from '@/components/SectionHeading'
@@ -199,23 +199,30 @@ export function HelpPage() {
           reads as a destination the way Home and Explore do. */}
       <section className="hero-ground border-b border-border pt-10 pb-12 sm:pt-14">
         <Container className="flex flex-col gap-10">
-          <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:gap-12">
-            <div className="flex-1">
-              <PageHeader
-                title="Help & community safety"
-                description="How to file a report that helps, how a match is checked, and how to stay safe arranging a handover."
-              />
-            </div>
-
-            {/* The brand mark, sized as artwork. Until IMG-012 exists this is
-                the one piece of imagery the page has, and it is a real asset
-                rather than a placeholder box. */}
+          {/* IMG-012, built the same way as Explore's IMG-008: the whole band
+              is one 3:1 illustration with its left side left clear, so the
+              heading sits on the plain area rather than over the artwork. */}
+          <section className="relative min-h-52 overflow-hidden rounded-card bg-brand-soft/60 lg:min-h-60">
+            {/* From `md` up only. At narrower widths `cover` crops the 3:1
+                artwork horizontally and the animals are the first thing lost,
+                so the band keeps its tint and the type has it to itself. */}
             <img
-              src={logoMark}
+              src={headerIllustration}
               alt=""
-              className="hidden w-40 shrink-0 opacity-90 lg:block"
+              className="absolute inset-0 hidden size-full object-cover object-center md:block"
             />
-          </div>
+
+            <div className="relative px-6 py-8 sm:px-10 sm:py-10">
+              {/* Capped at half the width: past that the artwork begins and
+                  text over it would not hold its contrast. */}
+              <div className="lg:max-w-1/2">
+                <PageHeader
+                  title="Help & community safety"
+                  description="How to file a report that helps, how a match is checked, and how to stay safe arranging a handover."
+                />
+              </div>
+            </div>
+          </section>
 
           {/* Jump links rather than a search box: with seven topics, scanning
               them is faster than typing, and there is no index to search. */}
