@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: second photograph batch and the Help header wired in — 2026-09-10_
+_Last updated: full system audit — 117 test cases, all passing — 2026-09-10_
 
 ## Foundation
 
@@ -20,7 +20,7 @@ _Last updated: second photograph batch and the Help header wired in — 2026-09-
 | UI primitives (button, inputs, card, modal) | `[x]` | `src/components/ui/` |
 | Service abstraction | `[x]` | `src/services/` — now calls the PHP API. The boundary is why the UI did not change when the data source did. |
 | Seed data | `[x]` | 32 reports across 4 statuses, 4 species, 15 cities and **six months** (April–September: 3, 3, 4, 6, 9, 7). Generated from `src/mock/` by `scripts/gen-seed.mjs`. Matched pairs were shifted by identical offsets, so every seeded match score is unchanged — verified against the algorithm afterwards. |
-| Image assets | `[~]` | 32 of 33 delivered. Every seeded report carries a photograph except report 009 (Rex), which still renders the placeholder — IMG-013 in `docs/image-requirements.md`. The Help header band (IMG-012) is in place. |
+| Image assets | `[x]` | Every seeded report carries a photograph (33 images across 32 reports). Reports 025 and 026 are the same dog from either side, so the 100% pairing demonstrates convincingly. Help header band (IMG-012) in place. |
 | Routing & navigation | `[x]` | All 25 routes, navbar, mobile nav, footer, sidebar, breadcrumb, 404, unauthorized |
 | Role-aware navigation + route guards | `[x]` | Route guards keep the interface coherent; they are not security — every endpoint checks the session again. The demo role selector is **development only** and is removed from production builds along with the demo password (see below). |
 
@@ -56,6 +56,26 @@ _Last updated: second photograph batch and the Help header wired in — 2026-09-
 | Admin dashboard | `[x]` | 11 — overview, user management, record oversight, pet categories |
 | Moderation API | `[x]` | `GET/POST /api/moderation`, `PATCH /api/moderation/{id}`. Admin-only, verified: a customer gets 403, signed-out gets 401. |
 | Moderation queue | `[x]` | 11 — dismiss, warn, remove, remove-and-suspend; the reporter is always told. Each decision is one transaction: case, report status, account status and notification move together or not at all. |
+
+## Audit
+
+`python scripts/audit_cases.py` runs every documented test case against the
+running system and prints a table per category. It restores the demonstration
+data afterwards, so it can be run again at any time.
+
+| Category | Cases | Passing |
+| --- | --- | --- |
+| A. Input validation | 19 | 19 |
+| B. SQL injection | 13 | 13 |
+| C. Authentication | 13 | 13 |
+| D. Authorization | 31 | 31 |
+| E. Cross-site scripting | 4 | 4 |
+| F. File upload | 7 | 7 |
+| G. Functional | 24 | 24 |
+| H. Error handling | 6 | 6 |
+| **Total** | **117** | **117** |
+
+Last run 2026-09-10 against the deployed build.
 
 ## Cross-cutting
 
