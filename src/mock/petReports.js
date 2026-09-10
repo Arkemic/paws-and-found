@@ -71,7 +71,7 @@ export const petReports = [
       'White patch across the chest, slightly bent left ear, wears a red nylon collar with a small bell.',
     description:
       'Milo slipped out of the gate while we were unloading groceries. He is friendly but nervous around traffic and usually hides under parked cars. He answers to his name and to whistling.',
-    incidentDate: '2026-08-10',
+    incidentDate: '2026-09-01',
     incidentTime: '17:30',
     location: {
       label: 'Near Poblacion Public Market, Barangay Poblacion',
@@ -109,18 +109,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-001',
-        createdAt: '2026-08-10T10:12:00.000Z',
+        createdAt: '2026-09-01T10:12:00.000Z',
       },
       {
         id: 'log-001b',
         status: REPORT_STATUSES.POSSIBLE_MATCH,
         note: 'A found report with similar characteristics was identified.',
         actorId: 'staff-001',
-        createdAt: '2026-08-11T03:40:00.000Z',
+        createdAt: '2026-09-02T03:40:00.000Z',
       },
     ],
-    createdAt: '2026-08-10T10:12:00.000Z',
-    updatedAt: '2026-08-11T03:40:00.000Z',
+    createdAt: '2026-09-01T10:12:00.000Z',
+    updatedAt: '2026-09-02T03:40:00.000Z',
   },
   {
     id: 'report-002',
@@ -137,7 +137,7 @@ export const petReports = [
       'Light patch on the chest, one ear does not stand up straight. Red collar, no name tag.',
     description:
       'Found this small dog wandering along the service road early in the morning. He was calm and let me pick him up. He is safe at our house and has been fed. Looking for the owner.',
-    incidentDate: '2026-08-11',
+    incidentDate: '2026-09-02',
     incidentTime: '08:15',
     location: {
       label: 'Service road near Jupiter Street, Barangay Bel-Air',
@@ -169,18 +169,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-003',
-        createdAt: '2026-08-11T01:02:00.000Z',
+        createdAt: '2026-09-02T01:02:00.000Z',
       },
       {
         id: 'log-002b',
         status: REPORT_STATUSES.POSSIBLE_MATCH,
         note: 'Linked to a lost report with similar characteristics.',
         actorId: 'staff-001',
-        createdAt: '2026-08-11T03:40:00.000Z',
+        createdAt: '2026-09-02T03:40:00.000Z',
       },
     ],
-    createdAt: '2026-08-11T01:02:00.000Z',
-    updatedAt: '2026-08-11T03:40:00.000Z',
+    createdAt: '2026-09-02T01:02:00.000Z',
+    updatedAt: '2026-09-02T03:40:00.000Z',
   },
 
   // --- A weaker, more ambiguous pair ---------------------------------------
@@ -199,7 +199,7 @@ export const petReports = [
       'Orange tabby stripes, short tail with a slight kink at the tip. Spayed, no collar.',
     description:
       'Kitkat is an indoor cat who got out through a window that was left open overnight. She is shy with strangers and will not come when called, but she is food-motivated.',
-    incidentDate: '2026-08-14',
+    incidentDate: '2026-07-29',
     incidentTime: '06:00',
     location: {
       label: 'Along Holy Spirit Drive, Barangay Holy Spirit',
@@ -231,11 +231,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-002',
-        createdAt: '2026-08-14T00:22:00.000Z',
+        createdAt: '2026-07-29T00:22:00.000Z',
       },
     ],
-    createdAt: '2026-08-14T00:22:00.000Z',
-    updatedAt: '2026-08-14T00:22:00.000Z',
+    createdAt: '2026-07-29T00:22:00.000Z',
+    updatedAt: '2026-07-29T00:22:00.000Z',
   },
   {
     id: 'report-004',
@@ -252,7 +252,7 @@ export const petReports = [
       'Orange and white, white socks on both front paws. Tail looks shorter than usual.',
     description:
       'A thin orange cat has been staying near our garage for two days. She lets us leave food but will not let anyone carry her yet. Posting in case someone is looking for her.',
-    incidentDate: '2026-08-15',
+    incidentDate: '2026-07-30',
     incidentTime: '19:40',
     location: {
       label: 'Near IBP Road, Barangay Batasan Hills',
@@ -284,11 +284,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-006',
-        createdAt: '2026-08-15T12:05:00.000Z',
+        createdAt: '2026-07-30T12:05:00.000Z',
       },
     ],
-    createdAt: '2026-08-15T12:05:00.000Z',
-    updatedAt: '2026-08-15T12:05:00.000Z',
+    createdAt: '2026-07-30T12:05:00.000Z',
+    updatedAt: '2026-07-30T12:05:00.000Z',
   },
 
   // --- Unmatched reports, other regions and species ------------------------
@@ -307,7 +307,7 @@ export const petReports = [
       'Tan markings above both eyes, a healed scar on the right hind leg, thick brown leather collar.',
     description:
       'Bantay is our family guard dog. He went missing after the fireworks on the fiesta weekend and has not come home. He is protective of strangers at first but calms down quickly.',
-    incidentDate: '2026-08-05',
+    incidentDate: '2026-06-14',
     incidentTime: '21:00',
     location: {
       label: 'Near Guadalupe Elementary School, Barangay Guadalupe',
@@ -339,11 +339,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-004',
-        createdAt: '2026-08-05T14:30:00.000Z',
+        createdAt: '2026-06-14T14:30:00.000Z',
       },
     ],
-    createdAt: '2026-08-05T14:30:00.000Z',
-    updatedAt: '2026-08-05T14:30:00.000Z',
+    createdAt: '2026-06-14T14:30:00.000Z',
+    updatedAt: '2026-06-14T14:30:00.000Z',
   },
   {
     id: 'report-006',
@@ -359,7 +359,7 @@ export const petReports = [
     distinctiveMarkings: 'Green body with a peach-coloured face. Has a small metal leg band.',
     description:
       'This lovebird flew into our laundry area and did not leave. It is clearly used to people and steps onto a finger. We placed it in a spare cage. The leg band suggests it belongs to a breeder or a hobbyist.',
-    incidentDate: '2026-08-12',
+    incidentDate: '2026-06-22',
     incidentTime: '15:20',
     location: {
       label: 'Near Talomo Public Market, Barangay Talomo',
@@ -391,11 +391,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-005',
-        createdAt: '2026-08-12T08:14:00.000Z',
+        createdAt: '2026-06-22T08:14:00.000Z',
       },
     ],
-    createdAt: '2026-08-12T08:14:00.000Z',
-    updatedAt: '2026-08-12T08:14:00.000Z',
+    createdAt: '2026-06-22T08:14:00.000Z',
+    updatedAt: '2026-06-22T08:14:00.000Z',
   },
 
   // --- A completed case, for the "reunited" story --------------------------
@@ -413,7 +413,7 @@ export const petReports = [
     distinctiveMarkings: 'Flat face, very long white coat, blue collar with a small silver tag.',
     description:
       'Mochi was missing for five days after the door was left open during a delivery. She was found two streets away and returned by a neighbour who saw the report here.',
-    incidentDate: '2026-07-28',
+    incidentDate: '2026-05-20',
     incidentTime: '11:45',
     location: {
       label: 'Along Bautista Street, Barangay San Antonio',
@@ -445,25 +445,25 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-003',
-        createdAt: '2026-07-28T04:50:00.000Z',
+        createdAt: '2026-05-20T04:50:00.000Z',
       },
       {
         id: 'log-007b',
         status: REPORT_STATUSES.POSSIBLE_MATCH,
         note: 'A neighbour submitted a found report with matching characteristics.',
         actorId: 'staff-002',
-        createdAt: '2026-08-01T02:15:00.000Z',
+        createdAt: '2026-05-24T02:15:00.000Z',
       },
       {
         id: 'log-007c',
         status: REPORT_STATUSES.RETURNED,
         note: 'Ownership verified by the Pet Coordinator. Pet returned to the owner.',
         actorId: 'staff-002',
-        createdAt: '2026-08-02T07:30:00.000Z',
+        createdAt: '2026-05-25T07:30:00.000Z',
       },
     ],
-    createdAt: '2026-07-28T04:50:00.000Z',
-    updatedAt: '2026-08-02T07:30:00.000Z',
+    createdAt: '2026-05-20T04:50:00.000Z',
+    updatedAt: '2026-05-25T07:30:00.000Z',
   },
 
   // The found half of the completed case above. Kept so the reunion story is
@@ -483,7 +483,7 @@ export const petReports = [
     distinctiveMarkings: 'Very long white coat, flat face, blue collar with a silver tag.',
     description:
       'Found a long-haired white cat hiding under a parked van on our street. She was matted and hungry. We kept her indoors while looking for the owner.',
-    incidentDate: '2026-08-01',
+    incidentDate: '2026-05-24',
     incidentTime: '09:20',
     location: {
       label: 'Along Estrella Street, Barangay San Antonio',
@@ -515,25 +515,25 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-001',
-        createdAt: '2026-08-01T01:35:00.000Z',
+        createdAt: '2026-05-24T01:35:00.000Z',
       },
       {
         id: 'log-010b',
         status: REPORT_STATUSES.POSSIBLE_MATCH,
         note: 'Linked to a lost report filed four days earlier.',
         actorId: 'staff-002',
-        createdAt: '2026-08-01T02:15:00.000Z',
+        createdAt: '2026-05-24T02:15:00.000Z',
       },
       {
         id: 'log-010c',
         status: REPORT_STATUSES.RETURNED,
         note: 'Ownership verified by the Pet Coordinator. Pet returned to the owner.',
         actorId: 'staff-002',
-        createdAt: '2026-08-02T07:30:00.000Z',
+        createdAt: '2026-05-25T07:30:00.000Z',
       },
     ],
-    createdAt: '2026-08-01T01:35:00.000Z',
-    updatedAt: '2026-08-02T07:30:00.000Z',
+    createdAt: '2026-05-24T01:35:00.000Z',
+    updatedAt: '2026-05-25T07:30:00.000Z',
   },
 
   // --- A closed case that never resolved -----------------------------------
@@ -551,7 +551,7 @@ export const petReports = [
     distinctiveMarkings: 'Classic beagle tricolour, white tip on the tail, floppy ears.',
     description:
       'Coco went missing near the subdivision gate. The family has since moved provinces and asked for the report to be closed.',
-    incidentDate: '2026-06-30',
+    incidentDate: '2026-04-12',
     incidentTime: '07:10',
     location: {
       label: 'Near the subdivision gate, Barangay Novaliches Proper',
@@ -583,18 +583,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-002',
-        createdAt: '2026-06-30T01:40:00.000Z',
+        createdAt: '2026-04-12T01:40:00.000Z',
       },
       {
         id: 'log-008b',
         status: REPORT_STATUSES.CLOSED,
         note: 'Closed at the reporter’s request.',
         actorId: 'user-002',
-        createdAt: '2026-08-03T09:00:00.000Z',
+        createdAt: '2026-05-16T09:00:00.000Z',
       },
     ],
-    createdAt: '2026-06-30T01:40:00.000Z',
-    updatedAt: '2026-08-03T09:00:00.000Z',
+    createdAt: '2026-04-12T01:40:00.000Z',
+    updatedAt: '2026-05-16T09:00:00.000Z',
   },
 
   // --- An unlinked pair the Phase 7 algorithm should be able to find --------
@@ -616,7 +616,7 @@ export const petReports = [
       'Pale cream coat, faint scar above the right eye, blue collar with a bone-shaped tag.',
     description:
       'Nala pushed through a gap in the fence during a thunderstorm. She is gentle with children but panics at loud noises and will keep running.',
-    incidentDate: '2026-08-16',
+    incidentDate: '2026-08-03',
     incidentTime: '20:15',
     location: {
       label: 'Near Maginhawa Street, Barangay Teachers Village East',
@@ -644,11 +644,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-002',
-        createdAt: '2026-08-16T13:40:00.000Z',
+        createdAt: '2026-08-03T13:40:00.000Z',
       },
     ],
-    createdAt: '2026-08-16T13:40:00.000Z',
-    updatedAt: '2026-08-16T13:40:00.000Z',
+    createdAt: '2026-08-03T13:40:00.000Z',
+    updatedAt: '2026-08-03T13:40:00.000Z',
   },
   {
     id: 'report-012',
@@ -664,7 +664,7 @@ export const petReports = [
     distinctiveMarkings: 'Light-coloured big dog, small scar near one eye, blue collar, no tag.',
     description:
       "A large pale dog followed my kids home from the store and would not leave. Very friendly, clearly someone's pet. She is in our garage where it is dry.",
-    incidentDate: '2026-08-17',
+    incidentDate: '2026-08-12',
     incidentTime: '07:50',
     location: {
       label: 'Near Kalayaan Avenue, Barangay Sikatuna Village',
@@ -692,11 +692,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-006',
-        createdAt: '2026-08-17T00:12:00.000Z',
+        createdAt: '2026-08-12T00:12:00.000Z',
       },
     ],
-    createdAt: '2026-08-17T00:12:00.000Z',
-    updatedAt: '2026-08-17T00:12:00.000Z',
+    createdAt: '2026-08-12T00:12:00.000Z',
+    updatedAt: '2026-08-12T00:12:00.000Z',
   },
 
   // --- Spread across regions, species and statuses --------------------------
@@ -714,7 +714,7 @@ export const petReports = [
     distinctiveMarkings: 'White with grey patches over both ears, one eye is pale blue.',
     description:
       "Ming is barely a year old and has never been outside on his own. He was last seen on the roof of the neighbour's extension.",
-    incidentDate: '2026-08-09',
+    incidentDate: '2026-07-05',
     incidentTime: '05:30',
     location: {
       label: 'Near Sanciangko Street, Barangay Kalubihan',
@@ -742,11 +742,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-004',
-        createdAt: '2026-08-09T02:10:00.000Z',
+        createdAt: '2026-07-05T02:10:00.000Z',
       },
     ],
-    createdAt: '2026-08-09T02:10:00.000Z',
-    updatedAt: '2026-08-09T02:10:00.000Z',
+    createdAt: '2026-07-05T02:10:00.000Z',
+    updatedAt: '2026-07-05T02:10:00.000Z',
   },
   {
     id: 'report-014',
@@ -762,7 +762,7 @@ export const petReports = [
     distinctiveMarkings: 'Brown with a white blaze down the muzzle and white front paws.',
     description:
       'Brownie disappeared from the yard overnight. The family searched for three weeks and has asked for the report to be closed.',
-    incidentDate: '2026-07-22',
+    incidentDate: '2026-04-24',
     incidentTime: '22:00',
     location: {
       label: 'Near Burgos Street, Barangay Villamonte',
@@ -790,18 +790,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-005',
-        createdAt: '2026-07-22T15:05:00.000Z',
+        createdAt: '2026-04-24T15:05:00.000Z',
       },
       {
         id: 'log-014b',
         status: REPORT_STATUSES.CLOSED,
         note: "Closed at the reporter's request.",
         actorId: 'user-005',
-        createdAt: '2026-08-14T01:20:00.000Z',
+        createdAt: '2026-05-17T01:20:00.000Z',
       },
     ],
-    createdAt: '2026-07-22T15:05:00.000Z',
-    updatedAt: '2026-08-14T01:20:00.000Z',
+    createdAt: '2026-04-24T15:05:00.000Z',
+    updatedAt: '2026-05-17T01:20:00.000Z',
   },
   {
     id: 'report-015',
@@ -817,7 +817,7 @@ export const petReports = [
     distinctiveMarkings: 'Very long grey coat, flat face, badly matted. No collar.',
     description:
       'This cat has been sheltering under the stairs of our building for about a week. Someone must be missing it — it is clearly not a street cat.',
-    incidentDate: '2026-08-14',
+    incidentDate: '2026-08-06',
     incidentTime: '17:00',
     location: {
       label: 'Near Iznart Street, Barangay Sampaguita',
@@ -845,11 +845,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-004',
-        createdAt: '2026-08-14T09:30:00.000Z',
+        createdAt: '2026-08-06T09:30:00.000Z',
       },
     ],
-    createdAt: '2026-08-14T09:30:00.000Z',
-    updatedAt: '2026-08-14T09:30:00.000Z',
+    createdAt: '2026-08-06T09:30:00.000Z',
+    updatedAt: '2026-08-06T09:30:00.000Z',
   },
   {
     id: 'report-016',
@@ -865,7 +865,7 @@ export const petReports = [
     distinctiveMarkings: 'White with brown patches around both eyes and floppy ears.',
     description:
       'Bunbun got out when the hutch door was left unlatched. She will not go far from cover and is most likely hiding in a garden nearby.',
-    incidentDate: '2026-08-11',
+    incidentDate: '2026-07-17',
     incidentTime: '16:20',
     location: {
       label: 'Near Session Road, Barangay Kayang-Hilltop',
@@ -893,11 +893,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-003',
-        createdAt: '2026-08-11T08:45:00.000Z',
+        createdAt: '2026-07-17T08:45:00.000Z',
       },
     ],
-    createdAt: '2026-08-11T08:45:00.000Z',
-    updatedAt: '2026-08-11T08:45:00.000Z',
+    createdAt: '2026-07-17T08:45:00.000Z',
+    updatedAt: '2026-07-17T08:45:00.000Z',
   },
   {
     id: 'report-017',
@@ -913,7 +913,7 @@ export const petReports = [
     distinctiveMarkings: 'Very small, large ears, wearing a knitted red sweater.',
     description:
       'Found shivering beside the highway. Someone clearly cares for this dog — the sweater looks handmade. Keeping him warm until the owner is found.',
-    incidentDate: '2026-08-13',
+    incidentDate: '2026-08-09',
     incidentTime: '06:40',
     location: {
       label: 'Near Limketkai Drive, Barangay Nazareth',
@@ -941,11 +941,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-005',
-        createdAt: '2026-08-13T00:05:00.000Z',
+        createdAt: '2026-08-09T00:05:00.000Z',
       },
     ],
-    createdAt: '2026-08-13T00:05:00.000Z',
-    updatedAt: '2026-08-13T00:05:00.000Z',
+    createdAt: '2026-08-09T00:05:00.000Z',
+    updatedAt: '2026-08-09T00:05:00.000Z',
   },
   {
     id: 'report-018',
@@ -961,7 +961,7 @@ export const petReports = [
     distinctiveMarkings: 'Thick golden coat, greying muzzle, walks with a slight limp.',
     description:
       'Simba is eleven years old and hard of hearing, so calling out may not reach him. He walks slowly and cannot have gone far.',
-    incidentDate: '2026-08-06',
+    incidentDate: '2026-07-11',
     incidentTime: '09:00',
     location: {
       label: 'Near McKinley Parkway, Barangay Fort Bonifacio',
@@ -989,11 +989,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-001',
-        createdAt: '2026-08-06T02:30:00.000Z',
+        createdAt: '2026-07-11T02:30:00.000Z',
       },
     ],
-    createdAt: '2026-08-06T02:30:00.000Z',
-    updatedAt: '2026-08-06T02:30:00.000Z',
+    createdAt: '2026-07-11T02:30:00.000Z',
+    updatedAt: '2026-07-11T02:30:00.000Z',
   },
   {
     id: 'report-019',
@@ -1057,7 +1057,7 @@ export const petReports = [
     distinctiveMarkings: 'Cream body with dark brown face, ears, paws and tail. Blue eyes.',
     description:
       'Miso slipped out during a delivery. A neighbour two streets away recognised him from this report and brought him home the next morning.',
-    incidentDate: '2026-07-30',
+    incidentDate: '2026-04-18',
     incidentTime: '14:25',
     location: {
       label: 'Near Boni Avenue, Barangay Plainview',
@@ -1085,18 +1085,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-003',
-        createdAt: '2026-07-30T06:40:00.000Z',
+        createdAt: '2026-04-18T06:40:00.000Z',
       },
       {
         id: 'log-020b',
         status: REPORT_STATUSES.RETURNED,
         note: 'Returned by a neighbour who recognised him from the report.',
         actorId: 'user-003',
-        createdAt: '2026-07-31T01:15:00.000Z',
+        createdAt: '2026-04-19T01:15:00.000Z',
       },
     ],
-    createdAt: '2026-07-30T06:40:00.000Z',
-    updatedAt: '2026-07-31T01:15:00.000Z',
+    createdAt: '2026-04-18T06:40:00.000Z',
+    updatedAt: '2026-04-19T01:15:00.000Z',
   },
   {
     id: 'report-021',
@@ -1112,7 +1112,7 @@ export const petReports = [
     distinctiveMarkings: 'Black with a white chest and one white back foot. Very thin.',
     description:
       "Has been sleeping outside the sari-sari store for several days. Friendly with everyone, so he was somebody's dog before this.",
-    incidentDate: '2026-08-16',
+    incidentDate: '2026-08-18',
     incidentTime: '18:30',
     location: {
       label: 'Near Quimpo Boulevard, Barangay Matina Crossing',
@@ -1140,11 +1140,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-005',
-        createdAt: '2026-08-16T11:00:00.000Z',
+        createdAt: '2026-08-18T11:00:00.000Z',
       },
     ],
-    createdAt: '2026-08-16T11:00:00.000Z',
-    updatedAt: '2026-08-16T11:00:00.000Z',
+    createdAt: '2026-08-18T11:00:00.000Z',
+    updatedAt: '2026-08-18T11:00:00.000Z',
   },
   {
     id: 'report-022',
@@ -1160,7 +1160,7 @@ export const petReports = [
     distinctiveMarkings: 'Fluffy orange coat, recently trimmed short, pink collar with a bell.',
     description:
       'Cookie was groomed two days before she went missing, so she looks much smaller and fluffier than in older photos. She barks at strangers.',
-    incidentDate: '2026-08-12',
+    incidentDate: '2026-07-24',
     incidentTime: '15:45',
     location: {
       label: 'Near Fields Avenue, Barangay Balibago',
@@ -1188,11 +1188,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-002',
-        createdAt: '2026-08-12T08:20:00.000Z',
+        createdAt: '2026-07-24T08:20:00.000Z',
       },
     ],
-    createdAt: '2026-08-12T08:20:00.000Z',
-    updatedAt: '2026-08-12T08:20:00.000Z',
+    createdAt: '2026-07-24T08:20:00.000Z',
+    updatedAt: '2026-07-24T08:20:00.000Z',
   },
   {
     id: 'report-023',
@@ -1208,7 +1208,7 @@ export const petReports = [
     distinctiveMarkings: 'Grey tabby with black stripes and a notched right ear.',
     description:
       'Found crying inside a parked jeepney. The owner saw this report the same evening and collected her, notched ear and all.',
-    incidentDate: '2026-08-10',
+    incidentDate: '2026-06-06',
     incidentTime: '19:15',
     location: {
       label: 'Near Sumulong Highway, Barangay Mayamot',
@@ -1236,18 +1236,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-006',
-        createdAt: '2026-08-10T11:30:00.000Z',
+        createdAt: '2026-06-06T11:30:00.000Z',
       },
       {
         id: 'log-023b',
         status: REPORT_STATUSES.RETURNED,
         note: 'Owner recognised the notched ear and collected her the same evening.',
         actorId: 'user-006',
-        createdAt: '2026-08-10T14:05:00.000Z',
+        createdAt: '2026-06-06T14:05:00.000Z',
       },
     ],
-    createdAt: '2026-08-10T11:30:00.000Z',
-    updatedAt: '2026-08-10T14:05:00.000Z',
+    createdAt: '2026-06-06T11:30:00.000Z',
+    updatedAt: '2026-06-06T14:05:00.000Z',
   },
   {
     id: 'report-024',
@@ -1263,7 +1263,7 @@ export const petReports = [
     distinctiveMarkings: 'Brown tabby, very large for a puspin, missing the tip of his left ear.',
     description:
       'Tabby roams the neighbourhood most days but always comes back by dinner. He has now been gone five days, which is not like him.',
-    incidentDate: '2026-08-03',
+    incidentDate: '2026-06-27',
     incidentTime: '17:00',
     location: {
       label: 'Near Governor Camins Avenue, Barangay Camino Nuevo',
@@ -1291,11 +1291,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-004',
-        createdAt: '2026-08-03T10:15:00.000Z',
+        createdAt: '2026-06-27T10:15:00.000Z',
       },
     ],
-    createdAt: '2026-08-03T10:15:00.000Z',
-    updatedAt: '2026-08-03T10:15:00.000Z',
+    createdAt: '2026-06-27T10:15:00.000Z',
+    updatedAt: '2026-06-27T10:15:00.000Z',
   },
 
   // --- A flagged report, for the moderation queue --------------------------
@@ -1313,7 +1313,7 @@ export const petReports = [
     distinctiveMarkings: 'None given.',
     description:
       'Reward offered for information. Contact through the number in this description only.',
-    incidentDate: '2026-08-08',
+    incidentDate: '2026-05-08',
     incidentTime: '12:00',
     location: {
       label: 'Barangay 659, Sampaloc',
@@ -1338,18 +1338,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-007',
-        createdAt: '2026-08-08T05:00:00.000Z',
+        createdAt: '2026-05-08T05:00:00.000Z',
       },
       {
         id: 'log-009b',
         status: REPORT_STATUSES.CLOSED,
         note: 'Removed by an administrator following a moderation review.',
         actorId: 'admin-001',
-        createdAt: '2026-08-09T02:20:00.000Z',
+        createdAt: '2026-05-09T02:20:00.000Z',
       },
     ],
-    createdAt: '2026-08-08T05:00:00.000Z',
-    updatedAt: '2026-08-09T02:20:00.000Z',
+    createdAt: '2026-05-08T05:00:00.000Z',
+    updatedAt: '2026-05-09T02:20:00.000Z',
   },
 
   // ---------------------------------------------------------------------------
@@ -1379,7 +1379,7 @@ export const petReports = [
       'White blaze running down the muzzle, white front socks, and a kink near the end of the tail.',
     description:
       'Chico slipped out when the gate was left open for a delivery. He is friendly but shy with strangers and will not come if called by someone he does not know. He answers to a whistle.',
-    incidentDate: '2026-08-27',
+    incidentDate: '2026-09-05',
     incidentTime: '16:30',
     location: {
       label: 'Near Quimpo Boulevard, Barangay Matina Crossing',
@@ -1400,18 +1400,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-002',
-        createdAt: '2026-08-27T09:40:00.000Z',
+        createdAt: '2026-09-05T09:40:00.000Z',
       },
       {
         id: 'log-025b',
         status: REPORT_STATUSES.POSSIBLE_MATCH,
         note: 'A found report filed nearby shares the species, breed and markings.',
         actorId: 'user-008',
-        createdAt: '2026-08-29T02:15:00.000Z',
+        createdAt: '2026-09-07T02:15:00.000Z',
       },
     ],
-    createdAt: '2026-08-27T09:40:00.000Z',
-    updatedAt: '2026-08-29T02:15:00.000Z',
+    createdAt: '2026-09-05T09:40:00.000Z',
+    updatedAt: '2026-09-07T02:15:00.000Z',
   },
   {
     id: 'report-026',
@@ -1428,7 +1428,7 @@ export const petReports = [
       'White stripe on the face and white paws in front. The tail bends at the tip.',
     description:
       'This dog followed my tricycle home from the market and would not leave. He is well fed and clearly someone’s pet. He is staying in our yard until the owner turns up.',
-    incidentDate: '2026-08-29',
+    incidentDate: '2026-09-07',
     incidentTime: '07:15',
     location: {
       label: 'Near Ecoland Drive, Barangay Talomo',
@@ -1449,18 +1449,18 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-006',
-        createdAt: '2026-08-29T01:05:00.000Z',
+        createdAt: '2026-09-07T01:05:00.000Z',
       },
       {
         id: 'log-026b',
         status: REPORT_STATUSES.POSSIBLE_MATCH,
         note: 'A lost report filed two days earlier describes the same markings.',
         actorId: 'user-008',
-        createdAt: '2026-08-29T02:15:00.000Z',
+        createdAt: '2026-09-07T02:15:00.000Z',
       },
     ],
-    createdAt: '2026-08-29T01:05:00.000Z',
-    updatedAt: '2026-08-29T02:15:00.000Z',
+    createdAt: '2026-09-07T01:05:00.000Z',
+    updatedAt: '2026-09-07T02:15:00.000Z',
   },
   {
     id: 'report-027',
@@ -1477,7 +1477,7 @@ export const petReports = [
       'Orange tabby with a white chest and chin. Notch in the right ear from a fight last year.',
     description:
       'Pilo has never gone further than the next house. He did not come in for his evening meal and has not been seen since. He is neutered and very vocal, so he is hard to miss.',
-    incidentDate: '2026-08-25',
+    incidentDate: '2026-09-04',
     incidentTime: '18:45',
     location: {
       label: 'Near Diversion Road, Barangay San Rafael',
@@ -1498,11 +1498,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-004',
-        createdAt: '2026-08-25T13:20:00.000Z',
+        createdAt: '2026-09-04T13:20:00.000Z',
       },
     ],
-    createdAt: '2026-08-25T13:20:00.000Z',
-    updatedAt: '2026-08-25T13:20:00.000Z',
+    createdAt: '2026-09-04T13:20:00.000Z',
+    updatedAt: '2026-09-04T13:20:00.000Z',
   },
   {
     id: 'report-028',
@@ -1519,7 +1519,7 @@ export const petReports = [
       'Grey and white, long haired, with a very bushy tail. Wearing a thin blue collar with no tag.',
     description:
       'Found sheltering under a parked jeepney during the rain. She is thin and was shivering, so we took her in and dried her off. She is eating now. The collar suggests she has an owner somewhere.',
-    incidentDate: '2026-08-22',
+    incidentDate: '2026-08-30',
     incidentTime: '20:10',
     location: {
       label: 'Near Leonard Wood Road, Barangay Lualhati',
@@ -1540,11 +1540,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-007',
-        createdAt: '2026-08-22T14:55:00.000Z',
+        createdAt: '2026-08-30T14:55:00.000Z',
       },
     ],
-    createdAt: '2026-08-22T14:55:00.000Z',
-    updatedAt: '2026-08-22T14:55:00.000Z',
+    createdAt: '2026-08-30T14:55:00.000Z',
+    updatedAt: '2026-08-30T14:55:00.000Z',
   },
   {
     id: 'report-029',
@@ -1561,7 +1561,7 @@ export const petReports = [
       'Classic beagle tricolour with a white tail tip. Wears a red collar with a small brass bell.',
     description:
       'Sabel followed a scent out of the subdivision gate during a walk and did not come back when called. She is food motivated and will approach anyone holding something to eat.',
-    incidentDate: '2026-08-20',
+    incidentDate: '2026-08-26',
     incidentTime: '06:00',
     location: {
       label: 'Near Lacson Street, Barangay Mandalagan',
@@ -1582,11 +1582,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-003',
-        createdAt: '2026-08-20T01:30:00.000Z',
+        createdAt: '2026-08-26T01:30:00.000Z',
       },
     ],
-    createdAt: '2026-08-20T01:30:00.000Z',
-    updatedAt: '2026-08-20T01:30:00.000Z',
+    createdAt: '2026-08-26T01:30:00.000Z',
+    updatedAt: '2026-08-26T01:30:00.000Z',
   },
   {
     id: 'report-030',
@@ -1602,7 +1602,7 @@ export const petReports = [
     distinctiveMarkings: 'White with grey ears and a grey patch over one eye. Lop eared.',
     description:
       'A rabbit was hopping around the covered court in the middle of the afternoon. Someone caught it before a dog did. It is in a borrowed cage at the barangay hall with food and water.',
-    incidentDate: '2026-08-26',
+    incidentDate: '2026-09-06',
     incidentTime: '15:00',
     location: {
       label: 'Near Kalayaan Avenue, Barangay Diliman',
@@ -1623,11 +1623,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-005',
-        createdAt: '2026-08-26T08:05:00.000Z',
+        createdAt: '2026-09-06T08:05:00.000Z',
       },
     ],
-    createdAt: '2026-08-26T08:05:00.000Z',
-    updatedAt: '2026-08-26T08:05:00.000Z',
+    createdAt: '2026-09-06T08:05:00.000Z',
+    updatedAt: '2026-09-06T08:05:00.000Z',
   },
   {
     id: 'report-031',
@@ -1644,7 +1644,7 @@ export const petReports = [
       'Flat face, very thick cream coat, and one eye that waters constantly. Recently shaved along her back for a skin treatment.',
     description:
       'Tuna is an indoor cat and got out through a window screen that had come loose. She is not used to the outside and will most likely be hiding somewhere close rather than roaming far.',
-    incidentDate: '2026-08-18',
+    incidentDate: '2026-08-22',
     incidentTime: '11:20',
     location: {
       label: 'Near Salinas Drive, Barangay Lahug',
@@ -1665,11 +1665,11 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-001',
-        createdAt: '2026-08-18T05:45:00.000Z',
+        createdAt: '2026-08-22T05:45:00.000Z',
       },
     ],
-    createdAt: '2026-08-18T05:45:00.000Z',
-    updatedAt: '2026-08-18T05:45:00.000Z',
+    createdAt: '2026-08-22T05:45:00.000Z',
+    updatedAt: '2026-08-22T05:45:00.000Z',
   },
   {
     id: 'report-032',
@@ -1686,7 +1686,7 @@ export const petReports = [
       'Small white and grey shih tzu, badly matted coat, nails long enough that it has been loose a while.',
     description:
       'Wandering along the service road near the market, going up to people for food. The coat is matted and the nails are long, so it has probably been out for some time rather than lost today.',
-    incidentDate: '2026-08-28',
+    incidentDate: '2026-09-08',
     incidentTime: '09:30',
     location: {
       label: 'Near General Luna Avenue, Barangay Ususan',
@@ -1708,10 +1708,10 @@ export const petReports = [
         status: REPORT_STATUSES.ACTIVE,
         note: 'Report created.',
         actorId: 'user-002',
-        createdAt: '2026-08-28T03:10:00.000Z',
+        createdAt: '2026-09-08T03:10:00.000Z',
       },
     ],
-    createdAt: '2026-08-28T03:10:00.000Z',
-    updatedAt: '2026-08-28T03:10:00.000Z',
+    createdAt: '2026-09-08T03:10:00.000Z',
+    updatedAt: '2026-09-08T03:10:00.000Z',
   },
 ]

@@ -18,7 +18,7 @@ export const moderationCases = [
     status: 'actioned',
     resolvedByAdminId: 'admin-001',
     resolutionNote: 'Report removed and the account suspended pending review.',
-    createdAt: '2026-08-08T22:10:00.000Z',
+    createdAt: '2026-05-08T22:10:00.000Z',
   },
   {
     id: 'mod-002',
@@ -29,6 +29,6 @@ export const moderationCases = [
     status: 'open',
     resolvedByAdminId: null,
     resolutionNote: '',
-    createdAt: '2026-08-16T03:25:00.000Z',
+    createdAt: '2026-06-26T03:25:00.000Z',
   },
 ]

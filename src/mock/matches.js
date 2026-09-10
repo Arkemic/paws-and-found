@@ -80,8 +80,8 @@ export const matches = [
     reviewedByStaffId: 'staff-001',
     staffNotes:
       'Owner was asked to describe the collar tag and the bent ear before any contact details are shared. Awaiting reply.',
-    createdAt: '2026-08-11T03:40:00.000Z',
-    updatedAt: '2026-08-12T01:15:00.000Z',
+    createdAt: '2026-09-02T03:40:00.000Z',
+    updatedAt: '2026-09-03T01:15:00.000Z',
   },
   {
     // 75 = 25 species + 20 location + 15 breed + 10 date + 5 other
@@ -143,8 +143,8 @@ export const matches = [
     ],
     reviewedByStaffId: null,
     staffNotes: '',
-    createdAt: '2026-08-15T12:30:00.000Z',
-    updatedAt: '2026-08-15T12:30:00.000Z',
+    createdAt: '2026-07-30T12:30:00.000Z',
+    updatedAt: '2026-07-30T12:30:00.000Z',
   },
   {
     // 100 = every signal matched. This is the case that was reunited, and it
@@ -209,8 +209,8 @@ export const matches = [
     reviewedByStaffId: 'staff-002',
     staffNotes:
       'Owner correctly described the engraving on the collar tag and provided an earlier photo. Handover completed at the barangay hall.',
-    createdAt: '2026-08-01T02:15:00.000Z',
-    updatedAt: '2026-08-02T07:30:00.000Z',
+    createdAt: '2026-05-24T02:15:00.000Z',
+    updatedAt: '2026-05-25T07:30:00.000Z',
   },
   {
     // 95 = 25 species + 20 location + 15 breed + 15 colour + 10 size + 10 date
@@ -283,7 +283,7 @@ export const matches = [
     ],
     reviewedByStaffId: null,
     staffNotes: '',
-    createdAt: '2026-08-29T02:15:00.000Z',
-    updatedAt: '2026-08-29T02:15:00.000Z',
+    createdAt: '2026-09-07T02:15:00.000Z',
+    updatedAt: '2026-09-07T02:15:00.000Z',
   },
 ]
