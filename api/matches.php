@@ -111,7 +111,7 @@ function match_decide(int $id): never
     try {
         match ($action) {
             'request_verification' => match_set_status($id, 'verification_requested', $user, $note),
-            'dismiss'              => match_set_status($id, 'dismissed', $user, $note),
+            'dismiss'              => match_dismiss($id, $match, $user, $note),
             'reject'               => match_reject($id, $match, $user, $note),
             'request_information'  => match_request_information($id, $match, $user, $note),
             'confirm'              => match_confirm($id, $match, $user, $note),
@@ -146,10 +146,11 @@ function match_set_status(int $id, string $status, array $user, ?string $note): 
     ]);
 }
 
-/** Ruled out. Both reports stay active so the search continues. */
+/** Ruled out. Both reports go back to being searched for. */
 function match_reject(int $id, array $match, array $user, ?string $note): void
 {
     match_set_status($id, 'rejected', $user, $note);
+    release_reports_without_open_matches($match, $user);
 
     notify_both(
         $match,
@@ -157,6 +158,68 @@ function match_reject(int $id, array $match, array $user, ?string $note): void
         'A possible match was ruled out',
         $note ?? 'A Pet Coordinator reviewed the pairing and it is not the same animal.'
     );
+}
+
+/** The reporter says it is not their pet. */
+function match_dismiss(int $id, array $match, array $user, ?string $note): void
+{
+    match_set_status($id, 'dismissed', $user, $note);
+    release_reports_without_open_matches($match, $user);
+}
+
+/**
+ * Put a report back to Active once nothing is pending on it.
+ *
+ * A report is moved to Possible Match when a pairing is suggested. Settling
+ * that pairing — ruled out by a coordinator, or the reporter saying it is not
+ * their pet — has to move it back, or the report goes on saying "Possible
+ * Match" when there is no longer a possible match to look at, and the owner
+ * keeps opening it expecting news.
+ *
+ * This was not needed until suggestions began setting the status themselves:
+ * before that, reports simply stayed Active and the wording in match_reject()
+ * was accidentally true.
+ *
+ * A report with another suggestion still open is left alone.
+ */
+function release_reports_without_open_matches(array $match, array $user): void
+{
+    $remaining = db()->prepare(
+        "SELECT COUNT(*)
+           FROM match_claims
+          WHERE (lost_report_id = :a OR found_report_id = :b)
+            AND match_status NOT IN ('rejected', 'dismissed', 'confirmed')"
+    );
+
+    $update = db()->prepare(
+        "UPDATE pet_reports
+            SET status = 'active'
+          WHERE report_id = :id AND status = 'possible_match'"
+    );
+
+    foreach (['lost_report_id', 'found_report_id'] as $key) {
+        $reportId = (int) $match[$key];
+
+        $remaining->execute([':a' => $reportId, ':b' => $reportId]);
+        if ((int) $remaining->fetchColumn() > 0) {
+            continue;
+        }
+
+        $update->execute([':id' => $reportId]);
+
+        // Only write history if the status actually moved. A report already
+        // Active — closed, returned, or never promoted — must not gain a line
+        // saying something changed when nothing did.
+        if ($update->rowCount() > 0) {
+            log_match_status_change(
+                $reportId,
+                (int) $user['user_id'],
+                'possible_match',
+                'active',
+                'No possible matches are open on this report.'
+            );
+        }
+    }
 }
 
 /** The coordinator needs something more before deciding. */
