@@ -213,8 +213,10 @@ export function DashboardOverviewPage() {
                   {entry.reportLabel}
                 </Link>
                 {entry.note && <span className="text-fg-muted">{entry.note}</span>}
+                {/* fg-muted, not fg-subtle: the subtle ink measures 3.06:1 on a
+                    white card. fg-subtle is for decorative icons, not text. */}
                 {entry.actorName && (
-                  <span className="text-sm text-fg-subtle">by {entry.actorName}</span>
+                  <span className="text-sm text-fg-muted">by {entry.actorName}</span>
                 )}
                 <span className="ml-auto text-sm whitespace-nowrap text-fg-muted">
                   {formatDate(entry.createdAt)}

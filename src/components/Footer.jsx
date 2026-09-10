@@ -117,7 +117,10 @@ export function Footer() {
             <Users size={18} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
             Together, we can bring them home.
           </p>
-          <p className="mt-1.5 text-sm text-fg-muted">
+          {/* `fg` rather than `fg-muted`: this card sits on `brand-soft`,
+              where the muted ink measures 4.14:1 — the lowest reading in the
+              interface and the furthest under AA. */}
+          <p className="mt-1.5 text-sm text-fg">
             Every report helps somebody find the pet they are looking for.
           </p>
           <Button as={Link} to="/explore" size="sm" className="mt-3">

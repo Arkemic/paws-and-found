@@ -23,6 +23,7 @@ import {
   MessageSquare,
   Phone,
   SearchX,
+  TriangleAlert,
   X,
 } from 'lucide-react'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
@@ -52,7 +53,7 @@ import {
   speciesLabel,
 } from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
-import { matchService, petService, userService } from '@/services'
+import { NotFoundError, matchService, petService, userService } from '@/services'
 import { formatDate } from '@/utils/date'
 
 /**
@@ -109,17 +110,33 @@ export function PetDetailPage({ role }) {
   if (isLoading) return <DetailSkeleton />
 
   if (error) {
+    // A missing report and a broken server are different things, and used to
+    // look identical here. Telling somebody whose pet is missing that their
+    // report "does not exist" because the server is down is both wrong and
+    // frightening, so the two are now separated.
+    const missing = error instanceof NotFoundError
+
     return (
       <Container width="prose" className="flex flex-col gap-6">
-        <PageHeader title="Report not found" />
+        <PageHeader title={missing ? 'Report not found' : 'This report could not be loaded'} />
         <EmptyState
-          icon={SearchX}
-          title="This report does not exist"
-          description="It may have been removed, or the address may be wrong."
+          icon={missing ? SearchX : TriangleAlert}
+          title={missing ? 'This report does not exist' : 'Something went wrong at our end'}
+          description={
+            missing
+              ? 'It may have been removed, or the address may be wrong.'
+              : 'The report is still there — we just could not fetch it. Please try again in a moment.'
+          }
           action={
-            <Button as={Link} to="/explore" variant="secondary">
-              Browse all reports
-            </Button>
+            missing ? (
+              <Button as={Link} to="/explore" variant="secondary">
+                Browse all reports
+              </Button>
+            ) : (
+              <Button onClick={reload} variant="secondary">
+                Try again
+              </Button>
+            )
           }
         />
       </Container>
@@ -332,43 +349,43 @@ export function PetDetailPage({ role }) {
           <Card>
             <CardHeader titleAs="h2" title={<HeadingWithIcon icon={ClipboardList}>Report summary</HeadingWithIcon>} />
             <CardBody className="flex flex-col gap-4">
+              {/* A `dl` may contain `dt`/`dd` directly, or wrapped one level
+                  deep in a `div` — not two. The icon used to force a second
+                  wrapper, which left the terms and definitions outside any
+                  list as far as assistive technology was concerned. A grid
+                  puts the icon, the term and the definition on one level and
+                  keeps the layout identical. */}
               <dl className="flex flex-col gap-3 text-sm">
-                <div className="flex items-start gap-2.5">
+                <div className="grid grid-cols-[auto_1fr] items-start gap-x-2.5">
                   <CalendarDays
                     size={16}
-                    className="mt-0.5 shrink-0 text-fg-subtle"
+                    className="row-span-2 mt-0.5 shrink-0 text-fg-subtle"
                     aria-hidden="true"
                   />
-                  <div>
-                    <dt className="text-fg-muted">{isFound ? 'Found on' : 'Last seen'}</dt>
-                    <dd className="font-medium text-fg">{formatDate(report.incidentDate)}</dd>
-                  </div>
+                  <dt className="text-fg-muted">{isFound ? 'Found on' : 'Last seen'}</dt>
+                  <dd className="font-medium text-fg">{formatDate(report.incidentDate)}</dd>
                 </div>
 
-                <div className="flex items-start gap-2.5">
+                <div className="grid grid-cols-[auto_1fr] items-start gap-x-2.5">
                   <MapPin
                     size={16}
-                    className="mt-0.5 shrink-0 text-fg-subtle"
+                    className="row-span-2 mt-0.5 shrink-0 text-fg-subtle"
                     aria-hidden="true"
                   />
-                  <div>
-                    <dt className="text-fg-muted">Area</dt>
-                    <dd className="font-medium text-fg">
-                      {report.location.city}, {report.location.province}
-                    </dd>
-                  </div>
+                  <dt className="text-fg-muted">Area</dt>
+                  <dd className="font-medium text-fg">
+                    {report.location.city}, {report.location.province}
+                  </dd>
                 </div>
 
-                <div className="flex items-start gap-2.5">
+                <div className="grid grid-cols-[auto_1fr] items-start gap-x-2.5">
                   <UserRound
                     size={16}
-                    className="mt-0.5 shrink-0 text-fg-subtle"
+                    className="row-span-2 mt-0.5 shrink-0 text-fg-subtle"
                     aria-hidden="true"
                   />
-                  <div>
-                    <dt className="text-fg-muted">Reported by</dt>
-                    <dd className="font-medium text-fg">{reporter.full_name}</dd>
-                  </div>
+                  <dt className="text-fg-muted">Reported by</dt>
+                  <dd className="font-medium text-fg">{reporter.full_name}</dd>
                 </div>
               </dl>
 

@@ -3,12 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Paws&Found — Web-Based Community System for Lost and Found Pets",
+  "description": "Paws&Found \u2014 Web-Based Community System for Lost and Found Pets",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "a11y": "node scripts/a11y.mjs",
+    "audit": "python scripts/audit_cases.py"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
@@ -22,10 +24,12 @@
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.0.5",
+    "axe-core": "^4.12.1",
     "eslint": "^10.8.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
     "globals": "^17.11.0",
+    "puppeteer-core": "^24.28.0",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.1"
   }

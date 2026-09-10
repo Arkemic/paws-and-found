@@ -83,7 +83,12 @@ export function StaffVerificationPage() {
         <ul className="flex flex-col gap-6">
           {pairings.map(({ match, lostReport, foundReport }) => (
             <li key={match.id} className="flex flex-col gap-3">
-              <MatchCard match={match} lostReport={lostReport} foundReport={foundReport} />
+              <MatchCard
+                match={match}
+                lostReport={lostReport}
+                foundReport={foundReport}
+                headingAs="h2"
+              />
               <VerificationPanel
                 match={match}
                 staff={staff}

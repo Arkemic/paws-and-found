@@ -149,9 +149,12 @@ export async function getReportById(id) {
     const payload = await apiFetch(`/reports/${id}`)
     return fromApi(payload.data)
   } catch (error) {
-    // Keep the error type the pages already handle, so their "report not
-    // found" states still work.
-    throw new NotFoundError(error.message)
+    // Only a 404 means the report is not there. Everything else — the server
+    // failing, the network dropping — is a different thing entirely, and
+    // telling somebody whose pet is missing that their report "does not
+    // exist" because the server is down is both wrong and alarming.
+    if (error.status === 404) throw new NotFoundError(error.message)
+    throw error
   }
 }
 

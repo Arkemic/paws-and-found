@@ -109,7 +109,10 @@ function ProblemAndChange() {
                   className="rounded-card border border-border bg-surface-muted p-5"
                 >
                   <p className="font-medium text-fg">{item.title}</p>
-                  <p className="mt-1 text-fg-muted">{item.body}</p>
+                  {/* `fg` rather than `fg-muted`: on `surface-muted` the muted
+                      ink measures 4.30:1, under AA. Same fix the table header
+                      labels already carry (design-system.md). */}
+                  <p className="mt-1 text-fg">{item.body}</p>
                 </li>
               ))}
             </ul>

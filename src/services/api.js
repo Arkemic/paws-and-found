@@ -76,6 +76,10 @@ export async function apiFetch(path, options = {}) {
     // of its own (CLAUDE.md §15).
     if (payload?.fields) error.fields = payload.fields
 
+    // The status, so a caller can tell "there is no such thing" from "the
+    // server is broken". Without it every failure looks the same.
+    error.status = response.status
+
     throw error
   }
 

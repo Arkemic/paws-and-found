@@ -7,7 +7,7 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: full system audit — 117 test cases, all passing — 2026-09-10_
+_Last updated: accessibility audited with axe-core; failure states swept — 2026-09-10_
 
 ## Foundation
 
@@ -59,9 +59,11 @@ _Last updated: full system audit — 117 test cases, all passing — 2026-09-10_
 
 ## Audit
 
-`python scripts/audit_cases.py` runs every documented test case against the
-running system and prints a table per category. It restores the demonstration
-data afterwards, so it can be run again at any time.
+`npm run audit` runs every documented test case against the running system and
+prints a table per category. It restores the demonstration data afterwards, so
+it can be run again at any time.
+
+`npm run a11y` runs axe-core over all 25 pages in every role.
 
 | Category | Cases | Passing |
 | --- | --- | --- |
@@ -82,8 +84,8 @@ Last run 2026-09-10 against the deployed build.
 | Item | Status | Notes |
 | --- | --- | --- |
 | Responsive (390 / 768 / 1366 / 1920) | `[x]` | Eight representative pages measured at all four widths against the deployed build — homepage, Explore, report detail, report form, customer dashboard, coordinator comparison, admin dashboard and admin table. No horizontal overflow anywhere. Explore overflowed by 16px at 390px until the results controls were allowed to wrap. |
-| Accessibility | `[~]` | Focus ring, skip link, labels, `aria-describedby`, breadcrumb `aria-current`, reduced motion |
-| Empty / loading / error states | `[~]` | `EmptyState` and `LoadingSkeleton` built and in use; applied per page as pages are built |
+| Accessibility | `[x]` | Focus ring, skip link, labels, `aria-describedby`, breadcrumb `aria-current`, reduced motion — and now **audited with axe-core** across all 25 pages in every role: zero violations. Run `npm run a11y`. Four rules had been failing: colour contrast in five places, an invalid `dl`, and headings skipping a level. |
+| Empty / loading / error states | `[x]` | Swept by forcing each state: a new account for empty lists, a search matching nothing, aborted and 500 responses for errors, delayed responses for loading. Two faults found and fixed — a slow first load showed a blank page, and the report page called every failure "this report does not exist". |
 | Real database | `[x]` | MySQL, 11 tables, verified on MariaDB 10.4.32 via XAMPP. `database/schema.sql`. |
 | Prepared statements everywhere | `[x]` | PDO with `ATTR_EMULATE_PREPARES => false`. Injection tested with three payloads. |
 | Category management | `[x]` | `GET/POST /api/categories`, `PATCH/DELETE /api/categories/{code}`. Administrator only. Report counts come from SQL; deleting is refused while any report uses the category, and retiring it is offered instead. Verified to survive a reload. |

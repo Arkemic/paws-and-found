@@ -85,6 +85,7 @@ export function MyMatchesPage() {
           {suggestions.map((suggestion) => (
             <li key={suggestion.id}>
               <MatchCard
+                headingAs="h2"
                 match={suggestion}
                 lostReport={byId[suggestion.lostReportId]}
                 foundReport={byId[suggestion.foundReportId]}

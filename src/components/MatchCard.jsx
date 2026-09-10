@@ -20,15 +20,23 @@ import { cn } from '@/utils/cn'
  * @param {Object} props.lostReport
  * @param {Object} props.foundReport
  * @param {React.ReactNode} [props.actions]
+ * @param {'h2'|'h3'} [props.headingAs]  The level this card's heading sits at.
+ *   Defaults to `h3`, which is right on the report detail page, where the card
+ *   follows an "Possible matches" h2. On a page where the card comes straight
+ *   after the page title, pass `h2` — a heading may only go down one level at
+ *   a time, and h1 followed by h3 leaves a gap a screen reader reads as a
+ *   missing section.
  */
-export function MatchCard({ match, lostReport, foundReport, actions }) {
+export function MatchCard({ match, lostReport, foundReport, actions, headingAs = 'h3' }) {
+  // h2 -> h3, h3 -> h4. A heading may only step down one level at a time.
+  const SignalHeading = headingAs === 'h2' ? 'h3' : 'h4'
   const matchedSignals = match.signals.filter((signal) => signal.matched)
   const unmatchedSignals = match.signals.filter((signal) => !signal.matched)
 
   return (
     <Card>
       <CardHeader
-        titleAs="h3"
+        titleAs={headingAs}
         title="Possible match"
         action={
           !match.isSuggestion && (
@@ -56,9 +64,11 @@ export function MatchCard({ match, lostReport, foundReport, actions }) {
         </div>
 
         <div className="flex flex-col gap-3">
-          <h4 className="font-semibold text-fg">
+          {/* One level below the card heading, whatever that is. Fixed at
+              h4 it skipped a level as soon as the card became an h2. */}
+          <SignalHeading className="font-semibold text-fg">
             {matchedSignals.length} of {match.signals.length} characteristics matched
-          </h4>
+          </SignalHeading>
 
           <ul className="grid gap-2 sm:grid-cols-2">
             {[...matchedSignals, ...unmatchedSignals].map((signal) => (
@@ -135,7 +145,11 @@ function ReportSide({ report }) {
  */
 export function MatchActions({ match, onRequestVerification, onDismiss, isBusy }) {
   if (match.status === MATCH_STATUSES.CONFIRMED) {
-    return <p className="text-sm text-success">Confirmed — this pet has been reunited.</p>
+    // success-ink rather than success: the brighter green measures 4.27:1 as
+    // text on white. The palette already carries a darker variant for this.
+    return (
+      <p className="text-sm text-success-ink">Confirmed — this pet has been reunited.</p>
+    )
   }
 
   if (match.status === MATCH_STATUSES.VERIFICATION_REQUESTED) {

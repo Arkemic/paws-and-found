@@ -124,7 +124,8 @@ function ProfileForm({ user, onSaved }) {
             />
           </div>
 
-          <p className="rounded-control border border-border bg-brand-soft px-3 py-2 text-sm text-fg-muted">
+          {/* fg, not fg-muted: on brand-soft the muted ink is 4.14:1. */}
+          <p className="rounded-control border border-border bg-brand-soft px-3 py-2 text-sm text-fg">
             Your email and phone number are only shown on a report if you choose to share
             them, and you choose that separately for each report.
           </p>

@@ -109,6 +109,7 @@ export function StaffMatchesPage() {
           {visible.map(({ match, lostReport, foundReport }) => (
             <li key={match.id}>
               <MatchCard
+                headingAs="h2"
                 match={match}
                 lostReport={lostReport}
                 foundReport={foundReport}

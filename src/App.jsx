@@ -107,8 +107,20 @@ export default function App() {
   // Until the session check finishes, a guarded route must not decide that
   // nobody is signed in — that would bounce a signed-in user to /login on
   // every refresh.
+  //
+  // This used to render nothing at all, which is invisible when the answer
+  // takes 40ms and a blank white page when it takes five seconds. The page
+  // now says it is working, and says so to a screen reader as well.
   if (user === undefined) {
-    return null
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex min-h-dvh items-center justify-center bg-surface"
+      >
+        <span className="text-sm text-fg-muted">Loading Paws&amp;Found…</span>
+      </div>
+    )
   }
 
   return (
