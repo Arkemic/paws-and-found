@@ -12,13 +12,12 @@ What Student Changed · Reason**.
 | Member | Responsibility |
 | --- | --- |
 | Austria, Kyle Michael V. | Project Manager / System Analyst |
-| Espiritu, Francezka Avery | Frontend Developer |
-| Citra, Dominic S. | *to be assigned* |
-| Velasco, Calvin Kristian C. | *to be assigned* |
-| Zaulda, Heinz Myjie P. | *to be assigned* |
+| Velasco, Calvin Kristian C. | Frontend Developer |
+| Zaulda, Heinz Myjie P. | Backend Developer |
+| Citra, Dominic S. | Database / API Developer |
+| Espiritu, Francezka Avery | QA / Security |
 
-Outstanding roles from the guide: Backend Developer, Database/API Developer,
-QA/Security/UI/Documentation.
+All five roles named in the project guide are assigned.
 
 ## How to keep this log
 

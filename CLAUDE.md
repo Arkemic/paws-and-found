@@ -14,11 +14,17 @@
 - **Type:** Web-Based Smart Service Management System
 - **Stage:** Proposal approved. Implementation is incremental, frontend-first.
 
-**Course code:** ITS122P – AM5. **Group 3, five members.** Kyle Michael V. Austria is
-Project Manager / System Analyst; Francezka Avery Espiritu is Frontend
-Developer; Dominic S. Citra, Calvin Kristian C. Velasco and Heinz Myjie P.
-Zaulda have roles still to be assigned. Every member must be able to explain the
-whole system, not only their part.
+**Course code:** ITS122P – AM5. **Group 3, five members.** Roles are settled:
+
+| Member | Responsibility |
+| --- | --- |
+| Austria, Kyle Michael V. | Project Manager / System Analyst |
+| Velasco, Calvin Kristian C. | Frontend Developer |
+| Zaulda, Heinz Myjie P. | Backend Developer |
+| Citra, Dominic S. | Database / API Developer |
+| Espiritu, Francezka Avery | QA / Security |
+
+Every member must be able to explain the whole system, not only their part.
 
 An academic system by Computer Science students. It should be polished and
 functional, but must remain realistic, maintainable, and **defendable by the
