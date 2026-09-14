@@ -46,7 +46,7 @@ const PAGES = [
 ]
 
 const browser = await puppeteer.launch({
-  executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  executablePath: CHROME,
   headless: 'new',
   defaultViewport: { width: 1440, height: 950 },
 })
@@ -77,7 +77,9 @@ for (const [who, route, label] of PAGES) {
   await new Promise((r) => setTimeout(r, 1400))
 
   await page.evaluate(AXE)
+  // This callback runs inside the page, where window and document exist.
   const result = await page.evaluate(async () => {
+    // eslint-disable-next-line no-undef
     const r = await window.axe.run(document, {
       resultTypes: ['violations'],
       runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'] },

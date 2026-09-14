@@ -38,11 +38,15 @@ area, and reporters can drop a pin when filing. Leaflet + OpenStreetMap.
 **Accounts are real.** You can register, and you can sign in with an email
 address and password. Passwords are hashed with bcrypt, the session is a PHP
 session, and a new account is always an ordinary user — the role is never taken
-from the request. The development role selector is kept alongside the form as a
-shortcut for the demonstration.
+from the request.
 
-Still on mock data: category management and photo upload. See
-[`docs/feature-status.md`](docs/feature-status.md) for the current picture.
+**Photos and categories are live too.** Report photographs upload to the API and
+are checked by what the file actually is; administrators add, rename, retire and
+delete pet categories. Nothing the app shows comes from mock data any more. See
+[`docs/feature-status.md`](docs/feature-status.md) for the item-by-item picture.
+
+**It is tested.** `npm run audit` runs 117 test cases against the live API and
+database; `npm run a11y` runs axe-core over 25 pages.
 
 ## Getting started
 
@@ -82,9 +86,16 @@ silent, and only shows up on the page.
 
 ### 2. API
 
-Put the project where Apache can serve it — typically `C:\xampp\htdocs\` — so
-that `http://localhost/PawsAndFound/api/` responds. Visiting it should return a
-short JSON index listing the endpoints.
+Apache has to serve the `api/` folder at `/pawsandfound/api`. Either copy it to
+`C:\xampp\htdocs\pawsandfound\api\`, or link it so edits take effect straight
+away (run in an administrator Command Prompt, adjusting the project path):
+
+```bash
+mklink /J C:\xampp\htdocs\pawsandfound\api C:\Projects\paws-and-found\api
+```
+
+Then `http://localhost/pawsandfound/api/` should return a short JSON index
+listing the endpoints.
 
 ### 3. Frontend
 
@@ -149,6 +160,8 @@ with the password itself. On a built site everyone signs in through the form.
 | `npm run build` | Production build to `dist/` |
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | ESLint over the project |
+| `npm run audit` | 117 test cases against the live API and database (reseeds it) |
+| `npm run a11y` | axe-core accessibility scan of the deployed site |
 
 ## Stack
 
@@ -220,8 +233,8 @@ Full rules for contributors and for AI assistance are in
 | [`docs/page-inventory.md`](docs/page-inventory.md) | Every route and who can reach it |
 | [`docs/design-system.md`](docs/design-system.md) | Approved palette, shape tokens, accessibility rules |
 | [`docs/ui-inventory.md`](docs/ui-inventory.md) | Reusable components — check before creating one |
-| [`docs/mock-data-guide.md`](docs/mock-data-guide.md) | How the temporary data layer works |
-| [`docs/image-requirements.md`](docs/image-requirements.md) | Visual assets still needed |
+| [`docs/mock-data-guide.md`](docs/mock-data-guide.md) | How `src/mock/` feeds the database seed |
+| [`docs/image-requirements.md`](docs/image-requirements.md) | Every visual asset and where it is used |
 | [`docs/img-005-pet-photos.md`](docs/img-005-pet-photos.md) | Shot list for the 24 demo pet photos |
 
 ## Demo data

@@ -32,3 +32,6 @@ Thumbs.db
 # tracked; what people upload into it is not.
 api/uploads/*
 !api/uploads/.htaccess
+
+# Python bytecode from the audit scripts
+__pycache__/

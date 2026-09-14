@@ -2,6 +2,10 @@
 
 How the temporary data layer works, and the rules for adding to it.
 
+> **Since Phase 12 the app no longer reads `src/mock/`.** Every page reads the PHP
+> API and MySQL. The mock files remain as the source `scripts/gen-seed.mjs` turns
+> into `database/seed.sql`, so the rules below still apply when adding seed data.
+
 _Last updated: Phase 11 — 2026-08-18_
 
 ## Why it exists
