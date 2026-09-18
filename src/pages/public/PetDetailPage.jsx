@@ -447,7 +447,8 @@ export function PetDetailPage({ role }) {
                   Close this report
                 </Button>
                 <p className="text-sm text-fg-muted">
-                  Closing removes it from public searches. Editing arrives in Phase 6.
+                  Closing removes it from public searches. To change the details, use Edit
+                  on My Reports.
                 </p>
               </CardBody>
             </Card>
