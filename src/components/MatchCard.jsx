@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Check, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
-import { Button, Card, CardBody, CardFooter, CardHeader } from '@/components/ui'
+import { Card, CardBody, CardFooter, CardHeader } from '@/components/ui'
 import { ReportTypeBadge } from './ReportTypeBadge'
-import { MATCH_STATUSES, MATCH_STATUS_LABELS, speciesLabel } from '@/constants'
+import { MATCH_STATUS_LABELS, speciesLabel } from '@/constants'
 import { formatDate } from '@/utils/date'
 import { cn } from '@/utils/cn'
 
@@ -135,40 +135,5 @@ function ReportSide({ report }) {
         </p>
       </div>
     </div>
-  )
-}
-
-/**
- * The standard action row for a user looking at a suggestion about their own
- * report. Kept beside the card so the dashboard and the detail page offer the
- * same choices in the same order.
- */
-export function MatchActions({ match, onRequestVerification, onDismiss, isBusy }) {
-  if (match.status === MATCH_STATUSES.CONFIRMED) {
-    // success-ink rather than success: the brighter green measures 4.27:1 as
-    // text on white. The palette already carries a darker variant for this.
-    return (
-      <p className="text-sm text-success-ink">Confirmed — this pet has been reunited.</p>
-    )
-  }
-
-  if (match.status === MATCH_STATUSES.VERIFICATION_REQUESTED) {
-    return (
-      <p className="text-sm text-fg-muted">
-        A Pet Coordinator has been asked to review this match.
-      </p>
-    )
-  }
-
-  return (
-    <>
-      <Button onClick={onRequestVerification} isLoading={isBusy}>
-        This could be my pet
-        <ArrowRight size={16} aria-hidden="true" />
-      </Button>
-      <Button variant="ghost" onClick={onDismiss} disabled={isBusy}>
-        Not my pet
-      </Button>
-    </>
   )
 }

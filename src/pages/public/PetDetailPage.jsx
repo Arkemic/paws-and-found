@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   Bird,
@@ -24,7 +24,6 @@ import {
   Phone,
   SearchX,
   TriangleAlert,
-  X,
 } from 'lucide-react'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import {
@@ -44,6 +43,7 @@ import { ReportTypeBadge } from '@/components/ReportTypeBadge'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Timeline } from '@/components/Timeline'
 import { FlagReportDialog } from '@/components/FlagReportDialog'
+import { PhotoLightbox } from '@/components/PhotoLightbox'
 import {
   SPECIES,
   PET_SEX_LABELS,
@@ -446,8 +446,8 @@ export function PetDetailPage({ role }) {
                   Close this report
                 </Button>
                 <p className="text-sm text-fg-muted">
-                  Closing removes it from public searches. To change the details, use Edit
-                  on My Reports.
+                  Closing stops it being compared against new reports. It stays visible
+                  with a Closed status. To change the details, use Edit on My Reports.
                 </p>
               </CardBody>
             </Card>
@@ -572,71 +572,6 @@ function PhotoGallery({ photos, petLabel }) {
         }
       />
     </div>
-  )
-}
-
-/**
- * The report photograph at full size.
- *
- * Built on the native `<dialog>` for the same reason `Modal` is: Escape, the
- * focus trap and the inert background come from the platform rather than from
- * a library. It is not `Modal` itself because that draws a titled white panel,
- * which is the wrong frame for a photograph.
- */
-function PhotoLightbox({ isOpen, onClose, src, alt, index, total, onStep }) {
-  const dialogRef = useRef(null)
-
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-
-    if (isOpen && !dialog.open) dialog.showModal()
-    if (!isOpen && dialog.open) dialog.close()
-  }, [isOpen])
-
-  return (
-    <dialog
-      ref={dialogRef}
-      // Let Escape close the dialog natively, then sync the parent state from
-      // the resulting `close` event. Intercepting `cancel` instead leaves the
-      // two out of step if the event does not fire.
-      onClose={onClose}
-      // A click that lands on the dialog itself is a click on the backdrop —
-      // the image and controls are children and stop it here.
-      onClick={(event) => {
-        if (event.target === dialogRef.current) onClose()
-      }}
-      className="max-h-none max-w-none bg-transparent p-0 backdrop:bg-fg/85 open:fixed open:inset-0 open:flex open:size-full open:items-center open:justify-center"
-    >
-      <div className="relative flex max-h-full max-w-full flex-col items-center gap-3 p-2 sm:p-4">
-        <img src={src} alt={alt} className="max-h-[82vh] max-w-[97vw] rounded-card object-contain sm:max-w-[92vw]" />
-
-        <div className="flex items-center gap-4">
-          {total > 1 && (
-            <>
-              <Button variant="secondary" size="sm" onClick={() => onStep(-1)}>
-                Previous
-              </Button>
-              <span className="text-sm font-medium text-fg-inverted">
-                {index + 1} / {total}
-              </span>
-              <Button variant="secondary" size="sm" onClick={() => onStep(1)}>
-                Next
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute top-4 right-4 flex size-11 items-center justify-center rounded-full bg-panel text-fg shadow-raised hover:bg-surface-muted"
-      >
-        <X size={20} aria-hidden="true" />
-        <span className="sr-only">Close full photo</span>
-      </button>
-    </dialog>
   )
 }
 

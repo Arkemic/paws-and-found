@@ -196,7 +196,7 @@ export const petReports = [
   {
     id: 'report-003',
     reportType: REPORT_TYPES.LOST,
-    status: REPORT_STATUSES.ACTIVE,
+    status: REPORT_STATUSES.POSSIBLE_MATCH,
     petName: 'Kitkat',
     species: SPECIES.CAT,
     breed: 'Puspin (Philippine Domestic Shorthair)',
@@ -242,14 +242,23 @@ export const petReports = [
         actorId: 'user-002',
         createdAt: '2026-07-29T00:22:00.000Z',
       },
+      {
+        id: 'log-003b',
+        status: REPORT_STATUSES.POSSIBLE_MATCH,
+        // Raised by the matching engine when match-002 was created, so no
+        // person is the actor — the same entry the live system writes.
+        note: 'A possible match was found.',
+        actorId: null,
+        createdAt: '2026-07-30T12:30:00.000Z',
+      },
     ],
     createdAt: '2026-07-29T00:22:00.000Z',
-    updatedAt: '2026-07-29T00:22:00.000Z',
+    updatedAt: '2026-07-30T12:30:00.000Z',
   },
   {
     id: 'report-004',
     reportType: REPORT_TYPES.FOUND,
-    status: REPORT_STATUSES.ACTIVE,
+    status: REPORT_STATUSES.POSSIBLE_MATCH,
     petName: null,
     species: SPECIES.CAT,
     breed: 'Puspin (Philippine Domestic Shorthair)',
@@ -295,9 +304,18 @@ export const petReports = [
         actorId: 'user-006',
         createdAt: '2026-07-30T12:05:00.000Z',
       },
+      {
+        id: 'log-004b',
+        status: REPORT_STATUSES.POSSIBLE_MATCH,
+        // Raised by the matching engine when match-002 was created, so no
+        // person is the actor — the same entry the live system writes.
+        note: 'A possible match was found.',
+        actorId: null,
+        createdAt: '2026-07-30T12:30:00.000Z',
+      },
     ],
     createdAt: '2026-07-30T12:05:00.000Z',
-    updatedAt: '2026-07-30T12:05:00.000Z',
+    updatedAt: '2026-07-30T12:30:00.000Z',
   },
 
   // --- Unmatched reports, other regions and species ------------------------

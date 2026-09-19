@@ -143,12 +143,15 @@ L.push(users.map((u, i) =>
 ).join(',\n') + ';')
 L.push('')
 
-// locations — one per report
+// locations — one per report, numbered by the report's own id. The report
+// row below points at location_id = report_id, so numbering these by their
+// position in the file instead put 17 of 32 reports at another report's
+// place wherever src/mock/ is not in id order (report-010 sits before 008).
 L.push('-- One location per report. Coordinates are barangay-level (approximate).')
 L.push('INSERT INTO locations (location_id, label, city, province, latitude, longitude, `precision`) VALUES')
-L.push(petReports.map((r, i) => {
+L.push(petReports.map((r) => {
   const l = r.location
-  return `  (${i + 1}, ${q(l.label)}, ${q(l.city)}, ${q(l.province)}, ${n(l.lat)}, ${n(l.lng)}, ${q(l.precision ?? 'approximate')})`
+  return `  (${reportId.get(r.id)},${q(l.label)}, ${q(l.city)}, ${q(l.province)}, ${n(l.lat)}, ${n(l.lng)}, ${q(l.precision ?? 'approximate')})`
 }).join(',\n') + ';')
 L.push('')
 
