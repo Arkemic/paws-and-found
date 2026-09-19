@@ -4,6 +4,7 @@ import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { Button, LoadingSkeleton } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { StatTile } from '@/components/StatTile'
+import { MatchStatusBadge, PairingName } from '@/components/MatchComparison'
 import { StatusBadge } from '@/components/StatusBadge'
 import { BreakdownBars } from '@/components/BreakdownBars'
 import { ReportTypeBadge } from '@/components/ReportTypeBadge'
@@ -14,6 +15,7 @@ import {
   REPORT_STATUS_BARS,
   REPORT_STATUS_LABELS,
   REPORT_STATUS_ORDER,
+  speciesLabel,
 } from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
 import { matchService, petService } from '@/services'
@@ -107,16 +109,20 @@ export function StaffOverviewPage() {
 
         <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-card border border-border bg-panel">
           {recentlyUpdated.map((report) => (
-            <li key={report.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3">
+            // The whole row opens the report: the name is a stretched link.
+            <li
+              key={report.id}
+              className="relative flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 transition-colors hover:bg-surface has-[a:focus-visible]:bg-surface"
+            >
               <ReportThumb report={report} />
               <ReportTypeBadge reportType={report.reportType} size="sm" />
               <Link
                 to={`/pet/${report.id}`}
-                className="text-sm font-medium text-brand hover:underline"
+                className="text-sm font-medium text-fg after:absolute after:inset-0 hover:underline"
               >
-                {report.petName ?? 'Found pet report'}
+                {report.petName ?? `Found ${speciesLabel(report.species).toLowerCase()}`}
               </Link>
-              <StatusBadge status={report.status} />
+              <StatusBadge status={report.status} variant="pill" />
               <span className="ml-auto text-sm whitespace-nowrap text-fg-muted">
                 {report.location.city} · {formatRelativeTime(report.updatedAt)}
               </span>
@@ -139,9 +145,14 @@ function NeedsAttention({ awaiting, suggested }) {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="text-xl font-semibold text-fg">
+      <h2 className="flex items-center gap-2 text-xl font-semibold text-fg">
         Needs your attention
-        {total > 0 && <span className="ml-2 font-normal text-fg-muted">{total}</span>}
+        {total > 0 && (
+          <span className="rounded-pill bg-accent-soft px-2.5 py-0.5 text-sm font-semibold text-lost tabular-nums">
+            {total}
+            <span className="sr-only"> {total === 1 ? 'item' : 'items'}</span>
+          </span>
+        )}
       </h2>
 
       {total === 0 ? (
@@ -150,31 +161,22 @@ function NeedsAttention({ awaiting, suggested }) {
         </p>
       ) : (
         <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-card border border-border bg-panel">
-          {awaiting.map(({ match, lostReport, foundReport }) => (
+          {/* Waiting on a decision first, with the stronger button; then open
+              pairings nobody has looked at. */}
+          {awaiting.map((item) => (
             <AttentionRow
-              key={match.id}
-              icon={ShieldCheck}
-              lostReport={lostReport}
-              foundReport={foundReport}
-              urgent
-              title={`Verification requested · ${match.score}% match`}
-              detail={`${lostReport.petName ?? 'A lost report'} and a found report in ${foundReport.location.city}`}
-              when={match.updatedAt}
-              to="/staff/verification"
+              key={item.match.id}
+              {...item}
+              to={`/staff/verification#match-${item.match.id}`}
               actionLabel="Verify"
+              primary
             />
           ))}
-
-          {suggested.map(({ match, lostReport, foundReport }) => (
+          {suggested.map((item) => (
             <AttentionRow
-              key={match.id}
-              icon={Heart}
-              lostReport={lostReport}
-              foundReport={foundReport}
-              title={`Possible match · ${match.score}%`}
-              detail={`${lostReport.petName ?? 'A lost report'} and a found report in ${foundReport.location.city}`}
-              when={match.updatedAt}
-              to="/staff/matches"
+              key={item.match.id}
+              {...item}
+              to={`/staff/matches#match-${item.match.id}`}
               actionLabel="Review"
             />
           ))}
@@ -184,61 +186,38 @@ function NeedsAttention({ awaiting, suggested }) {
   )
 }
 
-function AttentionRow({
-  icon: Icon,
-  urgent = false,
-  lostReport,
-  foundReport,
-  title,
-  detail,
-  when,
-  to,
-  actionLabel,
-}) {
+function AttentionRow({ match, lostReport, foundReport, to, actionLabel, primary = false }) {
   return (
     // A grid on phones so the button drops under the text and lines up with it;
     // beside the text it squeezed each line to two or three words.
-    <li className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 px-4 py-4 sm:flex sm:gap-4">
-      {/* The two animals, where the row is about a pairing. A coordinator
-          decides these by looking, and a queue of identical teal icons gave
-          them nothing to look at — the wording underneath is the same on every
-          row, so the photographs are the only thing that distinguishes one
-          case from the next. The icon medallion stays as the fallback. */}
-      {lostReport && foundReport ? (
-        <span className="mt-0.5 flex shrink-0 -space-x-3">
-          <ReportThumb report={lostReport} />
-          <ReportThumb report={foundReport} />
-        </span>
-      ) : (
-        <span
-          className={
-            urgent
-              ? 'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-control bg-accent-soft text-lost'
-              : 'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand'
-          }
-        >
-          <Icon size={18} aria-hidden="true" />
-        </span>
-      )}
+    <li className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 px-4 py-4 sm:flex sm:items-center sm:gap-4">
+      {/* The two animals. A coordinator decides these by looking; the words on
+          every row are similar, the photographs are not. */}
+      <span className="mt-0.5 flex shrink-0 -space-x-3 sm:mt-0">
+        <ReportThumb report={lostReport} />
+        <ReportThumb report={foundReport} />
+      </span>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="flex flex-wrap items-center gap-2 font-medium text-fg">
-          <Icon
-            size={16}
-            aria-hidden="true"
-            className={urgent ? 'shrink-0 text-lost' : 'shrink-0 text-brand'}
-          />
-          {title}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <MatchStatusBadge status={match.status} className="px-2.5 py-0.5 text-xs" />
+          <span className="text-sm text-fg-muted">
+            <span className="font-semibold text-fg tabular-nums">{match.score}%</span> compatibility
+          </span>
+        </div>
+        <p className="font-medium text-fg">
+          <PairingName lost={lostReport} found={foundReport} />
         </p>
-        <p className="text-sm text-fg-muted">{detail}</p>
-        <p className="text-sm text-fg-muted">{formatRelativeTime(when)}</p>
+        <p className="text-sm text-fg-muted">
+          {foundReport.location.city} · {formatRelativeTime(match.updatedAt)}
+        </p>
       </div>
 
       <Button
         as={Link}
         to={to}
         size="sm"
-        variant={urgent ? 'primary' : 'secondary'}
+        variant={primary ? 'primary' : 'secondary'}
         className="col-start-2 justify-self-start sm:shrink-0"
       >
         {actionLabel}
@@ -278,7 +257,7 @@ function StatusBreakdown({ reports }) {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="text-xl font-semibold text-fg">Where reports stand</h2>
+      <h2 className="text-xl font-semibold text-fg">Reports by status</h2>
       <BreakdownBars rows={rows} total={reports.length} className="rounded-card border border-border bg-panel p-5" />
     </section>
   )

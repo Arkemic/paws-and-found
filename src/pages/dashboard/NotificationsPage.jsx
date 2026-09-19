@@ -243,11 +243,7 @@ export function NotificationsPage({
                           )}
                           {notification.matchId && (
                             <Link
-                              to={
-                                matchPath === '/dashboard/matches'
-                                  ? `${matchPath}#match-${notification.matchId}`
-                                  : matchPath
-                              }
+                              to={`${matchPath}#match-${notification.matchId}`}
                               onClick={readOnFollow}
                               className="py-1 text-sm font-medium text-brand hover:underline"
                             >

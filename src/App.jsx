@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { RootLayout } from '@/layouts/RootLayout'
 import { WorkspaceLayout } from '@/layouts/WorkspaceLayout'
 import { loadDashboardCounts } from '@/pages/dashboard/dashboardSummary'
+import { loadStaffCounts } from '@/pages/staff/staffCounts'
 import { RequireAccess } from '@/components/RequireAccess'
 import { ROLES } from '@/constants'
 import { ADMIN_NAV, STAFF_NAV, USER_NAV } from '@/constants/navigation'
@@ -188,7 +189,12 @@ export default function App() {
             path="/staff"
             element={
               <RequireAccess role={role} allowed={[ROLES.STAFF]}>
-                <WorkspaceLayout label="Staff workspace" items={STAFF_NAV} />
+                <WorkspaceLayout
+                  label="Staff workspace"
+                  items={STAFF_NAV}
+                  variant="light"
+                  loadCounts={loadStaffCounts}
+                />
               </RequireAccess>
             }
           >
@@ -202,7 +208,10 @@ export default function App() {
                 <NotificationsPage
                   workspacePath="/staff"
                   workspaceLabel="Staff workspace"
-                  matchPath="/staff/verification"
+                  // The Match Queue holds every pairing; Verification only
+                  // the ones someone asked to be checked, so an open match
+                  // linked there was not on the page.
+                  matchPath="/staff/matches"
                 />
               }
             />

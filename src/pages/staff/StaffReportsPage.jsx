@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ChevronDown, ChevronUp, FileText, Heart, PawPrint } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { CalendarDays, ChevronDown, ChevronUp, FileText, Heart, MapPin, PawPrint, Search } from 'lucide-react'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
-import { EmptyState, LoadingSkeleton } from '@/components/ui'
+import { Button, EmptyState, LoadingSkeleton, Select } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { ReportTypeBadge } from '@/components/ReportTypeBadge'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -10,6 +10,7 @@ import {
   REPORT_STATUSES,
   REPORT_STATUS_LABELS,
   REPORT_STATUS_ORDER,
+  REPORT_TYPES,
   speciesLabel,
 } from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
@@ -40,6 +41,11 @@ export function StaffReportsPage() {
   // Most recently touched first — where a coordinator picks up from.
   const [sort, setSort] = useState({ key: 'updated', direction: 'desc' })
   const { data, error, isLoading } = useAsync(loadQueue)
+  // Narrowing within the loaded queue. The report list already came back in
+  // full (up to the API's 50-per-request cap), so this filters in the browser
+  // rather than asking the server again.
+  const [filters, setFilters] = useState({ text: '', type: '', species: '' })
+  const navigate = useNavigate()
 
   // Clicking the active column flips it; clicking a new one starts ascending.
   const toggleSort = (key) =>
@@ -80,10 +86,26 @@ export function StaffReportsPage() {
   }
 
   const { reports, matches } = data
-  const countFor = (id) =>
-    id === 'all' ? reports.length : reports.filter((report) => report.status === id).length
+  const needle = filters.text.trim().toLowerCase()
+  const matchesFilters = (report) =>
+    (!filters.type || report.reportType === filters.type) &&
+    (!filters.species || report.species === filters.species) &&
+    (!needle ||
+      [report.petName, report.breed, speciesLabel(report.species), report.primaryColor, report.secondaryColor, report.location.city, report.location.label]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(needle)))
+  const filtered = reports.filter(matchesFilters)
+  const isFiltering = Boolean(needle || filters.type || filters.species)
+  const speciesOptions = [...new Set(reports.map((report) => report.species))].map((value) => ({
+    value,
+    label: speciesLabel(value),
+  }))
 
-  const visible = tab === 'all' ? reports : reports.filter((report) => report.status === tab)
+  // Counts follow the filters, so a tab never promises rows it will not show.
+  const countFor = (id) =>
+    id === 'all' ? filtered.length : filtered.filter((report) => report.status === id).length
+
+  const visible = tab === 'all' ? filtered : filtered.filter((report) => report.status === tab)
 
   const matchCountFor = (reportId) =>
     matches.filter((match) => match.lostReportId === reportId || match.foundReportId === reportId)
@@ -130,138 +152,229 @@ export function StaffReportsPage() {
             )}
           >
             {item.label}
-            <span className="ml-1.5 text-fg-muted">{countFor(item.id)}</span>
+            <span className="ml-1.5 rounded-pill bg-surface-muted px-1.5 text-xs font-semibold text-fg tabular-nums">
+              {countFor(item.id)}
+            </span>
           </button>
         ))}
+      </div>
+
+      {/* Utility row: search and two filters over the loaded queue. */}
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_10rem]">
+        <label className="relative">
+          <span className="sr-only">Search reports</span>
+          <Search
+            size={16}
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={filters.text}
+            onChange={(event) => setFilters((f) => ({ ...f, text: event.target.value }))}
+            placeholder="Name, breed, colour or city"
+            className="h-10 w-full rounded-control border border-border-strong bg-panel pr-3 pl-9 text-sm text-fg placeholder:text-fg-muted"
+          />
+        </label>
+        <Select
+          label="Type"
+          hideLabel
+          value={filters.type}
+          onChange={(event) => setFilters((f) => ({ ...f, type: event.target.value }))}
+          options={[
+            { value: '', label: 'Lost & found' },
+            { value: REPORT_TYPES.LOST, label: 'Lost only' },
+            { value: REPORT_TYPES.FOUND, label: 'Found only' },
+          ]}
+        />
+        <Select
+          label="Species"
+          hideLabel
+          value={filters.species}
+          onChange={(event) => setFilters((f) => ({ ...f, species: event.target.value }))}
+          options={[{ value: '', label: 'Any species' }, ...speciesOptions]}
+        />
       </div>
 
       {visible.length === 0 ? (
         <EmptyState
           icon={PawPrint}
-          title="Nothing in this queue"
-          description="Reports will appear here as they reach this status."
+          title={isFiltering ? 'No reports match these filters' : 'Nothing in this queue'}
+          description={
+            isFiltering
+              ? 'Try another word, or clear the filters.'
+              : 'Reports will appear here as they reach this status.'
+          }
+          action={
+            isFiltering && (
+              <Button variant="secondary" onClick={() => setFilters({ text: '', type: '', species: '' })}>
+                Clear filters
+              </Button>
+            )
+          }
         />
       ) : (
-        // A management list, not a stack of cards: a coordinator scanning
-        // twenty-four reports needs rows they can compare, not twenty-four
-        // panels. Secondary columns drop out on narrow screens rather than
-        // forcing the whole table to scroll sideways.
-        <div className="overflow-x-auto rounded-card border border-border bg-panel">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-surface-muted text-fg">
-              <tr>
-                <th scope="col" className="w-20 px-4 py-2.5 font-medium">
-                  <span className="sr-only">Photo</span>
-                </th>
-                <SortableHeader label="Report" sortKey="report" {...headerProps} />
-                <SortableHeader
-                  label="Location"
-                  sortKey="location"
-                  className="hidden md:table-cell"
-                  {...headerProps}
-                />
-                <SortableHeader
-                  label="Date"
-                  sortKey="date"
-                  className="hidden lg:table-cell"
-                  {...headerProps}
-                />
-                <SortableHeader label="Status" sortKey="status" {...headerProps} />
-                <SortableHeader
-                  label="Match"
-                  sortKey="match"
-                  className="hidden sm:table-cell"
-                  {...headerProps}
-                />
-                <SortableHeader
-                  label="Updated"
-                  sortKey="updated"
-                  className="hidden xl:table-cell"
-                  {...headerProps}
-                />
-              </tr>
-            </thead>
+        <>
+          {/* Phones and tablets: one case card per report, most important
+              fields first. No squeezed table and no sideways scrolling. */}
+          <ul className="flex flex-col gap-3 lg:hidden">
+            {sorted.map((report) => (
+              <QueueCard key={report.id} report={report} matchCount={matchCountFor(report.id)} />
+            ))}
+          </ul>
 
-            <tbody className="divide-y divide-border">
-              {sorted.map((report) => {
-                const matchCount = matchCountFor(report.id)
-                const primaryPhoto =
-                  report.photos.find((photo) => photo.isPrimary) ?? report.photos[0]
+          {/* Laptops and wider: a management table a coordinator can scan and
+              sort. The row opens the report; the name is its keyboard link. */}
+          <div className="hidden overflow-hidden rounded-card border border-border bg-panel lg:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-surface-muted text-fg">
+                <tr>
+                  <th scope="col" className="w-16 py-2.5 pl-4">
+                    <span className="sr-only">Photo</span>
+                  </th>
+                  <SortableHeader label="Report" sortKey="report" {...headerProps} />
+                  <SortableHeader label="Location" sortKey="location" {...headerProps} />
+                  <SortableHeader label="Incident" sortKey="date" {...headerProps} />
+                  <SortableHeader label="Status" sortKey="status" {...headerProps} />
+                  <SortableHeader label="Matches" sortKey="match" {...headerProps} />
+                  <SortableHeader label="Updated" sortKey="updated" className="pr-4" {...headerProps} />
+                </tr>
+              </thead>
 
-                return (
-                  <tr key={report.id} className="align-middle transition-colors hover:bg-surface">
-                    <td className="px-4 py-3">
-                      <img
-                        src={primaryPhoto?.url ?? photoPlaceholder}
-                        alt=""
-                        className="size-11 rounded-control bg-surface-muted object-cover"
-                        loading="lazy"
-                      />
-                    </td>
+              <tbody className="divide-y divide-border">
+                {sorted.map((report) => {
+                  const matchCount = matchCountFor(report.id)
 
-                    <td className="px-2 py-3">
-                      <div className="flex flex-col gap-1">
-                        <Link
-                          to={`/pet/${report.id}`}
-                          className="font-medium text-fg hover:underline"
-                        >
-                          {report.petName ?? `${speciesLabel(report.species)} (name unknown)`}
-                        </Link>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <ReportTypeBadge reportType={report.reportType} size="sm" />
+                  return (
+                    <tr
+                      key={report.id}
+                      onClick={(event) => {
+                        // A click on the name or the match link does its own thing.
+                        if (event.target.closest('a')) return
+                        navigate(`/pet/${report.id}`)
+                      }}
+                      className="cursor-pointer align-middle transition-colors hover:bg-surface has-[a:focus-visible]:bg-surface"
+                    >
+                      <td className="py-3 pl-4">
+                        <Thumb report={report} className="size-11" />
+                      </td>
+
+                      <td className="px-2 py-3">
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <ReportTypeBadge reportType={report.reportType} size="sm" />
+                            <Link to={`/pet/${report.id}`} className="font-semibold text-fg hover:underline">
+                              {reportName(report)}
+                            </Link>
+                          </div>
                           <span className="text-fg-muted">
-                            {report.breed || speciesLabel(report.species)}
+                            {[speciesLabel(report.species), report.breed].filter(Boolean).join(' · ')}
                           </span>
                         </div>
-                        {/* The columns hidden on narrow screens, folded into
-                            the one column that is always visible. */}
-                        <span className="text-fg-muted md:hidden">
-                          {report.location.city} · {formatDate(report.incidentDate)}
-                        </span>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="hidden px-2 py-3 text-fg-muted md:table-cell">
-                      {report.location.city}
-                    </td>
+                      <td className="px-2 py-3 text-fg-muted">{report.location.city}</td>
 
-                    <td className="hidden px-2 py-3 whitespace-nowrap text-fg-muted lg:table-cell">
-                      {formatDate(report.incidentDate)}
-                    </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-fg-muted">
+                        {formatDate(report.incidentDate)}
+                      </td>
 
-                    <td className="px-2 py-3">
-                      <StatusBadge status={report.status} />
-                    </td>
+                      <td className="px-2 py-3">
+                        <StatusBadge status={report.status} variant="pill" />
+                      </td>
 
-                    <td className="hidden px-2 py-3 sm:table-cell">
-                      {matchCount > 0 ? (
-                        <Link
-                          to="/staff/matches"
-                          className="inline-flex items-center gap-1 whitespace-nowrap text-brand hover:underline"
-                        >
-                          <Heart size={14} aria-hidden="true" />
-                          {matchCount}
-                          <span className="sr-only">
-                            possible {matchCount === 1 ? 'match' : 'matches'}
-                          </span>
-                        </Link>
-                      ) : (
-                        <span className="text-fg-muted">—</span>
-                      )}
-                    </td>
+                      <td className="px-2 py-3">
+                        <MatchLink count={matchCount} />
+                      </td>
 
-                    <td className="hidden px-4 py-3 whitespace-nowrap text-fg-muted xl:table-cell">
-                      {formatRelativeTime(report.updatedAt)}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <td className="py-3 pr-4 pl-2 whitespace-nowrap text-fg-muted">
+                        {formatRelativeTime(report.updatedAt)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   )
+}
+
+/** A report as a compact case card, for narrower screens. */
+function QueueCard({ report, matchCount }) {
+  return (
+    <li className="relative flex gap-3 rounded-card border border-border bg-panel p-3 shadow-card has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-brand">
+      <Thumb report={report} className="size-18 shrink-0" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <ReportTypeBadge reportType={report.reportType} size="sm" />
+          <StatusBadge status={report.status} variant="pill" />
+        </div>
+        <Link
+          to={`/pet/${report.id}`}
+          className="font-semibold text-fg after:absolute after:inset-0 after:rounded-card focus-visible:outline-none"
+        >
+          {reportName(report)}
+        </Link>
+        <p className="text-sm text-fg-muted">
+          {[speciesLabel(report.species), report.breed].filter(Boolean).join(' · ')}
+        </p>
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-fg-muted">
+          <span className="inline-flex items-center gap-1">
+            <MapPin size={13} className="shrink-0 text-fg-subtle" aria-hidden="true" />
+            {report.location.city}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <CalendarDays size={13} className="shrink-0 text-fg-subtle" aria-hidden="true" />
+            {formatDate(report.incidentDate)}
+          </span>
+        </p>
+        <div className="relative mt-0.5 flex flex-wrap items-center gap-x-3 text-sm text-fg-muted">
+          <MatchLink count={matchCount} />
+          <span>Updated {formatRelativeTime(report.updatedAt)}</span>
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function MatchLink({ count }) {
+  if (count === 0) {
+    return (
+      <span className="text-fg-muted">
+        —<span className="sr-only">No matches</span>
+      </span>
+    )
+  }
+
+  return (
+    <Link
+      to="/staff/matches"
+      className="relative inline-flex items-center gap-1 font-medium whitespace-nowrap text-lost hover:underline"
+    >
+      <Heart size={14} aria-hidden="true" />
+      {count} {count === 1 ? 'match' : 'matches'}
+    </Link>
+  )
+}
+
+function Thumb({ report, className }) {
+  const photo = report.photos.find((item) => item.isPrimary) ?? report.photos[0]
+
+  return (
+    <img
+      src={photo?.url ?? photoPlaceholder}
+      alt=""
+      loading="lazy"
+      className={`rounded-control bg-surface-muted object-cover ${className}`}
+    />
+  )
+}
+
+function reportName(report) {
+  return report.petName ?? `${speciesLabel(report.species)} (name unknown)`
 }
 
 /**

@@ -16,9 +16,9 @@ const linkClasses = ({ isActive }) =>
  *
  * Two looks:
  *
- * - `panel` (staff and admin): a white panel from `lg` up, and a wrapping row
+ * - `panel` (administration): a white panel from `lg` up, and a wrapping row
  *   of links on smaller screens.
- * - `light` (the customer dashboard): no panel — the links sit on the page
+ * - `light` (the customer dashboard and the Staff workspace): no panel — the links sit on the page
  *   ground with a hairline divider, and only the current destination gets the
  *   pale-teal surface. The tall white panel around five links read as an empty,
  *   unfinished box. Below `lg` it becomes one compact "section" menu instead of
@@ -110,7 +110,7 @@ function LightSidebar({ label, items, counts }) {
         >
           <span className="flex items-center gap-2">
             <CurrentIcon size={16} className="text-brand" aria-hidden="true" />
-            <span className="sr-only">Dashboard section: </span>
+            <span className="sr-only">{label} section: </span>
             {current.label}
           </span>
           <ChevronDown
@@ -137,7 +137,7 @@ function LightSidebar({ label, items, counts }) {
 
 function CountBadge({ count }) {
   return (
-    <span className="ml-auto min-w-6 rounded-pill bg-surface-muted px-2 py-0.5 text-center text-xs font-medium text-fg-muted tabular-nums">
+    <span className="ml-auto min-w-6 rounded-pill bg-surface-muted px-2 py-0.5 text-center text-xs font-medium text-fg tabular-nums">
       {count}
       <span className="sr-only"> {count === 1 ? 'item' : 'items'}</span>
     </span>
