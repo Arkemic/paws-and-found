@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Lock, MapPin, ShieldCheck, UserRound } from 'lucide-react'
 import { Button, Card, CardBody, CardHeader, Checkbox, Input, LoadingSkeleton } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { ROLE_LABELS } from '@/constants'
@@ -16,6 +16,35 @@ const header = (
   />
 )
 
+/** The API's field names → this form's, so a rejected field is marked where it is. */
+const API_FIELDS = {
+  full_name: 'fullName',
+  email: 'email',
+  contact_number: 'phone',
+  preferred_location: 'preferredLocation',
+}
+
+/** The three switches, as the rows they are shown in. */
+const PREFERENCES = [
+  {
+    field: 'possibleMatches',
+    label: 'Possible matches',
+    hint: 'When a report is filed that could be the same pet.',
+  },
+  {
+    field: 'statusUpdates',
+    label: 'Status updates',
+    hint: 'When one of your reports changes status.',
+  },
+  {
+    field: 'staffMessages',
+    label: 'Messages from a Pet Coordinator',
+    // What notify_staff actually gates: a coordinator asking for more
+    // information. Their decisions arrive as status updates.
+    hint: 'When a Pet Coordinator asks you for more information about a pairing.',
+  },
+]
+
 /**
  * Your own details and notification preferences.
  *
@@ -26,7 +55,10 @@ const header = (
 export function ProfilePage() {
   const { data: user, isLoading, error, reload } = useAsync(loadCurrentUser)
 
-  if (isLoading) {
+  // Only on the first load. After a save the account is fetched again; if
+  // that showed the skeleton too, it replaced the form and threw away its
+  // "Profile saved" confirmation the moment it appeared.
+  if (isLoading && !user) {
     return (
       <div className="flex flex-col gap-6">
         {header}
@@ -60,6 +92,11 @@ function ProfileForm({ user, onSaved }) {
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [saveError, setSaveError] = useState(null)
+
+  // The server's own per-field messages, placed under the fields they name.
+  const fieldErrors = Object.fromEntries(
+    Object.entries(saveError?.fields ?? {}).map(([name, message]) => [API_FIELDS[name] ?? name, message]),
+  )
 
   const change = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -97,52 +134,75 @@ function ProfileForm({ user, onSaved }) {
       {header}
 
       <Card>
-        <CardHeader titleAs="h2" title="Your details" />
-        <CardBody className="flex flex-col gap-4">
-          <Input
-            label="Full name"
-            value={form.fullName}
-            onChange={(event) => change('fullName', event.target.value)}
-            maxLength={80}
-            required
-            hint="Shown on the reports you file."
-          />
+        <CardHeader
+          titleAs="h2"
+          title="Your details"
+          // Read-only, and shaped like it: a badge in the header rather than a
+          // line among fields that can all be edited.
+          action={
+            // fg, not fg-muted: muted ink on surface-muted fails contrast.
+            <span className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-3 py-1 text-sm text-fg">
+              <ShieldCheck size={14} className="text-fg-muted" aria-hidden="true" />
+              Account type
+              <span className="font-semibold">{ROLE_LABELS[user.role]}</span>
+            </span>
+          }
+        />
 
-          <div className="grid gap-4 sm:grid-cols-2">
+        <CardBody className="flex flex-col gap-7">
+          <FieldGroup icon={UserRound} title="Personal information">
             <Input
-              label="Email address"
-              type="email"
-              value={form.email}
-              onChange={(event) => change('email', event.target.value)}
+              label="Full name"
+              value={form.fullName}
+              onChange={(event) => change('fullName', event.target.value)}
+              maxLength={80}
               required
+              hint="Shown on the reports you file."
+              error={fieldErrors.fullName}
             />
-            <Input
-              label="Phone number"
-              type="tel"
-              value={form.phone}
-              onChange={(event) => change('phone', event.target.value)}
-            />
-          </div>
 
-          {/* fg, not fg-muted: on brand-soft the muted ink is 4.14:1. */}
-          <p className="rounded-control border border-border bg-brand-soft px-3 py-2 text-sm text-fg">
-            Your email and phone number are only shown on a report if you choose to share
-            them, and you choose that separately for each report.
-          </p>
+            <div className="flex flex-col gap-2">
+              <Input
+                label="Preferred location"
+                value={form.preferredLocation}
+                onChange={(event) => change('preferredLocation', event.target.value)}
+                maxLength={80}
+                placeholder="e.g. Makati City, Metro Manila"
+                error={fieldErrors.preferredLocation}
+              />
+              <p className="flex items-center gap-1.5 text-sm font-medium text-fg">
+                <MapPin size={15} className="shrink-0 text-brand" aria-hidden="true" />
+                Private. Where you usually are — only you and Pet Coordinators can see it.
+              </p>
+            </div>
+          </FieldGroup>
 
-          <Input
-            label="Preferred location"
-            value={form.preferredLocation}
-            onChange={(event) => change('preferredLocation', event.target.value)}
-            maxLength={80}
-            placeholder="e.g. Makati City, Metro Manila"
-            hint="Where you usually are. Only you and Pet Coordinators can see it."
-          />
+          <FieldGroup icon={Lock} title="Contact information">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                label="Email address"
+                type="email"
+                value={form.email}
+                onChange={(event) => change('email', event.target.value)}
+                required
+                error={fieldErrors.email}
+              />
+              <Input
+                label="Phone number"
+                type="tel"
+                value={form.phone}
+                onChange={(event) => change('phone', event.target.value)}
+                error={fieldErrors.phone}
+              />
+            </div>
 
-          <div>
-            <p className="text-sm font-medium text-fg">Account type</p>
-            <p className="text-sm text-fg-muted">{ROLE_LABELS[user.role]}</p>
-          </div>
+            {/* fg, not fg-muted: on brand-soft the muted ink is 4.14:1. */}
+            <p className="flex items-start gap-2 rounded-control border border-brand/20 bg-brand-soft px-3 py-2.5 text-sm text-fg">
+              <Lock size={15} className="mt-0.5 shrink-0 text-brand-hover" aria-hidden="true" />
+              Your email and phone number are only shown on a report if you choose to share
+              them, and you choose that separately for each report.
+            </p>
+          </FieldGroup>
         </CardBody>
       </Card>
 
@@ -152,45 +212,57 @@ function ProfileForm({ user, onSaved }) {
           title="Notifications"
           subtitle="Which updates appear in your notifications."
         />
-        <CardBody className="flex flex-col gap-3">
-          <Checkbox
-            label="Possible matches"
-            hint="When a report is filed that could be the same pet."
-            checked={form.possibleMatches}
-            onChange={(event) => change('possibleMatches', event.target.checked)}
-          />
-          <Checkbox
-            label="Status updates"
-            hint="When one of your reports changes status."
-            checked={form.statusUpdates}
-            onChange={(event) => change('statusUpdates', event.target.checked)}
-          />
-          <Checkbox
-            label="Messages from a Pet Coordinator"
-            checked={form.staffMessages}
-            onChange={(event) => change('staffMessages', event.target.checked)}
-          />
+        <CardBody className="p-0">
+          <ul className="divide-y divide-border">
+            {PREFERENCES.map((pref) => (
+              // One setting per row: its name, what it covers, and the box.
+              <li key={pref.field}>
+                <Checkbox
+                  label={<span className="font-medium">{pref.label}</span>}
+                  hint={pref.hint}
+                  checked={form[pref.field]}
+                  onChange={(event) => change(pref.field, event.target.checked)}
+                  className="px-5 py-3.5"
+                />
+              </li>
+            ))}
+          </ul>
         </CardBody>
       </Card>
 
-      {saveError && (
-        <p role="alert" className="text-sm text-danger">
-          Your profile could not be saved: {saveError.message}
-        </p>
-      )}
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" isLoading={isSaving}>
+      {/* The action bar: separated from the last card, with the outcome of
+          the last save beside the button. */}
+      <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center">
+        <Button type="submit" isLoading={isSaving} className="w-full sm:w-auto">
           {isSaving ? 'Saving…' : 'Save changes'}
         </Button>
 
         {isSaved && (
-          <p role="status" className="flex items-center gap-1 text-sm text-success">
+          <p role="status" className="flex items-center gap-1 text-sm text-success-ink">
             <Check size={16} aria-hidden="true" />
             Profile saved
           </p>
         )}
+        {saveError && (
+          <p role="alert" className="text-sm text-danger">
+            {saveError.fields
+              ? 'Please check the highlighted fields.'
+              : `Your profile could not be saved: ${saveError.message}`}
+          </p>
+        )}
       </div>
     </form>
+  )
+}
+
+function FieldGroup({ icon: Icon, title, children }) {
+  return (
+    <fieldset className="flex flex-col gap-4">
+      <legend className="mb-4 flex items-center gap-2 text-sm font-semibold tracking-wide text-fg-muted uppercase">
+        <Icon size={15} aria-hidden="true" />
+        {title}
+      </legend>
+      {children}
+    </fieldset>
   )
 }
