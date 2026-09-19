@@ -302,6 +302,8 @@ export async function getRecentActivity(limit = 6) {
     id: row.log_id,
     reportId: row.report_id,
     reportLabel: row.report_label,
+    reportType: row.report_type,
+    previousStatus: row.previous_status,
     status: row.status,
     note: row.note ?? '',
     actorName: row.actor_name,

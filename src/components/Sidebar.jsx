@@ -1,4 +1,6 @@
-import { NavLink } from 'react-router-dom'
+import { useId, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const linkClasses = ({ isActive }) =>
@@ -12,15 +14,28 @@ const linkClasses = ({ isActive }) =>
 /**
  * Workspace navigation for the dashboard, staff and admin areas.
  *
- * On mobile it becomes a horizontally scrolling row above the content rather
- * than a drawer — there are only four or five links, so a drawer would be more
- * machinery than the problem needs.
+ * Two looks:
+ *
+ * - `panel` (staff and admin): a white panel from `lg` up, and a wrapping row
+ *   of links on smaller screens.
+ * - `light` (the customer dashboard): no panel — the links sit on the page
+ *   ground with a hairline divider, and only the current destination gets the
+ *   pale-teal surface. The tall white panel around five links read as an empty,
+ *   unfinished box. Below `lg` it becomes one compact "section" menu instead of
+ *   a stack of links above the content.
  *
  * @param {Object} props
  * @param {string} props.label  Names the nav for screen readers, e.g. "My Account".
  * @param {{ to: string, label: string, icon: React.ElementType, end?: boolean }[]} props.items
+ * @param {'panel'|'light'} [props.variant]
+ * @param {Record<string, number>} [props.counts]  Small count badges, keyed by
+ *   link `to`. Only real, non-zero counts are shown.
  */
-export function Sidebar({ label, items }) {
+export function Sidebar({ label, items, variant = 'panel', counts }) {
+  if (variant === 'light') {
+    return <LightSidebar label={label} items={items} counts={counts} />
+  }
+
   return (
     // A panel from `lg` up, the same treatment Explore's filter sidebar uses, so
     // a signed-in workspace reads as part of the same site rather than as bare
@@ -48,5 +63,83 @@ export function Sidebar({ label, items }) {
         })}
       </ul>
     </nav>
+  )
+}
+
+function LightSidebar({ label, items, counts }) {
+  const { pathname } = useLocation()
+  const [isOpen, setIsOpen] = useState(false)
+  const menuId = useId()
+
+  // The section being shown, for the compact menu's button. An `end` link only
+  // matches exactly; the others also own their child routes (an edit page sits
+  // under My Reports).
+  const current =
+    items.find((item) =>
+      item.end ? pathname === item.to : pathname === item.to || pathname.startsWith(`${item.to}/`),
+    ) ?? items[0]
+  const CurrentIcon = current.icon
+
+  const links = (onNavigate) =>
+    items.map((item) => {
+      const Icon = item.icon
+      const count = counts?.[item.to]
+
+      return (
+        <li key={item.to}>
+          <NavLink to={item.to} end={item.end} className={linkClasses} onClick={onNavigate}>
+            <Icon size={16} aria-hidden="true" />
+            <span className="whitespace-nowrap">{item.label}</span>
+            {count > 0 && <CountBadge count={count} />}
+          </NavLink>
+        </li>
+      )
+    })
+
+  return (
+    <nav aria-label={label} className="lg:w-56 lg:shrink-0 lg:border-r lg:border-border lg:pr-5">
+      {/* Phones and tablets: one line that names where you are, and opens the
+          other four. */}
+      <div className="lg:hidden">
+        <button
+          type="button"
+          onClick={() => setIsOpen((open) => !open)}
+          aria-expanded={isOpen}
+          aria-controls={menuId}
+          className="flex w-full items-center justify-between gap-3 rounded-control border border-border-strong bg-panel px-3.5 py-2.5 text-sm font-medium text-fg"
+        >
+          <span className="flex items-center gap-2">
+            <CurrentIcon size={16} className="text-brand" aria-hidden="true" />
+            <span className="sr-only">Dashboard section: </span>
+            {current.label}
+          </span>
+          <ChevronDown
+            size={15}
+            aria-hidden="true"
+            className={cn('shrink-0 text-fg-muted transition-transform', isOpen && 'rotate-180')}
+          />
+        </button>
+
+        {isOpen && (
+          <ul
+            id={menuId}
+            className="mt-2 flex flex-col gap-0.5 rounded-card border border-border bg-panel p-1.5 shadow-raised"
+          >
+            {links(() => setIsOpen(false))}
+          </ul>
+        )}
+      </div>
+
+      <ul className="hidden flex-col gap-0.5 lg:flex">{links()}</ul>
+    </nav>
+  )
+}
+
+function CountBadge({ count }) {
+  return (
+    <span className="ml-auto min-w-6 rounded-pill bg-surface-muted px-2 py-0.5 text-center text-xs font-medium text-fg-muted tabular-nums">
+      {count}
+      <span className="sr-only"> {count === 1 ? 'item' : 'items'}</span>
+    </span>
   )
 }

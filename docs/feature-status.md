@@ -51,7 +51,7 @@ _Last updated: accessibility audited with axe-core; failure states swept — 202
 
 | Item | Status | Phase |
 | --- | --- | --- |
-| User dashboard | `[x]` | 6 — overview with stats and activity, My Reports, Profile |
+| User dashboard | `[x]` | 6 — overview with stats and activity, My Reports, Profile. **Overview reworked 2026-09-19:** personal summary row (active reports, open possible matches, pets returned, unread when any), compact quick actions, possible matches first with one link per match, active reports three across, a five-entry activity timeline, reunion cards. Sidebar counts on My Reports, Possible Matches and Notifications. |
 | Staff dashboard | `[x]` | 10 — overview, report queue, match queue, verification workspace |
 | Admin dashboard | `[x]` | 11 — overview, user management, record oversight, pet categories |
 | Moderation API | `[x]` | `GET/POST /api/moderation`, `PATCH /api/moderation/{id}`. Admin-only, verified: a customer gets 403, signed-out gets 401. |

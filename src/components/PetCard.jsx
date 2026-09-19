@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { MapPin } from 'lucide-react'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { speciesLabel } from '@/constants'
-import { formatRelativeTime } from '@/utils/date'
+import { formatCardDate } from '@/utils/date'
 import { cn } from '@/utils/cn'
 import { ReportTypeBadge } from './ReportTypeBadge'
 import { StatusBadge } from './StatusBadge'
@@ -19,8 +19,10 @@ import { StatusBadge } from './StatusBadge'
  *
  * @param {Object} props
  * @param {Object} props.report  A report from petService.
+ * @param {'dot'|'pill'} [props.statusVariant]  How the status reads; the
+ *   customer dashboard uses the filled pill, public listings the quieter dot.
  */
-export function PetCard({ report, className }) {
+export function PetCard({ report, statusVariant = 'dot', className }) {
   const primaryPhoto = report.photos.find((photo) => photo.isPrimary) ?? report.photos[0]
   const hasPhoto = Boolean(primaryPhoto?.url)
 
@@ -53,7 +55,7 @@ export function PetCard({ report, className }) {
         />
 
         <span className="absolute top-3 right-3 rounded-pill bg-panel/90 px-3 py-1 text-sm font-medium text-fg shadow-card backdrop-blur-sm">
-          {formatRelativeTime(report.incidentDate)}
+          {formatCardDate(report.incidentDate)}
         </span>
       </div>
 
@@ -79,7 +81,7 @@ export function PetCard({ report, className }) {
         </p>
 
         <div className="mt-2">
-          <StatusBadge status={report.status} />
+          <StatusBadge status={report.status} variant={statusVariant} />
         </div>
       </div>
     </article>

@@ -1,3 +1,4 @@
+import { cn } from '@/utils/cn'
 import { Breadcrumb } from './Breadcrumb'
 
 /**
@@ -21,8 +22,18 @@ import { Breadcrumb } from './Breadcrumb'
  *   illustration instead, so they pass nothing.
  * @param {string} [props.eyebrow]  A short line above the heading, for a
  *   workspace to say whose it is.
+ * @param {boolean} [props.compact]  A slightly smaller heading, for a
+ *   dashboard greeting rather than a page title.
  */
-export function PageHeader({ title, description, breadcrumb, actions, icon: Icon, eyebrow }) {
+export function PageHeader({
+  title,
+  description,
+  breadcrumb,
+  actions,
+  icon: Icon,
+  eyebrow,
+  compact = false,
+}) {
   return (
     <div className="flex flex-col gap-2.5 border-b border-border pb-5">
       <title>{`${title} · Paws&Found`}</title>
@@ -41,7 +52,12 @@ export function PageHeader({ title, description, breadcrumb, actions, icon: Icon
             {eyebrow && (
               <p className="text-xs font-medium tracking-wide text-fg-muted uppercase">{eyebrow}</p>
             )}
-            <h1 className="text-3xl font-semibold tracking-tight text-balance text-fg sm:text-4xl">
+            <h1
+              className={cn(
+                'font-semibold tracking-tight text-balance text-fg',
+                compact ? 'text-[1.75rem] sm:text-[2rem]' : 'text-3xl sm:text-4xl',
+              )}
+            >
               {title}
             </h1>
           </div>

@@ -116,8 +116,12 @@ export function Navbar({ role, onRoleChange, onSignOut, user }) {
           {user ? (
             <NavDropdown
               align="right"
-              label={<span className="min-w-0 truncate">{user.fullName}</span>}
-              triggerClassName="flex w-36 items-center justify-between gap-1.5 rounded-control border border-transparent px-2 py-1.5 text-left text-[0.9375rem] font-medium text-fg transition-colors hover:bg-surface-muted"
+              label={
+                <span className="min-w-0 truncate" title={user.fullName}>
+                  {user.fullName}
+                </span>
+              }
+              triggerClassName="flex w-44 items-center justify-between gap-1.5 rounded-control border border-transparent px-2 py-1.5 text-left text-[0.9375rem] font-medium text-fg transition-colors hover:bg-surface-muted"
             >
               {(close) => (
                 <>

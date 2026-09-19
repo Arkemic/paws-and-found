@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import { Button, EmptyState, LoadingSkeleton } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
@@ -24,6 +24,15 @@ async function loadMatches() {
 export function MyMatchesPage() {
   const { data, error, isLoading, reload } = useAsync(loadMatches)
   const [busyId, setBusyId] = useState(null)
+  const { hash } = useLocation()
+
+  // The Overview links each match here as /dashboard/matches#match-3. The
+  // router does not scroll to a fragment itself, and the card does not exist
+  // until the data has loaded, so this waits for both.
+  useEffect(() => {
+    if (!data || !hash) return
+    document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' })
+  }, [data, hash])
 
   const header = (
     <PageHeader
@@ -83,7 +92,7 @@ export function MyMatchesPage() {
       ) : (
         <ul className="flex flex-col gap-5">
           {suggestions.map((suggestion) => (
-            <li key={suggestion.id}>
+            <li key={suggestion.id} id={`match-${suggestion.id}`} className="scroll-mt-24">
               <MatchCard
                 headingAs="h2"
                 match={suggestion}

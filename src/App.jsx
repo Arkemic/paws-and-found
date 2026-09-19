@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import { RootLayout } from '@/layouts/RootLayout'
 import { WorkspaceLayout } from '@/layouts/WorkspaceLayout'
+import { loadDashboardCounts } from '@/pages/dashboard/dashboardSummary'
 import { RequireAccess } from '@/components/RequireAccess'
 import { ROLES } from '@/constants'
 import { ADMIN_NAV, STAFF_NAV, USER_NAV } from '@/constants/navigation'
@@ -165,7 +166,12 @@ export default function App() {
             path="/dashboard"
             element={
               <RequireAccess role={role} allowed={[ROLES.USER]}>
-                <WorkspaceLayout label="My account" items={USER_NAV} />
+                <WorkspaceLayout
+                  label="My account"
+                  items={USER_NAV}
+                  variant="light"
+                  loadCounts={loadDashboardCounts}
+                />
               </RequireAccess>
             }
           >

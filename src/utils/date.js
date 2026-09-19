@@ -59,6 +59,42 @@ export function formatRelativeTime(value, now = new Date()) {
 }
 
 /**
+ * A compact date — "Jul 11" this year, "Jul 11, 2025" otherwise. For places
+ * where the year is almost always obvious and space is short: card badges and
+ * the dashboard's activity timeline.
+ *
+ * @param {string|Date|null|undefined} value
+ * @param {Date} [now]
+ */
+export function formatShortDate(value, now = new Date()) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const sameYear = date.getFullYear() === now.getFullYear()
+  return date.toLocaleDateString('en-PH', {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+}
+
+/**
+ * The date badge on a report card: "19 days ago" while a case is recent, then
+ * "Jul 11". One rule for every card, so recent and older cards read as the
+ * same system — before, older cards switched to a long "July 11, 2026" beside
+ * short relative labels, which looked accidental.
+ *
+ * @param {string|Date} value
+ * @param {Date} [now]
+ */
+export function formatCardDate(value, now = new Date()) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const days = (now.getTime() - date.getTime()) / 86400000
+  return days < 30 ? formatRelativeTime(date, now) : formatShortDate(date, now)
+}
+
+/**
  * Today as "YYYY-MM-DD", for the `max` attribute on date inputs — an incident
  * cannot have happened in the future.
  *
