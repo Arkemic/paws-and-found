@@ -20,6 +20,8 @@ import { cn } from '@/utils/cn'
  *   child route is the current page.
  * @param {string} [props.triggerClassName] Styling for the trigger button.
  * @param {'left'|'right'} [props.align]    Which edge the panel lines up with.
+ * @param {boolean} [props.showChevron]     Off for an icon-only trigger such as
+ *   a "More" button, where the icon already says it opens something.
  * @param {(close: () => void) => React.ReactNode} props.children  Rendered with
  *   a `close` function, so an item can dismiss the menu when it is chosen.
  */
@@ -28,6 +30,7 @@ export function NavDropdown({
   isActive = false,
   triggerClassName,
   align = 'left',
+  showChevron = true,
   children,
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -68,11 +71,13 @@ export function NavDropdown({
         {/* One chevron style for every header menu. It used to take its
             colour from the label, so "Report" and the account name had two
             different chevrons side by side. */}
-        <ChevronDown
-          size={15}
-          aria-hidden="true"
-          className={cn('shrink-0 text-fg-muted transition-transform', isOpen && 'rotate-180')}
-        />
+        {showChevron && (
+          <ChevronDown
+            size={15}
+            aria-hidden="true"
+            className={cn('shrink-0 text-fg-muted transition-transform', isOpen && 'rotate-180')}
+          />
+        )}
       </button>
 
       {isOpen && (
