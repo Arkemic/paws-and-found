@@ -52,7 +52,7 @@ export function Navbar({ role, onRoleChange, onSignOut, user }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-panel/95 backdrop-blur-sm">
-      <Container className="flex h-18 items-center gap-6">
+      <Container className="flex h-16 items-center gap-6">
         {/* 1. Brand */}
         <Link
           to="/"
@@ -90,15 +90,20 @@ export function Navbar({ role, onRoleChange, onSignOut, user }) {
 
         {/* 3 and 4 sit together on the right, away from the public links. */}
         <div className="ml-auto hidden items-center gap-4 xl:flex">
-          {/* 3. The role's own workspace — a destination, not a sixth link. */}
+          {/* 3. The role's own workspace — a destination, not a sixth link.
+              A fixed width, and a fixed width on the account menu beside it, so
+              "My Dashboard", "Staff Workspace" and "Administration" all start
+              and end at the same place: the right side lines up identically for
+              every role. While you are in it, it fills with the same pale teal
+              the active public link uses. */}
           {workspace && (
             <NavLink
               to={workspace.to}
               className={({ isActive }) =>
                 cn(
-                  'rounded-control border px-3.5 py-2 text-[0.9375rem] font-medium whitespace-nowrap transition-colors',
+                  'inline-flex w-36 justify-center rounded-control border px-3 py-1.5 text-[0.9375rem] font-medium whitespace-nowrap transition-colors',
                   isActive
-                    ? 'border-brand bg-brand-soft text-brand-hover'
+                    ? 'border-brand-soft bg-brand-soft text-brand-hover'
                     : 'border-border-strong text-fg hover:bg-surface-muted',
                 )
               }
@@ -111,8 +116,8 @@ export function Navbar({ role, onRoleChange, onSignOut, user }) {
           {user ? (
             <NavDropdown
               align="right"
-              label={<span className="max-w-36 truncate">{user.fullName}</span>}
-              triggerClassName="flex items-center gap-1.5 rounded-control px-2 py-2 text-[0.9375rem] font-medium text-fg transition-colors hover:bg-surface-muted"
+              label={<span className="min-w-0 truncate">{user.fullName}</span>}
+              triggerClassName="flex w-36 items-center justify-between gap-1.5 rounded-control border border-transparent px-2 py-1.5 text-left text-[0.9375rem] font-medium text-fg transition-colors hover:bg-surface-muted"
             >
               {(close) => (
                 <>
@@ -204,7 +209,7 @@ export function Navbar({ role, onRoleChange, onSignOut, user }) {
                   cn(
                     'mt-3 rounded-control border px-3.5 py-2 text-center text-[0.9375rem] font-medium',
                     isActive
-                      ? 'border-brand bg-brand-soft text-brand-hover'
+                      ? 'border-brand-soft bg-brand-soft text-brand-hover'
                       : 'border-border-strong text-fg',
                   )
                 }

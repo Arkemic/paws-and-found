@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { ROLES, ROLE_LABELS } from '@/constants'
 
 /** The value used in the select to mean "signed out". */
@@ -34,21 +35,31 @@ export function DemoRoleSelector({ role, onRoleChange, hideLabel = false }) {
       >
         Demo role
       </label>
-      <select
-        id={selectId}
-        value={role ?? GUEST}
-        onChange={(event) =>
-          onRoleChange(event.target.value === GUEST ? null : event.target.value)
-        }
-        className="rounded-control border border-border bg-panel px-2.5 py-1.5 text-sm text-fg-muted"
-      >
-        <option value={GUEST}>Signed out</option>
-        {Object.values(ROLES).map((value) => (
-          <option key={value} value={value}>
-            {ROLE_LABELS[value]}
-          </option>
-        ))}
-      </select>
+      {/* The browser's own arrow is swapped for the header's chevron, so all
+          three menus in the bar share one style. A fixed width keeps the
+          control the same size whichever role is showing. */}
+      <div className="relative">
+        <select
+          id={selectId}
+          value={role ?? GUEST}
+          onChange={(event) =>
+            onRoleChange(event.target.value === GUEST ? null : event.target.value)
+          }
+          className="w-48 appearance-none rounded-control border border-border bg-panel py-1.5 pr-8 pl-2.5 text-sm text-fg-muted"
+        >
+          <option value={GUEST}>Signed out</option>
+          {Object.values(ROLES).map((value) => (
+            <option key={value} value={value}>
+              {ROLE_LABELS[value]}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          size={15}
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-fg-muted"
+        />
+      </div>
     </div>
   )
 }

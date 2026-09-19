@@ -65,10 +65,13 @@ export function NavDropdown({
         className={cn(triggerClassName, isActive && 'text-fg')}
       >
         {label}
+        {/* One chevron style for every header menu. It used to take its
+            colour from the label, so "Report" and the account name had two
+            different chevrons side by side. */}
         <ChevronDown
           size={15}
           aria-hidden="true"
-          className={cn('shrink-0 transition-transform', isOpen && 'rotate-180')}
+          className={cn('shrink-0 text-fg-muted transition-transform', isOpen && 'rotate-180')}
         />
       </button>
 
