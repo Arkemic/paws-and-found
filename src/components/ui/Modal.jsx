@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { Button } from './Button'
@@ -28,8 +28,14 @@ const SIZES = {
   lg: 'max-w-2xl',
 }
 
-export function Modal({
-  isOpen,
+export function Modal({ isOpen, ...props }) {
+  // Only in the page while open, like PhotoLightbox: nothing — no close button,
+  // no backdrop — can be left showing when a dialog is closed.
+  if (!isOpen) return null
+  return <OpenModal {...props} />
+}
+
+function OpenModal({
   onClose,
   title,
   description,
@@ -42,24 +48,20 @@ export function Modal({
   const titleId = useId()
   const descriptionId = useId()
 
-  // Reflect `isOpen` onto the element. showModal()/close() are imperative, so
-  // this is one of the few places a ref is the right tool.
-  useEffect(() => {
+  // Opened before the first paint, and focus handed back to whatever opened
+  // it afterwards. Not closed in the cleanup: `close()` fires the close event,
+  // and under React's development double-mount that shut the dialog the
+  // moment it opened. Unmounting ends the modal state without an event.
+  useLayoutEffect(() => {
     const dialog = dialogRef.current
-    if (!dialog) return
-
-    if (isOpen && !dialog.open) {
-      dialog.showModal()
-    } else if (!isOpen && dialog.open) {
-      dialog.close()
-    }
-  }, [isOpen])
+    const opener = document.activeElement
+    if (!dialog.open) dialog.showModal()
+    return () => opener?.focus?.()
+  }, [])
 
   // The browser fires `close` for Escape too, so this covers every exit route.
   useEffect(() => {
     const dialog = dialogRef.current
-    if (!dialog) return
-
     const handleClose = () => onClose?.()
     dialog.addEventListener('close', handleClose)
     return () => dialog.removeEventListener('close', handleClose)
