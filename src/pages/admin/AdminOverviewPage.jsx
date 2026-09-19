@@ -96,7 +96,7 @@ export function AdminOverviewPage() {
     <div className="flex flex-col gap-6">
       {header}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatTile icon={Flag} label="Flags awaiting review" value={openCases.length} to="/admin/moderation" />
         <StatTile icon={Users} label="Accounts" value={users.length} to="/admin/users" />
         <StatTile icon={ListChecks} label="Active reports" value={stats.totals.active} to="/admin/reports" />

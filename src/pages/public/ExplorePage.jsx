@@ -155,13 +155,14 @@ export function ExplorePage() {
           clear for type. The text block is capped at half the width because
           past that the artwork darkens and muted text would fall below AA. */}
       <section className="relative min-h-60 overflow-hidden rounded-card bg-brand-soft/60 lg:min-h-68">
-        {/* Shown from `md` up only. The artwork is 3:1; in a narrower band
-            `cover` crops horizontally and the cat is the first thing lost.
-            Below that the band keeps its tint and the type has it to itself. */}
+        {/* Shown from `lg` up only. The text column only narrows to half the
+            band at `lg`; from `md` it ran straight across the dog and cat. The
+            search row is capped too, or the input covers the animals' paws.
+            Below `lg` the band keeps its tint and the type has it to itself. */}
         <img
           src={headerIllustration}
           alt=""
-          className="absolute inset-0 hidden size-full object-cover object-center md:block"
+          className="absolute inset-0 hidden size-full object-cover object-center lg:block"
         />
 
         <div className="relative flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
@@ -176,7 +177,7 @@ export function ExplorePage() {
             </p>
           </div>
 
-          <form onSubmit={submitSearch} className="flex gap-2">
+          <form onSubmit={submitSearch} className="flex gap-2 lg:max-w-[58%]">
             <div className="relative flex-1">
               <label htmlFor="explore-search" className="sr-only">
                 Search reports
@@ -339,8 +340,10 @@ export function ExplorePage() {
           {!isLoading && !error && visibleReports.length > 0 && view === 'map' && (
             <>
               {/* The map shows every result, not just the loaded page — a pin is
-                  cheap and paging a map would be confusing. */}
-              <ReportMap reports={reports} height="h-[36rem]" />
+                  cheap and paging a map would be confusing. From `lg` it fills
+                  the screen below the header: the filter panel beside it is far
+                  taller than 36rem, and a fixed height left a gap under the map. */}
+              <ReportMap reports={reports} height="h-[36rem] lg:h-[max(36rem,calc(100dvh-8rem))]" />
 
               {unpinnedCount > 0 && (
                 <p className="text-sm text-fg-muted">

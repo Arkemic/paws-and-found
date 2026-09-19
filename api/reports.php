@@ -827,7 +827,7 @@ function reports_list(): never
     $sql = "SELECT r.report_id, r.report_type, r.status, r.pet_name, r.pet_size, r.pet_sex,
                    r.primary_color, r.secondary_color, r.distinct_features, r.description,
                    r.has_collar, r.pet_condition, r.incident_date, r.incident_time,
-                   r.updated_at,
+                   r.updated_at, r.user_id AS reporter_id,
                    c.category_code AS species, c.category_name AS species_label,
                    b.breed_name AS breed,
                    l.label AS location_label, l.city, l.province, l.latitude, l.longitude,
@@ -967,5 +967,8 @@ function shape_report_row(array $row): array
         ],
         'primary_image' => $row['primary_image'] ?? null,
         'primary_image_alt' => $row['primary_image_alt'] ?? null,
+        // Who filed it, as an id only. The administrator's record list needs it
+        // to show a name; contact details still come only from the detail view.
+        'reporter_id' => isset($row['reporter_id']) ? (int) $row['reporter_id'] : null,
     ];
 }

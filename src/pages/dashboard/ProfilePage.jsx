@@ -136,7 +136,7 @@ function ProfileForm({ user, onSaved }) {
             onChange={(event) => change('preferredLocation', event.target.value)}
             maxLength={80}
             placeholder="e.g. Makati City, Metro Manila"
-            hint="Where you usually search. Used to sort nearby reports first once maps arrive."
+            hint="Where you usually are. Only you and Pet Coordinators can see it."
           />
 
           <div>
@@ -150,7 +150,7 @@ function ProfileForm({ user, onSaved }) {
         <CardHeader
           titleAs="h2"
           title="Notifications"
-          subtitle="Which updates you want. Delivery is not connected yet."
+          subtitle="Which updates appear in your notifications."
         />
         <CardBody className="flex flex-col gap-3">
           <Checkbox

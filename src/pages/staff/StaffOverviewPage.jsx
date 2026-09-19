@@ -76,7 +76,7 @@ export function StaffOverviewPage() {
 
       {/* The first two numbers are work; the last two are context. They are
           sized accordingly rather than presented as four equal figures. */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatTile
           icon={ShieldCheck}
           label="Verification requests"
@@ -196,7 +196,9 @@ function AttentionRow({
   actionLabel,
 }) {
   return (
-    <li className="flex items-start gap-4 px-4 py-4">
+    // A grid on phones so the button drops under the text and lines up with it;
+    // beside the text it squeezed each line to two or three words.
+    <li className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 px-4 py-4 sm:flex sm:gap-4">
       {/* The two animals, where the row is about a pairing. A coordinator
           decides these by looking, and a queue of identical teal icons gave
           them nothing to look at — the wording underneath is the same on every
@@ -232,7 +234,13 @@ function AttentionRow({
         <p className="text-sm text-fg-muted">{formatRelativeTime(when)}</p>
       </div>
 
-      <Button as={Link} to={to} size="sm" variant={urgent ? 'primary' : 'secondary'}>
+      <Button
+        as={Link}
+        to={to}
+        size="sm"
+        variant={urgent ? 'primary' : 'secondary'}
+        className="col-start-2 justify-self-start sm:shrink-0"
+      >
         {actionLabel}
         <ArrowRight size={14} aria-hidden="true" />
       </Button>

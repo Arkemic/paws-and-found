@@ -131,7 +131,7 @@ export function AdminUsersPage() {
                 <th scope="col" className="px-4 py-2.5 font-medium">
                   User
                 </th>
-                <th scope="col" className="px-2 py-2.5 font-medium">
+                <th scope="col" className="hidden px-2 py-2.5 font-medium sm:table-cell">
                   Role
                 </th>
                 <th scope="col" className="hidden px-2 py-2.5 font-medium sm:table-cell">
@@ -140,7 +140,7 @@ export function AdminUsersPage() {
                 <th scope="col" className="hidden px-2 py-2.5 font-medium lg:table-cell">
                   Joined
                 </th>
-                <th scope="col" className="px-4 py-2.5 text-right font-medium">
+                <th scope="col" className="hidden px-4 py-2.5 text-right font-medium sm:table-cell">
                   Action
                 </th>
               </tr>
@@ -150,6 +150,38 @@ export function AdminUsersPage() {
               {visible.map((user) => {
                 const isSelf = user.id === currentUser?.id
                 const isSuspended = user.accountStatus === 'suspended'
+
+                // Made once, placed twice: in their own columns from `sm` up,
+                // and under the person's name on a phone, where four columns
+                // squeezed the role list down to a bare arrow.
+                const roleSelect = (
+                  <Select
+                    label={`Role for ${user.fullName}`}
+                    hideLabel
+                    value={user.role}
+                    disabled={isSelf || busyId === user.id}
+                    onChange={(event) =>
+                      run(user.id, () => userService.setUserRole(user.id, event.target.value))
+                    }
+                    options={optionsFromLabels(ROLE_LABELS)}
+                    className="min-w-50"
+                  />
+                )
+                const statusButton = (
+                  <Button
+                    size="sm"
+                    variant={isSuspended ? 'secondary' : 'danger'}
+                    disabled={isSelf || busyId === user.id}
+                    onClick={() =>
+                      run(user.id, () =>
+                        userService.setAccountStatus(user.id, isSuspended ? 'active' : 'suspended'),
+                      )
+                    }
+                  >
+                    {isSuspended ? 'Reinstate' : 'Suspend'}
+                    <span className="sr-only"> account</span>
+                  </Button>
+                )
 
                 return (
                   <tr key={user.id} className="align-middle transition-colors hover:bg-surface">
@@ -169,22 +201,16 @@ export function AdminUsersPage() {
                           {isSuspended && (
                             <p className="font-medium text-danger sm:hidden">Suspended</p>
                           )}
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2 sm:hidden">
+                            {roleSelect}
+                            {statusButton}
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    <td className="px-2 py-3">
-                      <Select
-                        label={`Role for ${user.fullName}`}
-                        hideLabel
-                        value={user.role}
-                        disabled={isSelf || busyId === user.id}
-                        onChange={(event) =>
-                          run(user.id, () => userService.setUserRole(user.id, event.target.value))
-                        }
-                        options={optionsFromLabels(ROLE_LABELS)}
-                      />
-                    </td>
+                    <td className="hidden px-2 py-3 sm:table-cell">{roleSelect}</td>
 
                     <td className="hidden px-2 py-3 sm:table-cell">
                       <span
@@ -203,24 +229,7 @@ export function AdminUsersPage() {
                       {formatDate(user.createdAt)}
                     </td>
 
-                    <td className="px-4 py-3 text-right">
-                      <Button
-                        size="sm"
-                        variant={isSuspended ? 'secondary' : 'danger'}
-                        disabled={isSelf || busyId === user.id}
-                        onClick={() =>
-                          run(user.id, () =>
-                            userService.setAccountStatus(
-                              user.id,
-                              isSuspended ? 'active' : 'suspended',
-                            ),
-                          )
-                        }
-                      >
-                        {isSuspended ? 'Reinstate' : 'Suspend'}
-                        <span className="sr-only"> account</span>
-                      </Button>
-                    </td>
+                    <td className="hidden px-4 py-3 text-right sm:table-cell">{statusButton}</td>
                   </tr>
                 )
               })}

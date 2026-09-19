@@ -203,13 +203,13 @@ export function HelpPage() {
               is one 3:1 illustration with its left side left clear, so the
               heading sits on the plain area rather than over the artwork. */}
           <section className="relative min-h-52 overflow-hidden rounded-card bg-brand-soft/60 lg:min-h-60">
-            {/* From `md` up only. At narrower widths `cover` crops the 3:1
-                artwork horizontally and the animals are the first thing lost,
-                so the band keeps its tint and the type has it to itself. */}
+            {/* From `lg` up only, where the text column is capped at half the
+                band. From `md` the description ran under the dog. Narrower
+                than that the band keeps its tint and the type has it to itself. */}
             <img
               src={headerIllustration}
               alt=""
-              className="absolute inset-0 hidden size-full object-cover object-center md:block"
+              className="absolute inset-0 hidden size-full object-cover object-center lg:block"
             />
 
             <div className="relative px-6 py-8 sm:px-10 sm:py-10">

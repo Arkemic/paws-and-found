@@ -199,6 +199,10 @@ function matching_store(array $suggestions): array
             // Both people are told, because either of them may recognise the
             // other's pet. The wording is a suggestion, never a conclusion.
             foreach ([$suggestion['lost'], $suggestion['found']] as $side) {
+                if (!wants_notification((int) $side['user_id'], 'match_suggested')) {
+                    continue;
+                }
+
                 $notify->execute([
                     ':user' => $side['user_id'],
                     ':title' => 'A possible match was found',

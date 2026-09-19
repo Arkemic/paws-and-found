@@ -118,6 +118,33 @@ function start_session(): void
     session_start();
 }
 
+/**
+ * Whether someone has asked to be told about this kind of update — the three
+ * switches on their profile page. A moderation decision about your own report
+ * is always sent: it concerns your account, so it is not a preference.
+ *
+ * The column name comes from the fixed list below, never from the caller, so
+ * building it into the SQL text is safe.
+ */
+function wants_notification(int $userId, string $type): bool
+{
+    $column = match ($type) {
+        'match_suggested' => 'notify_matches',
+        'staff_reviewed' => 'notify_staff',
+        'report_flagged' => null,
+        default => 'notify_status',
+    };
+
+    if ($column === null) {
+        return true;
+    }
+
+    $statement = db()->prepare("SELECT {$column} FROM users WHERE user_id = :id");
+    $statement->execute([':id' => $userId]);
+
+    return (bool) $statement->fetchColumn();
+}
+
 /** The signed-in user as a row from `users`, or null. */
 function current_user(): ?array
 {

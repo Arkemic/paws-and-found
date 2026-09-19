@@ -45,7 +45,7 @@ function fromApi(row) {
       lng: row.location?.lng ?? null,
       precision: 'approximate',
     },
-    reporterId: row.reporter?.user_id ?? null,
+    reporterId: row.reporter?.user_id ?? row.reporter_id ?? null,
     reporter: row.reporter ?? null,
     contactPreferences: {
       allowPlatformContact: row.reporter?.accepts_messages ?? true,

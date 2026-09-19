@@ -24,13 +24,16 @@ export function Sidebar({ label, items }) {
   return (
     // A panel from `lg` up, the same treatment Explore's filter sidebar uses, so
     // a signed-in workspace reads as part of the same site rather than as bare
-    // links on the page ground. On mobile it stays a plain scrolling row: a
+    // links on the page ground. On mobile it stays a plain row of links: a
     // bordered card around four links would be chrome for its own sake.
     <nav
       aria-label={label}
       className="lg:w-60 lg:shrink-0 lg:rounded-card lg:border lg:border-border lg:bg-panel lg:p-3 lg:shadow-card"
     >
-      <ul className="flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
+      {/* Below `lg` the links wrap onto a second row rather than scroll: a
+          scrolling strip cut the last tabs off mid-word ("Possible Matc") with
+          nothing to say there was more. */}
+      <ul className="flex flex-wrap gap-1 pb-2 lg:flex-col lg:pb-0">
         {items.map((item) => {
           const Icon = item.icon
 

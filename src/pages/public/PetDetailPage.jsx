@@ -418,8 +418,7 @@ export function PetDetailPage({ role }) {
                     className="mt-0.5 shrink-0 text-fg-subtle"
                     aria-hidden="true"
                   />
-                  Accepts messages through Paws&amp;Found. In-platform messaging is not
-                  connected yet.
+                  Prefers to be reached through a Pet Coordinator.
                 </p>
               ) : (
                 !report.contactPreferences.showPhone &&

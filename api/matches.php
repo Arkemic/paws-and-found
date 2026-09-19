@@ -325,6 +325,10 @@ function notify_both(array $match, string $type, string $title, ?string $body): 
     ];
 
     foreach ($sides as [$userId, $reportId]) {
+        if (!wants_notification($userId, $type)) {
+            continue;
+        }
+
         $statement->execute([
             ':user_id' => $userId,
             ':type' => $type,

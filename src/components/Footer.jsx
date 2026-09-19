@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Mail, Users } from 'lucide-react'
-import facebookIcon from '@/assets/img-009-icon-facebook.png'
-import instagramIcon from '@/assets/img-010-icon-instagram.png'
+import { ArrowRight, Users } from 'lucide-react'
 import logoMark from '@/assets/pawsfound-logo-mark.png'
 import { Button, Container } from '@/components/ui'
 
@@ -43,24 +41,14 @@ const COLUMNS = [
   },
 ]
 
-/**
- * Social links.
- *
- * Facebook and Instagram wordmarks are not in `lucide-react` — it dropped brand
- * icons — so those two slots are waiting on real SVG marks. Until then they use
- * the closest neutral icon and are labelled for screen readers.
- */
-const SOCIALS = [
-  { label: 'Paws&Found on Facebook', image: facebookIcon },
-  { label: 'Email Paws&Found', icon: Mail },
-  { label: 'Paws&Found on Instagram', image: instagramIcon },
-]
-
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-border bg-surface-warm">
-      <Container className="grid gap-x-8 gap-y-10 py-12 lg:grid-cols-[1.7fr_repeat(4,1fr)_1.5fr]">
-        <div className="flex flex-col gap-2.5">
+      {/* Phones: the four link groups sit two by two, tablets four across, with
+          the brand block and the call-to-action card spanning the row. Stacked
+          one above another they made the footer longer than a phone screen. */}
+      <Container className="grid grid-cols-2 gap-x-8 gap-y-8 py-12 sm:grid-cols-4 lg:grid-cols-[1.7fr_repeat(4,1fr)_1.5fr]">
+        <div className="col-span-2 flex flex-col gap-2.5 sm:col-span-4 lg:col-span-1">
           <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold text-fg">
             <img src={logoMark} alt="" className="size-9" />
             Paws&amp;Found
@@ -70,28 +58,6 @@ export function Footer() {
             each other.
           </p>
 
-          {/* Demo only: the project has no real accounts, so these are marks
-              rather than links. Rendering them as links would promise a
-              destination that does not exist. */}
-          <ul className="mt-1 flex items-center gap-2">
-            {SOCIALS.map((social) => {
-              const Icon = social.icon
-
-              return (
-                <li
-                  key={social.label}
-                  className="flex size-9 items-center justify-center rounded-full bg-brand text-fg-inverted"
-                >
-                  {social.image ? (
-                    <img src={social.image} alt="" className="h-4 w-auto" />
-                  ) : (
-                    <Icon size={16} aria-hidden="true" />
-                  )}
-                  <span className="sr-only">{social.label} (demo only)</span>
-                </li>
-              )
-            })}
-          </ul>
         </div>
 
         {COLUMNS.map((column) => (
@@ -112,7 +78,7 @@ export function Footer() {
           </nav>
         ))}
 
-        <div className="self-start rounded-card bg-brand-soft p-4">
+        <div className="col-span-2 self-start rounded-card bg-brand-soft p-4 sm:col-span-4 lg:col-span-1">
           <p className="flex items-start gap-2 text-sm font-semibold text-fg">
             <Users size={18} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
             Together, we can bring them home.

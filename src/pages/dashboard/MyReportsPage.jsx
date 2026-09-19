@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Heart, PawPrint, Pencil, TriangleAlert } from 'lucide-react'
+import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { Button, Card, CardBody, EmptyState, LoadingSkeleton } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { ReportTypeBadge } from '@/components/ReportTypeBadge'
@@ -134,37 +135,49 @@ export function MyReportsPage() {
         <ul className="flex flex-col gap-3">
           {visible.map((report) => {
             const matchCount = matchCountFor(report.id)
+            const primaryPhoto =
+              report.photos.find((photo) => photo.isPrimary) ?? report.photos[0]
 
             return (
               <li key={report.id}>
                 <Card>
                   <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <ReportTypeBadge reportType={report.reportType} size="sm" />
-                        <StatusBadge status={report.status} />
-                      </div>
+                    {/* The photograph, as in the staff and admin queues: people
+                        find their own case by the animal faster than by name. */}
+                    <div className="flex min-w-0 items-start gap-4">
+                      <img
+                        src={primaryPhoto?.url ?? photoPlaceholder}
+                        alt=""
+                        loading="lazy"
+                        className="size-16 shrink-0 rounded-control bg-surface-muted object-cover"
+                      />
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <ReportTypeBadge reportType={report.reportType} size="sm" />
+                          <StatusBadge status={report.status} />
+                        </div>
 
-                      <Link
-                        to={`/pet/${report.id}`}
-                        className="font-semibold text-fg hover:underline"
-                      >
-                        {report.petName ?? 'Found pet report'}
-                      </Link>
-
-                      <p className="text-sm text-fg-muted">
-                        {report.location.city} · {formatDate(report.incidentDate)}
-                      </p>
-
-                      {matchCount > 0 && (
                         <Link
-                          to="/dashboard/matches"
-                          className="inline-flex w-fit items-center gap-1 text-sm text-brand hover:underline"
+                          to={`/pet/${report.id}`}
+                          className="font-semibold text-fg hover:underline"
                         >
-                          <Heart size={14} aria-hidden="true" />
-                          {matchCount} possible {matchCount === 1 ? 'match' : 'matches'}
+                          {report.petName ?? 'Found pet report'}
                         </Link>
-                      )}
+
+                        <p className="text-sm text-fg-muted">
+                          {report.location.city} · {formatDate(report.incidentDate)}
+                        </p>
+
+                        {matchCount > 0 && (
+                          <Link
+                            to="/dashboard/matches"
+                            className="inline-flex w-fit items-center gap-1 text-sm text-brand hover:underline"
+                          >
+                            <Heart size={14} aria-hidden="true" />
+                            {matchCount} possible {matchCount === 1 ? 'match' : 'matches'}
+                          </Link>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex shrink-0 flex-wrap gap-2">

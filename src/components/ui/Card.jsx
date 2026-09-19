@@ -35,12 +35,14 @@ export function CardHeader({ title, subtitle, action, titleAs: Heading = 'h3', c
   return (
     <div
       className={cn(
-        'flex items-start justify-between gap-4 border-b border-border px-5 py-4',
+        'flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-border px-5 py-4',
         className,
       )}
     >
       <div className="min-w-0">
-        {title && <Heading className="truncate text-lg font-semibold text-fg">{title}</Heading>}
+        {/* Wraps rather than truncating: beside an action button on a phone,
+            "Flags awaiting review" was cut to "Flags awaiting re…". */}
+        {title && <Heading className="text-lg font-semibold text-balance text-fg">{title}</Heading>}
         {subtitle && <p className="mt-1 text-sm text-fg-muted">{subtitle}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}

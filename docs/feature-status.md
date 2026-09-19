@@ -44,7 +44,7 @@ _Last updated: accessibility audited with axe-core; failure states swept — 202
 | Map | `[x]` | 8 — Leaflet + OpenStreetMap: Explore map view, report detail map, pin-drop in the form |
 | Matching | `[x]` | 7 — explainable weighted algorithm, no AI. **Now runs on the server** in `api/matching.php` whenever a report is filed, so a newly filed report gets suggestions like any other. Creating a pairing writes its seven signals, notifies both reporters, and moves both reports to Possible Match, in one transaction. Verified to reproduce all four seeded pairings exactly. |
 | Verification | `[x]` | 7/10 — users request it, coordinators confirm, request more information, or rule it out |
-| Notifications | `[x]` | 9 — written to the `notifications` table by the same transaction as the event that caused them. No outbound delivery (email/push); in-app only. |
+| Notifications | `[x]` | 9 — written to the `notifications` table by the same transaction as the event that caused them. No outbound delivery (email/push); in-app only. **The three profile switches are honoured**: `wants_notification()` in `api/helpers.php` skips a notification the person has switched off (possible matches, status updates, coordinator messages). Moderation decisions about your own report are always sent. |
 | Status workflow & history | `[x]` | 9 — every change appends to `status_logs`; the case timeline and the dashboard activity feed both read it. |
 
 ## Dashboards
