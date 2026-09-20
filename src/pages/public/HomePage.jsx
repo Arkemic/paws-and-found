@@ -2,13 +2,18 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
+  Bird,
+  Cat,
   ClipboardList,
+  Dog,
   Eye,
   Handshake,
   Heart,
   Lock,
   MapPin,
   PawPrint,
+  Rabbit,
+  Scale,
   Search,
   SearchCheck,
   ShieldCheck,
@@ -38,11 +43,11 @@ import { cn } from '@/utils/cn'
  * with the two things they might need to do and proves the system works —
  * real recent reports, real reunions — rather than describing itself.
  *
- * Sections alternate between the warm canvas, a pale teal band and a warm
- * cream one so the page reads as distinct chapters instead of one long scroll
- * of white cards. The search panel straddles the seam between the hero and the
- * content below it, which is what gives the top of the page a foreground and a
- * background rather than one flat plane.
+ * The composition, top to bottom: an urgent line, one raised panel holding the
+ * headline, the photograph, what the system promises and the search; a row of
+ * species to jump straight into; then chapters that alternate between the warm
+ * canvas, a pale teal band and a warm cream one. Everything on it is drawn from
+ * the real reports — there are no invented numbers and no invented testimonials.
  */
 export function HomePage() {
   return (
@@ -53,100 +58,294 @@ export function HomePage() {
           right up to the header and footer, so that padding is cancelled. */}
       <div className="-my-8 flex flex-col">
         {/* The richest environment on the site: two brand glows, the route
-            pattern, a search sweep running off the top-right corner, and a
-            shallow curve where it hands over to the content. The search panel
-            straddles that curve. */}
-        <div className="hero-ground relative isolate overflow-hidden">
+            pattern, and a search sweep running off the top-right corner. The
+            hero panel is the foreground object standing on it. */}
+        <div className="hero-ground relative isolate overflow-hidden pb-4">
           <PatternVeil />
           <RadarOrnament tone="teal" size={620} className="-top-40 -right-56 lg:-right-40" />
           <RouteOrnament tone="amber" size={420} className="-bottom-10 -left-32" />
+          <UrgentLine />
           <Hero />
+          <SpeciesRow />
           <SectionCurve to="surface" />
         </div>
 
-        <SearchBand />
         <RecentReports />
+        <CommunityNumbers />
         <HowItWorks />
         <Reunions />
         <Safety />
+        <ClosingCall />
       </div>
     </>
   )
 }
 
+/**
+ * The first line on the page, for the person who arrived in a hurry: what to
+ * do, and how long it takes. Above the headline because for them it matters
+ * more than the headline does.
+ */
+function UrgentLine() {
+  return (
+    <Container className="pt-6 sm:pt-8">
+      <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-fg-muted">
+        <span className="inline-flex items-center gap-2 rounded-pill bg-accent-soft px-3 py-1 font-medium text-lost">
+          <span className="size-1.5 rounded-full bg-accent-hover" aria-hidden="true" />
+          Lost a pet today?
+        </span>
+        Filing a report takes a few minutes, and it starts being compared against found
+        reports straight away.
+        <Link to="/report/lost" className="font-medium text-brand hover:underline">
+          Report a lost pet
+        </Link>
+      </p>
+    </Container>
+  )
+}
+
+/** What the page can say about itself, counted from the real reports. */
 const loadHeroStats = async () => {
   const reports = await petService.getReports()
   return {
     total: reports.length,
     reunited: reports.filter((report) => report.status === REPORT_STATUSES.RETURNED).length,
+    cities: new Set(reports.map((report) => report.location.city)).size,
+    species: new Set(reports.map((report) => report.species)).size,
   }
 }
 
+/** Three things the system actually does, over the photograph. */
+const PROMISES = [
+  {
+    icon: Scale,
+    title: 'Every match explains itself',
+    body: 'You see which details lined up and which did not.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'A coordinator checks first',
+    body: 'Ownership is verified before a handover is arranged.',
+  },
+  {
+    icon: Lock,
+    title: 'Your details stay private',
+    body: 'Contact information is never on a public report.',
+  },
+]
+
+/**
+ * One raised panel holding the whole opening: the headline and the two things
+ * you might have come to do on the left, the photograph filling the right, and
+ * the search across the bottom.
+ *
+ * It is one object rather than text beside an image — which is what lets the
+ * page have a foreground standing on a background instead of two columns.
+ */
 function Hero() {
-  const { data: stats } = useAsync(loadHeroStats)
-
   return (
-    <section className="pt-10 pb-20 sm:pt-14 sm:pb-24">
-      <Container className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-        <div className="flex flex-col items-start gap-6">
-          <h1 className="text-[2.75rem] leading-[1.04] font-semibold tracking-tight text-balance text-fg sm:text-[3.5rem] xl:text-[3.85rem]">
-            Every lost pet has someone looking for them.
-          </h1>
+    <section className="pt-6 pb-8 sm:pt-8">
+      <Container>
+        <div className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-panel/80 shadow-raised backdrop-blur-sm">
+          <div className="grid lg:grid-cols-[1.05fr_1fr]">
+            <div className="flex flex-col items-start gap-6 p-6 sm:p-10 lg:py-14">
+              <h1 className="text-[2.75rem] leading-[1.04] font-semibold tracking-tight text-balance text-fg sm:text-[3.5rem] xl:text-[3.85rem]">
+                Every lost pet has someone looking for them.
+              </h1>
 
-          <p className="max-w-xl text-lg leading-relaxed text-fg-muted">
-            Paws&amp;Found brings lost and found reports into one place, so the search stops
-            depending on who saw which post. Describe the pet, and the system looks for
-            reports that could be the same animal.
-          </p>
+              <p className="max-w-xl text-lg leading-relaxed text-fg-muted">
+                Paws&amp;Found brings lost and found reports into one place, so the search
+                stops depending on who saw which post. Describe the pet, and the system
+                looks for reports that could be the same animal.
+              </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button as={Link} to="/report/lost" variant="accent" size="lg">
-              <TriangleAlert size={18} aria-hidden="true" />
-              Report a lost pet
-            </Button>
-            <Button as={Link} to="/report/found" variant="primary" size="lg">
-              <PawPrint size={18} aria-hidden="true" />
-              I found a pet
-            </Button>
-            <Button as={Link} to="/explore" variant="secondary" size="lg">
-              <Search size={18} aria-hidden="true" />
-              Search pets
-            </Button>
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Button as={Link} to="/report/lost" variant="accent" size="lg">
+                  <TriangleAlert size={18} aria-hidden="true" />
+                  Report a lost pet
+                </Button>
+                <Button as={Link} to="/report/found" variant="primary" size="lg">
+                  <PawPrint size={18} aria-hidden="true" />
+                  I found a pet
+                </Button>
+              </div>
+            </div>
+
+            {/* IMG-006, filling its half of the panel and bleeding to the
+                edges. The subjects are centred in the frame, so the crop keeps
+                both animals in view at every width. */}
+            <div className="relative sm:min-h-[28rem] lg:min-h-full">
+              <img
+                src={heroImage}
+                alt="A tan Aspin sitting beside its owner, who is holding a tabby cat, on the tiled porch of a Philippine home"
+                // On a phone the photograph is a band of its own with the
+                // promises underneath it: overlapping them there left a
+                // sliver of picture behind a card.
+                className="h-64 w-full object-cover sm:absolute sm:inset-0 sm:h-full"
+                fetchPriority="high"
+              />
+
+              {/* What the system promises, on its own surface over the
+                  photograph — never text directly on the image. */}
+              <ul className="m-4 flex flex-col gap-3 rounded-card border border-white/70 bg-panel/92 p-4 backdrop-blur-sm sm:absolute sm:right-6 sm:bottom-6 sm:left-auto sm:m-0 sm:w-80">
+                {PROMISES.map((promise) => {
+                  const Icon = promise.icon
+
+                  return (
+                    <li key={promise.title} className="flex items-start gap-3">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
+                        <Icon size={16} aria-hidden="true" />
+                      </span>
+                      <span className="flex min-w-0 flex-col">
+                        <span className="text-sm font-semibold text-fg">{promise.title}</span>
+                        <span className="text-sm text-fg-muted">{promise.body}</span>
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
           </div>
 
-          <p className="flex items-center gap-2 text-sm text-fg-muted">
-            <Lock size={14} className="shrink-0 text-fg-subtle" aria-hidden="true" />
-            Your contact details stay private unless you choose to share them.
+          {/* The search sits inside the panel, along its bottom edge: looking
+              is the third thing somebody might have come to do, and it belongs
+              with the other two rather than in a section of its own. */}
+          <SearchBand />
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+/** Lucide has a face for the species we actually carry; anything else gets a paw. */
+const SPECIES_ICONS = { dog: Dog, cat: Cat, bird: Bird, rabbit: Rabbit }
+
+/**
+ * Straight into Explore, filtered. The reference shops open with a row of
+ * departments; the equivalent here is the animal somebody is looking for.
+ */
+function SpeciesRow() {
+  const { data: categories } = useAsync(loadActiveCategories)
+  if (!categories) return null
+
+  // Dogs and cats first, because that is most of what gets reported, and
+  // "Other" left out: it is the catch-all on the report form, not somewhere
+  // anybody sets out to browse.
+  const order = ['dog', 'cat']
+  const shown = categories
+    .filter((category) => category.id !== 'other')
+    .sort((a, b) => {
+      const rank = (id) => (order.indexOf(id) === -1 ? order.length : order.indexOf(id))
+      return rank(a.id) - rank(b.id) || a.label.localeCompare(b.label)
+    })
+
+  return (
+    <Container className="pb-10 sm:pb-14">
+      <ul className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+        <li>
+          <Link
+            to="/explore"
+            className="inline-flex items-center gap-2 rounded-pill border border-border-strong bg-panel px-4 py-2 text-sm font-medium text-fg shadow-card transition-colors hover:bg-surface-muted"
+          >
+            <Search size={15} className="text-brand" aria-hidden="true" />
+            All reports
+          </Link>
+        </li>
+        {shown.map((category) => {
+          const Icon = SPECIES_ICONS[category.id] ?? PawPrint
+
+          return (
+            <li key={category.id}>
+              <Link
+                to={`/explore?species=${category.id}`}
+                className="inline-flex items-center gap-2 rounded-pill border border-border-strong bg-panel px-4 py-2 text-sm font-medium text-fg shadow-card transition-colors hover:bg-surface-muted"
+              >
+                <Icon size={15} className="text-brand" aria-hidden="true" />
+                {category.label}
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </Container>
+  )
+}
+
+/**
+ * The numbers, counted from the reports themselves rather than written into
+ * the page — if the seed changes, these change with it.
+ */
+function CommunityNumbers() {
+  const { data: stats } = useAsync(loadHeroStats)
+  if (!stats) return null
+
+  const figures = [
+    { value: stats.total, label: 'reports filed', icon: ClipboardList },
+    { value: stats.reunited, label: 'pets back home', icon: Heart },
+    { value: stats.cities, label: 'cities covered', icon: MapPin },
+    { value: stats.species, label: 'kinds of animal', icon: PawPrint },
+  ]
+
+  return (
+    <section className="pb-16 sm:pb-20">
+      <Container>
+        <ul className="grid grid-cols-2 gap-3 rounded-card bg-sunken/70 p-4 sm:gap-4 sm:p-6 lg:grid-cols-4">
+          {figures.map((figure) => {
+            const Icon = figure.icon
+
+            return (
+              <li
+                key={figure.label}
+                className="flex items-center gap-3.5 rounded-card border border-border bg-panel px-4 py-4 shadow-card"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
+                  <Icon size={19} aria-hidden="true" />
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="text-[1.75rem] leading-none font-semibold text-fg tabular-nums">
+                    {figure.value}
+                  </span>
+                  <span className="mt-1 text-sm text-fg-muted">{figure.label}</span>
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      </Container>
+    </section>
+  )
+}
+
+/** The last thing on the page is the first thing somebody came to do. */
+function ClosingCall() {
+  return (
+    <section className="relative isolate overflow-hidden bg-brand px-0 py-14 text-fg-inverted sm:py-16">
+      <RouteOrnament tone="teal" size={560} className="-top-16 -right-32 opacity-40" />
+      <Container className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-xl">
+          <h2 className="text-[1.75rem] leading-tight font-semibold text-balance sm:text-[2rem]">
+            A report is the fastest thing you can do right now.
+          </h2>
+          <p className="mt-2 text-[1.0625rem] text-fg-inverted">
+            Lost or found, it goes into the same place and starts being compared against
+            everything else that has been reported.
           </p>
         </div>
 
-        {/* IMG-006. The subjects are centred in the frame, so the default
-            centre crop keeps both animals in view at every width. */}
-        <div className="relative">
-          {/* A 4:3 frame on a 1.599 source trims about 7% from each side —
-              floor and railing, well clear of both animals. */}
-          <div className="aspect-4/3 overflow-hidden rounded-[1.25rem] bg-surface-muted shadow-raised ring-1 ring-black/5">
-            <img
-              src={heroImage}
-              alt="A tan Aspin sitting beside its owner, who is holding a tabby cat, on the tiled porch of a Philippine home"
-              className="size-full object-cover"
-              fetchPriority="high"
-            />
-          </div>
-
-          {stats && (
-            <div className="absolute right-3 -bottom-6 w-64 rounded-card border border-border bg-panel p-5 shadow-raised sm:right-6">
-              <p className="flex items-center gap-2 font-semibold text-fg">
-                <span className="flex size-9 items-center justify-center rounded-control bg-brand-soft text-brand">
-                  <PawPrint size={18} aria-hidden="true" />
-                </span>
-                {stats.total} community reports
-              </p>
-              <p className="mt-1.5 text-fg-muted">
-                {stats.reunited} pets already back with their owners.
-              </p>
-            </div>
-          )}
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button as={Link} to="/report/lost" variant="accent" size="lg">
+            <TriangleAlert size={18} aria-hidden="true" />
+            Report a lost pet
+          </Button>
+          <Button
+            as={Link}
+            to="/report/found"
+            size="lg"
+            className="border border-white/70 bg-white/10 text-fg-inverted hover:bg-white/20"
+          >
+            <PawPrint size={18} aria-hidden="true" />
+            I found a pet
+          </Button>
         </div>
       </Container>
     </section>
@@ -181,21 +380,16 @@ function SearchBand() {
   }
 
   return (
-    // Pulled up over the bottom of the hero band: the panel belongs to both
-    // the hero and the content, which is what reads as depth.
-    <section className="relative z-10 -mt-16 pb-12 sm:-mt-20 sm:pb-16">
-      <Container>
-        {/* The one genuinely elevated surface on the page — level 4. */}
-        <form
-          onSubmit={submit}
-          className="surface-glass rounded-card border p-6 shadow-raised sm:p-8"
-        >
-          <div className="flex items-center gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
-              <SearchCheck size={20} aria-hidden="true" />
-            </span>
-            <h2 className="text-xl font-semibold text-fg">Find or report a pet near you</h2>
-          </div>
+    // Inside the hero panel now, along its bottom edge, so looking for a pet
+    // sits with reporting one instead of in a section of its own.
+    <div className="border-t border-border/70 bg-surface/70">
+      <form onSubmit={submit} className="p-6 sm:p-8">
+        <div className="flex items-center gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
+            <SearchCheck size={20} aria-hidden="true" />
+          </span>
+          <h2 className="text-xl font-semibold text-fg">Find or report a pet near you</h2>
+        </div>
 
           <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
             <Select
@@ -243,9 +437,8 @@ function SearchBand() {
               Search
             </Button>
           </div>
-        </form>
-      </Container>
-    </section>
+      </form>
+    </div>
   )
 }
 
