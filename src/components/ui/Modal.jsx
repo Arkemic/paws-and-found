@@ -87,6 +87,9 @@ function OpenModal({
         // own `margin: auto`, and Tailwind's reset sets `margin: 0` on every
         // element — which silently pinned every dialog to the top-left corner.
         'm-auto w-[calc(100%-2rem)] rounded-card border border-border bg-panel p-0 text-fg shadow-lg',
+        // Opens with a gentle fade and a 2% rise. Never a spring, and the
+        // base layer turns it off for anyone who asked for reduced motion.
+        'motion-safe:animate-[dialog-in_160ms_ease-out] motion-safe:backdrop:animate-[backdrop-in_160ms_ease-out]',
         // A tall dialog scrolls inside itself instead of running off a short
         // screen. `overflow-x-hidden` is required, not decoration: a box with
         // `auto` on one axis promotes `visible` on the other to `auto` too,

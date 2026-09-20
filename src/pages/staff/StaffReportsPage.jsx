@@ -216,8 +216,9 @@ export function StaffReportsPage() {
       ) : (
         <>
           {/* Phones and tablets: one case card per report, most important
-              fields first. No squeezed table and no sideways scrolling. */}
-          <ul className="flex flex-col gap-3 lg:hidden">
+              fields first. No squeezed table and no sideways scrolling. The
+              well behind them groups the queue without another border. */}
+          <ul className="flex flex-col gap-3 rounded-card bg-sunken/60 p-3 lg:hidden">
             {sorted.map((report) => (
               <QueueCard key={report.id} report={report} matchCount={matchCountFor(report.id)} />
             ))}
@@ -225,7 +226,8 @@ export function StaffReportsPage() {
 
           {/* Laptops and wider: a management table a coordinator can scan and
               sort. The row opens the report; the name is its keyboard link. */}
-          <div className="hidden overflow-hidden rounded-card border border-border bg-panel lg:block">
+          <div className="hidden rounded-card bg-sunken/60 p-3 lg:block">
+            <div className="overflow-hidden rounded-card border border-border bg-panel">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-border bg-surface-muted text-fg">
                 <tr>
@@ -295,6 +297,7 @@ export function StaffReportsPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </>
       )}

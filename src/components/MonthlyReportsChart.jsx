@@ -59,7 +59,11 @@ export function MonthlyReportsChart({ months }) {
         ))}
       </div>
 
-      <table className="sr-only">
+      {/* The same figures as text. Wrapped rather than `sr-only` on the
+          table itself: the caption escaped the clip and pushed a phone 5px
+          wider than the screen. */}
+      <div className="sr-only">
+      <table>
         <caption>Reports filed per month, over the last six months</caption>
         <thead>
           <tr>
@@ -80,6 +84,7 @@ export function MonthlyReportsChart({ months }) {
           ))}
         </tbody>
       </table>
+      </div>
 
       <p className="text-sm text-fg-muted">
         Month totals under each label.{' '}

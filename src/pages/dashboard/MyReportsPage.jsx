@@ -252,7 +252,7 @@ function ReportCaseCard({ report, openMatches, onClose }) {
     <li>
       <article
         className={cn(
-          'relative flex flex-col gap-4 rounded-card border bg-panel p-4 shadow-card transition-shadow hover:shadow-raised sm:flex-row sm:items-start sm:gap-5',
+          'card-interactive relative flex flex-col gap-4 rounded-card border bg-panel p-4 shadow-card sm:flex-row sm:items-start sm:gap-5',
           'has-[.case-link:focus-visible]:ring-2 has-[.case-link:focus-visible]:ring-brand',
           firstMatch ? 'border-accent/50' : 'border-border',
         )}

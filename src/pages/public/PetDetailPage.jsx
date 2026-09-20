@@ -36,6 +36,8 @@ import {
   LoadingSkeleton,
 } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
+import { PatternVeil } from '@/components/PatternVeil'
+import { RadarOrnament } from '@/components/Ornament'
 import { Breadcrumb } from '@/components/Breadcrumb'
 import { MatchCard } from '@/components/MatchCard'
 import { ReportMap } from '@/components/LazyMaps'
@@ -55,6 +57,7 @@ import {
 import { useAsync } from '@/hooks/useAsync'
 import { NotFoundError, matchService, petService, userService } from '@/services'
 import { formatDate } from '@/utils/date'
+import { cn } from '@/utils/cn'
 
 /**
  * The central case page for one report.
@@ -170,7 +173,22 @@ export function PetDetailPage({ role }) {
   }
 
   return (
-    <Container className="flex flex-col gap-8">
+    <Container className="relative isolate flex flex-col gap-8">
+      {/* The case header environment: the breadcrumb, the name and the
+          photograph share one tinted ground — amber for a lost report, teal
+          for a found one — which fades out before the details below it. It is
+          a field, not a boxed hero. */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          'pointer-events-none absolute inset-x-0 -top-8 -z-10 h-[34rem] overflow-hidden',
+          isFound ? 'case-ground-found' : 'case-ground-lost',
+        )}
+      >
+        <RadarOrnament tone={isFound ? 'teal' : 'amber'} size={520} className="-top-24 -right-40" />
+      </span>
+      <PatternVeil className="-top-8 h-[26rem]" />
+
       {/* This page composes its own header rather than using PageHeader: the
           type and status badges belong directly under the name, which is the
           first thing anyone needs to read here. */}

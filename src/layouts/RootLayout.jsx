@@ -1,6 +1,21 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
+import { cn } from '@/utils/cn'
+
+/**
+ * Which environment the page is in. The four canvases share one recipe and
+ * differ in which brand colour leads, so the public pages feel warm and
+ * community-facing, the coordinator's workspace reads cooler and operational,
+ * and administration is the quietest of the four — without any of them looking
+ * like a different product (docs/design-system.md).
+ */
+function canvasFor(pathname) {
+  if (pathname.startsWith('/admin')) return 'canvas-admin'
+  if (pathname.startsWith('/staff')) return 'canvas-staff'
+  if (pathname.startsWith('/dashboard')) return 'canvas-customer'
+  return 'canvas-public'
+}
 
 /**
  * The shell every page sits inside: navigation, the page itself, and the
@@ -13,6 +28,8 @@ import { Footer } from '@/components/Footer'
  * @param {Object|null} props.user
  */
 export function RootLayout({ role, onRoleChange, onSignOut, user }) {
+  const { pathname } = useLocation()
+
   return (
     <div className="page-ground flex min-h-screen flex-col bg-surface">
       <a href="#main-content" className="skip-link">
@@ -21,7 +38,18 @@ export function RootLayout({ role, onRoleChange, onSignOut, user }) {
 
       <Navbar role={role} onRoleChange={onRoleChange} onSignOut={onSignOut} user={user} />
 
-      <main id="main-content" className="flex-1 py-8">
+      {/* The environment layer: grain plus the two glows for this area of the
+          site. It is behind the page, above the ground, and fades out well
+          before the content ends — the atmosphere belongs to the top of a
+          page, not to the whole scroll. */}
+      <main id="main-content" className={cn('relative isolate flex-1 py-8')}>
+        <span
+          aria-hidden="true"
+          className={cn(
+            'pointer-events-none absolute inset-x-0 top-0 -z-10 h-[46rem]',
+            canvasFor(pathname),
+          )}
+        />
         <Outlet />
       </main>
 

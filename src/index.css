@@ -67,6 +67,8 @@
   --color-panel: #ffffff; /* 3 cards, modals, nav bar           */
   --color-layer: #f7fbfa; /* 3 a quieter panel: filter rails,
                                         summary panels, progress rails   */
+  --color-sunken: #f2f7f5; /* 1.5 a well the canvas sinks into,
+                                        behind a group of cards           */
 
   --color-border: #dde6e4; /* dividers, card outlines    */
   --color-border-strong: #c7d5d2; /* form controls              */
@@ -182,6 +184,21 @@
   }
 }
 
+/* Dialogs and the photo viewer enter rather than appear. Restrained on
+   purpose: 160ms, a fade and a 2% rise, nothing that springs. */
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @utility skip-link {
   position: absolute;
   left: 0.5rem;
@@ -206,63 +223,113 @@
    section, so the photographs there sit on the plain canvas. */
 @utility hero-ground {
   background-image:
-    radial-gradient(64rem 48rem at 4% 2%, rgb(244 163 64 / 0.12), transparent 68%),
-    radial-gradient(60rem 44rem at 96% 0%, rgb(21 122 120 / 0.09), transparent 64%);
+    radial-gradient(56rem 40rem at 2% -6%, rgb(244 163 64 / 0.20), transparent 66%),
+    radial-gradient(52rem 40rem at 98% -2%, rgb(21 122 120 / 0.16), transparent 66%);
 }
 
-/* The same amber/teal atmosphere as the homepage hero, at roughly a third of
-   the strength, on every page, plus a barely-there cool drift down the page.
-   Enough that the interface reads as one warm surface rather than cards
-   floating on flat white; not enough to notice as a gradient. Home keeps
-   `hero-ground` on top of this for its stronger opening. */
+/* ---------------------------------------------------------------------------
+   The canvas system.
+
+   The page itself is part of the design. Four environments share one recipe —
+   a grain layer, the route pattern where it is wanted, two far-off brand
+   glows, and the warm base — and differ only in which colour leads:
+
+     canvas-public    amber and teal in balance, the strongest of the four
+     canvas-customer  warm: amber leads, teal answers it
+     canvas-staff     cooler: teal leads, a little amber for warmth
+     canvas-admin     quietest: neutral with a restrained teal
+
+   Gradients are large enough to run off the viewport, so no circular edge is
+   ever visible. Nothing here may carry meaning, and nothing here may sit
+   between text and its background (docs/design-system.md).
+--------------------------------------------------------------------------- */
+
+/* Microscopic monochrome grain. Generated in the file rather than shipped as
+   a raster: it is about 300 bytes, and a texture that can be described should
+   not be a download. At this strength it is invisible to look at directly and
+   only stops a large flat field reading as a screenshot of nothing. */
+@utility grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+  background-repeat: repeat;
+}
+
+/* The ground under every page. Fixed, so the atmosphere stays put while the
+   content scrolls over it. */
 @utility page-ground {
   background-image:
-    radial-gradient(70rem 40rem at 0% 0%, rgb(244 163 64 / 0.05), transparent 60%),
-    radial-gradient(64rem 38rem at 100% 4%, rgb(21 122 120 / 0.045), transparent 58%),
+    radial-gradient(70rem 42rem at 0% 0%, rgb(244 163 64 / 0.06), transparent 62%),
+    radial-gradient(64rem 40rem at 100% 4%, rgb(21 122 120 / 0.05), transparent 60%),
     linear-gradient(180deg, #fbfaf7 0%, #f6f9f7 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
 }
 
-/* IMG-014 — the community pattern: routes, pins and paw prints, already at
-   5–7% inside the file. Decoration only, and never behind body copy at full
-   tile strength: use it on a heading region, a band, or an empty side.
+/* The four environments. Each is the grain plus its own two glows; the page's
+   own `bg-surface` stays underneath. */
+@utility canvas-public {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E"),
+    radial-gradient(60rem 42rem at -5% 0%, rgb(244 163 64 / 0.17), transparent 68%),
+    radial-gradient(58rem 44rem at 105% 8%, rgb(21 122 120 / 0.14), transparent 68%);
+  background-size: 140px 140px, auto, auto;
+  background-repeat: repeat, no-repeat, no-repeat;
+}
 
-   `pattern-fade` is the usual pairing — the pattern at the top of a section,
-   gone by the time the text starts. */
-@utility pattern-community {
-  background-image: url('./assets/img-014-community-pattern.svg');
-  background-size: 30rem auto;
+@utility canvas-customer {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E"),
+    radial-gradient(52rem 32rem at -4% -4%, rgb(244 163 64 / 0.15), transparent 66%),
+    radial-gradient(46rem 30rem at 104% 0%, rgb(21 122 120 / 0.10), transparent 64%);
+  background-size: 140px 140px, auto, auto;
+  background-repeat: repeat, no-repeat, no-repeat;
+}
+
+@utility canvas-staff {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E"),
+    radial-gradient(52rem 32rem at -4% -4%, rgb(21 122 120 / 0.15), transparent 66%),
+    radial-gradient(44rem 28rem at 104% 0%, rgb(244 163 64 / 0.07), transparent 62%);
+  background-size: 140px 140px, auto, auto;
+  background-repeat: repeat, no-repeat, no-repeat;
+}
+
+@utility canvas-admin {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E"),
+    radial-gradient(48rem 30rem at -4% -6%, rgb(21 122 120 / 0.09), transparent 64%),
+    linear-gradient(180deg, rgb(238 243 242 / 0.55), transparent 60%);
+  background-size: 140px 140px, auto, auto;
+  background-repeat: repeat, no-repeat, no-repeat;
+}
+
+/* IMG-014 — the route pattern. Placed by `PatternVeil`, which is a layer of
+   its own: the pattern is faded with a mask, and a mask fades every child of
+   the element it sits on. */
+@utility route-pattern {
+  background-image: url('./assets/img-014-community-route-pattern.svg');
+  background-size: 56rem auto;
   background-repeat: repeat;
 }
 
-/* Fades the layer it is on. It belongs on the decorative layer only — put it
-   on a section and it fades that section's text with it. `PatternVeil` is
-   the component that does this correctly. */
+/* Closer in, for a band that should show the routes rather than hint at them
+   — "How Paws&Found works" is the search journey drawn out. */
+@utility route-pattern-near {
+  background-image: url('./assets/img-014-community-route-pattern.svg');
+  background-size: 40rem auto;
+  background-repeat: repeat;
+}
+
+/* IMG-016 — the woven microtexture. Footer and a couple of warm sections
+   only; everywhere else it is noise for its own sake. */
+@utility woven-texture {
+  background-image: url('./assets/img-016-woven-microtexture.svg');
+  background-size: 4rem 4rem;
+  background-repeat: repeat;
+}
+
 @utility pattern-fade {
-  mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.9) 0%, rgb(0 0 0 / 0.35) 45%, transparent 85%);
-}
-
-/* A workspace's heading region: the atmosphere the dashboard, staff and admin
-   areas open with. One tone each so the three environments are told apart
-   without reading the title — warm for a community member, teal for the
-   coordinator's operational workspace, cool and quiet for administration. */
-@utility ground-warm {
-  background-image:
-    radial-gradient(46rem 26rem at 2% 0%, rgb(244 163 64 / 0.10), transparent 62%),
-    radial-gradient(42rem 24rem at 98% 0%, rgb(21 122 120 / 0.06), transparent 60%);
-}
-
-@utility ground-teal {
-  background-image:
-    radial-gradient(46rem 26rem at 0% 0%, rgb(21 122 120 / 0.10), transparent 62%),
-    radial-gradient(40rem 24rem at 96% 0%, rgb(244 163 64 / 0.05), transparent 58%);
-}
-
-@utility ground-cool {
-  background-image:
-    radial-gradient(44rem 24rem at 0% 0%, rgb(21 122 120 / 0.06), transparent 60%),
-    linear-gradient(180deg, rgb(238 243 242 / 0.7), transparent 70%);
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 1) 0%, rgb(0 0 0 / 0.55) 55%, transparent 92%);
 }
 
 /* A card you can click. It lifts a little and deepens its shadow; it never
@@ -285,27 +352,45 @@
   }
 }
 
-/* The reunions band: warm cream with an amber glow behind the first story.
-   The warmest moment on the page, which is the one it is describing. */
-@utility reunion-ground {
-  background-image:
-    radial-gradient(50rem 30rem at 12% 0%, rgb(244 163 64 / 0.10), transparent 62%),
-    radial-gradient(44rem 26rem at 92% 100%, rgb(51 138 85 / 0.05), transparent 60%);
-}
+/* The two surfaces that sit over a rich background: the homepage search and
+   the report summary. Translucent so the canvas shows through, with a solid
+   fallback wherever `backdrop-filter` is unavailable. Nowhere else — glass
+   over a flat surface is just a lighter card. */
+@utility surface-glass {
+  background-color: rgb(255 255 255 / 0.94);
+  border-color: rgb(255 255 255 / 0.9);
 
-/* The last band before the footer, easing the page into it rather than
-   stopping dead at a border. */
-@utility closing-ground {
-  background-image: linear-gradient(180deg, rgb(21 122 120 / 0.03), rgb(244 163 64 / 0.05));
+  @supports (backdrop-filter: blur(1px)) {
+    background-color: rgb(255 255 255 / 0.86);
+    backdrop-filter: blur(16px);
+  }
 }
 
 /* The reporting wizard's ground. Amber for a lost report, teal for a found
    one — just enough that someone knows which workflow they are in without the
    whole form changing colour. */
 @utility lost-ground {
-  background-image: radial-gradient(56rem 34rem at 12% 0%, rgb(244 163 64 / 0.11), transparent 62%);
+  background-image:
+    radial-gradient(52rem 32rem at -2% -4%, rgb(244 163 64 / 0.18), transparent 66%),
+    radial-gradient(40rem 26rem at 102% 6%, rgb(21 122 120 / 0.07), transparent 62%);
 }
 
 @utility found-ground {
-  background-image: radial-gradient(56rem 34rem at 12% 0%, rgb(21 122 120 / 0.09), transparent 62%);
+  background-image:
+    radial-gradient(52rem 32rem at -2% -4%, rgb(21 122 120 / 0.15), transparent 66%),
+    radial-gradient(40rem 26rem at 102% 6%, rgb(244 163 64 / 0.06), transparent 62%);
+}
+
+/* The report detail case header: the environment the breadcrumb, the name and
+   the photograph share, tinted by what kind of report it is. */
+@utility case-ground-lost {
+  background-image:
+    radial-gradient(46rem 26rem at 0% 0%, rgb(244 163 64 / 0.16), transparent 64%),
+    radial-gradient(38rem 24rem at 100% 10%, rgb(21 122 120 / 0.07), transparent 62%);
+}
+
+@utility case-ground-found {
+  background-image:
+    radial-gradient(46rem 26rem at 0% 0%, rgb(21 122 120 / 0.14), transparent 64%),
+    radial-gradient(38rem 24rem at 100% 10%, rgb(244 163 64 / 0.06), transparent 62%);
 }

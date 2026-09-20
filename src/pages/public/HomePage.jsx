@@ -18,7 +18,9 @@ import heroImage from '@/assets/img-006-homepage-hero.jpg'
 import emptyReportsImage from '@/assets/empty-no-reports.png'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { Button, Container, EmptyState, LoadingSkeleton, Select } from '@/components/ui'
-import { PatternVeil } from '@/components/PatternVeil'
+import { PatternVeil, WovenVeil } from '@/components/PatternVeil'
+import { RadarOrnament, RouteOrnament } from '@/components/Ornament'
+import { SectionCurve } from '@/components/SectionCurve'
 import { PetCard } from '@/components/PetCard'
 import { SectionHeading } from '@/components/SectionHeading'
 import { REPORT_STATUSES, REPORT_TYPE_LABELS, speciesLabel } from '@/constants'
@@ -49,12 +51,16 @@ export function HomePage() {
       {/* RootLayout pads <main>; the homepage runs its own full-bleed bands
           right up to the header and footer, so that padding is cancelled. */}
       <div className="-my-8 flex flex-col">
-        {/* The hero's ground stops behind the search panel, which overlaps
-            the seam by a little over a centimetre; everything below returns to
-            the plain canvas so the photographs carry the page. */}
-        <div className="hero-ground relative isolate">
+        {/* The richest environment on the site: two brand glows, the route
+            pattern, a search sweep running off the top-right corner, and a
+            shallow curve where it hands over to the content. The search panel
+            straddles that curve. */}
+        <div className="hero-ground relative isolate overflow-hidden">
           <PatternVeil />
+          <RadarOrnament tone="teal" size={620} className="-top-40 -right-56 lg:-right-40" />
+          <RouteOrnament tone="amber" size={420} className="-bottom-10 -left-32" />
           <Hero />
+          <SectionCurve to="surface" />
         </div>
 
         <SearchBand />
@@ -79,7 +85,7 @@ function Hero() {
   const { data: stats } = useAsync(loadHeroStats)
 
   return (
-    <section className="pt-10 pb-24 sm:pt-14 sm:pb-28">
+    <section className="pt-10 pb-20 sm:pt-14 sm:pb-24">
       <Container className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col items-start gap-6">
           <h1 className="text-4xl leading-[1.08] font-semibold tracking-tight text-balance text-fg sm:text-5xl">
@@ -176,12 +182,12 @@ function SearchBand() {
   return (
     // Pulled up over the bottom of the hero band: the panel belongs to both
     // the hero and the content, which is what reads as depth.
-    <section className="relative z-10 -mt-10 pb-12 sm:-mt-12 sm:pb-16">
+    <section className="relative z-10 -mt-16 pb-12 sm:-mt-20 sm:pb-16">
       <Container>
         {/* The one genuinely elevated surface on the page — level 4. */}
         <form
           onSubmit={submit}
-          className="rounded-card border border-border bg-panel p-6 shadow-raised sm:p-8"
+          className="surface-glass rounded-card border p-6 shadow-raised sm:p-8"
         >
           <div className="flex items-center gap-3">
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
@@ -249,6 +255,8 @@ function RecentReports() {
 
   return (
     <section className="pb-16 sm:pb-24">
+      {/* A sunken well behind the grid: the canvas dips, the cards stay white,
+          and the group reads as one collection without another card around it. */}
       <Container className="flex flex-col gap-6">
         <SectionHeading
           title="Recently reported"
@@ -295,8 +303,11 @@ function RecentReports() {
           />
         )}
 
+        {/* A sunken well behind the grid: the canvas dips, the cards stay
+            white, and the group reads as one collection without another card
+            drawn around it. */}
         {!isLoading && !error && reports?.length > 0 && (
-          <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <ul className="grid gap-5 rounded-card bg-sunken/70 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
             {reports.map((report) => (
               <li key={report.id} className="flex">
                 <PetCard report={report} className="w-full" />
@@ -336,8 +347,12 @@ function HowItWorks() {
   return (
     // A compact band: the four steps are a reference, not the reason anyone
     // came. The padding was spending more height than the content did.
-    <section className="relative isolate border-y border-border/60 bg-surface-alt py-12 sm:py-14">
-      <PatternVeil />
+    <section className="relative isolate overflow-hidden bg-surface-alt py-12 sm:py-16">
+      {/* The one band where the routes should be legible: this section is the
+          search journey, so the pattern comes closer and the four steps are
+          joined by a route rather than a dotted rule. */}
+      <PatternVeil scale="near" fade={false} className="opacity-90" />
+      <RadarOrnament tone="teal" size={460} className="-bottom-40 -left-40" />
       <Container className="flex flex-col gap-8">
         <SectionHeading
           title="How Paws&Found works"
@@ -345,19 +360,33 @@ function HowItWorks() {
           centered
         />
 
-        <ol className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-          {STEPS.map((step, index) => {
+        <div className="relative">
+          {/* The journey itself, drawn once across the row: a route that dips
+              and rises between the four stops rather than three straight
+              rules. Desktop only — stacked steps have nothing to connect. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+            className="pointer-events-none absolute top-6 left-0 hidden h-20 w-full lg:block"
+          >
+            <path
+              d="M150 44C300 44 330 92 450 92s180-64 300-64 180 56 300 56"
+              fill="none"
+              stroke="#0e5d5b"
+              strokeOpacity="0.2"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="2 9"
+            />
+          </svg>
+
+          <ol className="relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+          {STEPS.map((step) => {
             const Icon = step.icon
 
             return (
               <li key={step.title} className="relative flex flex-col items-center text-center">
-                {/* Connector, desktop only. Decorative. */}
-                {index < STEPS.length - 1 && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-10 left-[calc(50%+2.75rem)] hidden h-0.5 w-[calc(100%-5.5rem)] border-t-2 border-dotted border-border-strong lg:block"
-                  />
-                )}
 
                 <span className="relative z-10 flex size-20 items-center justify-center rounded-full border border-border bg-panel text-brand shadow-card">
                   <Icon size={32} aria-hidden="true" />
@@ -365,7 +394,7 @@ function HowItWorks() {
 
                 <h3 className="mt-4 flex items-center gap-2 text-lg font-semibold text-fg">
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand text-xs text-fg-inverted">
-                    {index + 1}
+                    {STEPS.indexOf(step) + 1}
                   </span>
                   {step.title}
                 </h3>
@@ -374,8 +403,11 @@ function HowItWorks() {
               </li>
             )
           })}
-        </ol>
+          </ol>
+        </div>
       </Container>
+
+      <SectionCurve to="warm-band" flip />
     </section>
   )
 }
@@ -400,7 +432,9 @@ function Reunions() {
   const [featured, ...rest] = reunions
 
   return (
-    <section className="reunion-ground border-b border-border/60 bg-warm-band py-14 sm:py-20">
+    <section className="reunion-ground relative isolate overflow-hidden bg-warm-band py-14 sm:py-20">
+      <WovenVeil />
+      <RouteOrnament tone="amber" size={520} className="-right-40 -bottom-16 rotate-6" />
       <Container className="flex flex-col gap-8">
         <SectionHeading
           title={
@@ -435,6 +469,7 @@ function Reunions() {
           ))}
         </ul>
       </Container>
+      <SectionCurve to="surface-alt" />
     </section>
   )
 }
@@ -541,8 +576,9 @@ function Safety() {
   return (
     // The closing band: the page eases into the footer rather than stopping
     // at a hairline.
-    <section className="closing-ground relative isolate bg-surface-alt py-14 sm:py-16">
+    <section className="closing-ground relative isolate overflow-hidden bg-surface-alt py-14 sm:py-16">
       <PatternVeil />
+      <RadarOrnament tone="teal" size={560} className="-top-28 -right-44" />
       <Container className="flex flex-col gap-8">
         <SectionHeading
           title="Helping is easier when everyone stays safe"

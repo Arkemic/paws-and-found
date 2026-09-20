@@ -129,7 +129,12 @@ export function AdminOverviewPage() {
         </div>
       </section>
 
-      <section aria-labelledby="activity-heading" className="flex flex-col gap-4">
+      {/* The analytics sit in a well: four white cards on the bare canvas
+          read as four unrelated things rather than one report. */}
+      <section
+        aria-labelledby="activity-heading"
+        className="flex flex-col gap-4 rounded-card bg-sunken/60 p-4 sm:p-5"
+      >
         <h2 id="activity-heading" className="text-xl font-semibold text-fg">
           Activity
         </h2>

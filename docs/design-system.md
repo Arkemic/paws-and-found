@@ -56,6 +56,7 @@ Amber is **not** an error colour. Errors use `danger`.
 | `surface` | `#FBF9F6` | Page canvas — warm off-white so cards lift off it |
 | `surface-alt` | `#F2F8F6` | Full-bleed section band — pale teal |
 | `warm-band` | `#FDF7EC` | Full-bleed section band — warm cream |
+| `sunken` | `#F2F7F5` | A well the canvas dips into, behind a group of cards |
 | `surface-muted` | `#EEF3F2` | Hover fills, disabled inputs |
 | `surface-warm` | `#FCF8F0` | The footer — a warmer neutral than the body, so the page ends deliberately |
 | `panel` | `#FFFFFF` | Cards, modals, forms, the nav bar |
@@ -107,25 +108,63 @@ Do not overuse danger red.
 
 ## Surface levels
 
-The page itself is part of the design. Every surface belongs to one of four
+The page itself is part of the design. Every surface belongs to one of these
 levels, and nothing sits on a level that does not describe it:
 
 | Level | How it is built | What belongs on it |
 | --- | --- | --- |
-| 1 Canvas | `bg-surface` + `page-ground` | The ground the whole application sits on: warm off-white with a far-off amber glow top-left and teal top-right, drifting a little cooler down the page |
-| 2 Band | `bg-surface-alt` / `bg-warm-band`, full-bleed | A chapter of a long page. Public pages alternate them; a band may carry `PatternVeil` |
-| 3 Surface | `bg-panel` (white) or `bg-layer` (tinted) | A card or panel. `layer` is the quieter one — a filter rail, a summary panel beside the main content, the wizard's progress rail |
-| 4 Elevated | `shadow-raised` | Something genuinely floating: dialogs, dropdowns, the homepage search panel, the report photograph, the map |
+| 0 Canvas | `bg-surface` + `page-ground` + one `canvas-*` | The ground the whole application sits on |
+| 1 Band | `bg-surface-alt` / `bg-warm-band`, full-bleed | A chapter of a long page, sometimes entered through a `SectionCurve` |
+| 1.5 Well | `bg-sunken/60` | The canvas dipping behind a *group* of cards — a report grid, a queue, an analytics set. Depth before any shadow is spent |
+| 2 Static surface | `bg-panel` or `bg-layer`, `shadow-card` | One card. `layer` is the quieter tinted one: filter rails, summary panels, the wizard's progress rail |
+| 3 Interactive surface | `card-interactive` | A card that can be clicked: it rises 2px and deepens its shadow. Static cards never move, and that difference is the signal |
+| 4 Overlay | `shadow-raised` | Dialogs, dropdowns, the lightbox, the homepage search panel, the report photograph, the map |
 
 A white rectangle is not automatically a card. Static information can live on
-the canvas with a heading and space around it; keep containers for content that
-genuinely groups or genuinely lifts, or nothing on the page stands out.
+the canvas with a heading and space around it, or in a well with its siblings;
+keep containers for content that genuinely groups or genuinely lifts, or
+nothing on the page stands out.
 
-**Decoration.** `PatternVeil` puts IMG-014 — routes, location pins and paw
-prints at 5–7% — behind a heading region, a band, or an empty side. It is a
-separate layer because it is faded with a mask, and a mask fades everything
-inside the element it sits on. Never behind body copy at full strength, and
-never carrying meaning.
+## The canvas system
+
+Four environments share one recipe — grain, two far-off brand glows, and the
+warm base — and differ only in which colour leads. `RootLayout` picks one from
+the route, so nothing else has to think about it:
+
+| Utility | Where | Character |
+| --- | --- | --- |
+| `canvas-public` | Everything public | Amber and teal in balance, the strongest of the four |
+| `canvas-customer` | `/dashboard` | Warm: amber leads, teal answers |
+| `canvas-staff` | `/staff` | Cooler and operational: teal leads |
+| `canvas-admin` | `/admin` | Quietest: neutral with a restrained teal |
+
+The glows are large enough to run off the viewport, so no circular edge is ever
+visible, and the layer fades out before the content ends — the atmosphere
+belongs to the top of a page, not to the whole scroll.
+
+**Decoration.** Three pieces, all `aria-hidden`, all behind the content:
+
+- `PatternVeil` — IMG-014, the route pattern: wandering routes, contour arcs,
+  radar sweeps, pins, paw marks and two hearts, drawn at 4–7% and tiled large
+  (`far`, the ambient setting) or closer in (`near`, for a band that is about
+  the journey). It is a separate layer because it is faded with a mask, and a
+  mask fades everything inside the element it sits on.
+- `WovenVeil` — IMG-016, the woven microtexture, at 1–3%. Footer and a couple
+  of warm public sections only.
+- `RadarOrnament` / `RouteOrnament` — oversized single motifs that enter from a
+  page edge and are clipped by it. Their container needs `overflow-hidden`, or
+  they widen the page; they are hidden below `sm`, where there is no spare edge
+  to run off.
+
+**Grain.** `grain` (and every `canvas-*`, which includes it) lays a 140px
+monochrome noise tile at 3.5% over the background. Generated in CSS from
+`feTurbulence` — about 300 bytes, no download — and invisible to look at
+directly. It only stops a large flat field reading as nothing.
+
+**Section boundaries.** `SectionCurve` replaces a hard edge with about 30–48px
+of curve across the whole viewport, filled with the colour of the section
+*below*. Used sparingly: a page where every boundary curves reads as a
+template.
 
 ## Shape and elevation
 
@@ -138,6 +177,27 @@ never carrying meaning.
 | `shadow-hover` | soft, 16px | A card under the pointer — paired with a 2px lift by `card-interactive` |
 | `shadow-raised` | soft, 24px | Level 4: dialogs, dropdowns, elements floating over an image |
 | `shadow-header` | soft, 16px | The sticky header, once the page has scrolled under it |
+
+**Glass.** `surface-glass` is translucent white over a blur, with a solid
+fallback where `backdrop-filter` is unavailable. Exactly two places use it —
+the homepage search panel and nothing else yet — because glass over a flat
+surface is just a lighter card.
+
+## Motion
+
+Restrained, and never decorative: 150–180ms, no bounce, no spring, no parallax,
+nothing that moves a large region of the page.
+
+| What | How |
+| --- | --- |
+| Interactive card | Rises 2px, shadow deepens (`card-interactive`, 180ms) |
+| Button | Background transition, 150ms, and a 1px press |
+| Report photograph | The image dims very slightly and the expand control firms up, 200ms |
+| Dialog | Fades in with a 2% rise, 160ms, `motion-safe` only |
+| Header | Border and shadow change once the page scrolls under it, 200ms |
+
+Every one of these is switched off by the `prefers-reduced-motion` rule in the
+base layer.
 
 Shadows are neutral and restrained — a card lifts off the canvas, it does not
 float. **Only interactive cards move**: `card-interactive` raises them 2px and

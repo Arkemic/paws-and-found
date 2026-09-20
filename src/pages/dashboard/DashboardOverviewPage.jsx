@@ -296,7 +296,7 @@ function MatchRow({ match, lost, found, userId }) {
         to={`/dashboard/matches#match-${match.id}`}
         // A grid on phones, so "View match" drops under the text instead of
         // squeezing it to three words a line; one row from `sm` up.
-        className="group grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-card bg-panel p-3 shadow-card transition-shadow hover:shadow-raised sm:flex sm:gap-4"
+        className="card-interactive group grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-card bg-panel p-3 shadow-card sm:flex sm:gap-4"
       >
         <span className="flex shrink-0 -space-x-2 self-start sm:self-center">
           <Thumb report={lost} />
@@ -430,7 +430,7 @@ function ReunionCard({ report }) {
     <li className="flex">
       <Link
         to={`/pet/${report.id}`}
-        className="group flex w-full items-center gap-4 rounded-card border border-border bg-panel p-3 shadow-card transition-shadow hover:shadow-raised"
+        className="card-interactive group flex w-full items-center gap-4 rounded-card border border-border bg-panel p-3 shadow-card"
       >
         <img
           src={primaryPhotoUrl(report) ?? photoPlaceholder}

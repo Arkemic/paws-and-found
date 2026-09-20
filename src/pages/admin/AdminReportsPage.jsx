@@ -222,7 +222,7 @@ export function AdminReportsPage() {
       ) : (
         <>
           {/* Phones and tablets: one compact management card per record. */}
-          <ul className="flex flex-col gap-3 lg:hidden">
+          <ul className="flex flex-col gap-3 rounded-card bg-sunken/60 p-3 lg:hidden">
             {shown.map((report) => (
               <RecordCard
                 key={report.id}
@@ -232,7 +232,8 @@ export function AdminReportsPage() {
             ))}
           </ul>
 
-          <div className="hidden overflow-hidden rounded-card border border-border bg-panel lg:block">
+          <div className="hidden rounded-card bg-sunken/60 p-3 lg:block">
+            <div className="overflow-hidden rounded-card border border-border bg-panel">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-border bg-surface-muted text-fg">
                 <tr>
@@ -317,6 +318,7 @@ export function AdminReportsPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
 
           {totalPages > 1 && (

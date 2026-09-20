@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620" fill="none">
+  <!--
+    IMG-014 — the Paws&Found route pattern.
+
+    One community search, drawn as a map: long wandering routes, contour arcs,
+    radar sweeps around the places somebody looked, pins where a report was
+    filed, and the occasional paw or heart along the way. Large and sparse on
+    purpose — it is an environment, not wallpaper, and at this scale a viewport
+    holds two or three motifs rather than a grid of them.
+
+    Opacity is baked in (dark teal #0e5d5b at 4–7%, amber only for the hearts
+    and two pins) so a surface can use it as a plain background-image. It tiles
+    at 900x620: every route that leaves an edge re-enters at the same height on
+    the other side.
+
+    Decoration only. It is placed by `PatternVeil`, hidden from assistive
+    technology, and nothing on the page may depend on seeing it.
+  -->
+  <g stroke="#0e5d5b" fill="none" stroke-linecap="round">
+    <!-- Long routes, crossing the whole tile. -->
+    <g stroke-opacity="0.05" stroke-width="1.25">
+      <path d="M-40 196C60 196 120 96 232 96s176 128 296 128 156-92 268-92 122 40 184 40" />
+      <path d="M-40 452C74 452 128 528 244 528s168-96 284-96 148 76 252 76 128-56 184-56" stroke-dasharray="10 12" />
+      <path d="M-40 316C86 316 140 250 232 250" stroke-dasharray="4 10" />
+    </g>
+
+    <!-- Contour arcs: the land the routes cross. -->
+    <g stroke-opacity="0.04" stroke-width="1.1">
+      <path d="M620 620c0-120 96-168 96-284S612 96 612 -20" />
+      <path d="M676 620c0-140 104-190 104-306S668 82 668 -20" />
+      <path d="M112 -20c0 92-72 128-72 220s84 140 84 236 -64 128-64 184" />
+    </g>
+
+    <!-- Radar sweeps: somebody searched here. Concentric, partly clipped. -->
+    <g stroke-opacity="0.055" stroke-width="1.1">
+      <circle cx="232" cy="96" r="34" />
+      <circle cx="232" cy="96" r="62" stroke-opacity="0.04" />
+      <circle cx="232" cy="96" r="96" stroke-opacity="0.028" />
+      <circle cx="744" cy="432" r="44" />
+      <circle cx="744" cy="432" r="80" stroke-opacity="0.038" />
+      <circle cx="744" cy="432" r="124" stroke-opacity="0.025" />
+      <circle cx="528" cy="224" r="26" stroke-opacity="0.045" />
+    </g>
+
+    <!-- Pins, sitting on the routes. -->
+    <g stroke-opacity="0.075" stroke-width="1.4">
+      <path d="M520 208c0-9.4 7.6-17 17-17s17 7.6 17 17c0 12.8-17 27.5-17 27.5s-17-14.7-17-27.5Z" />
+      <circle cx="537" cy="208" r="5.5" />
+      <path d="M236 519c0-9.4 7.6-17 17-17s17 7.6 17 17c0 12.8-17 27.5-17 27.5s-17-14.7-17-27.5Z" />
+      <circle cx="253" cy="519" r="5.5" />
+    </g>
+    <g stroke="#9a620f" stroke-opacity="0.07" stroke-width="1.4" fill="none">
+      <path d="M735 415c0-9.4 7.6-17 17-17s17 7.6 17 17c0 12.8-17 27.5-17 27.5s-17-14.7-17-27.5Z" />
+      <circle cx="752" cy="415" r="5.5" />
+    </g>
+  </g>
+
+  <!-- Nodes where a route meets a place. -->
+  <g fill="#0e5d5b" fill-opacity="0.06">
+    <circle cx="232" cy="96" r="3.4" />
+    <circle cx="528" cy="224" r="3.4" />
+    <circle cx="884" cy="172" r="3.4" />
+    <circle cx="60" cy="452" r="3.4" />
+  </g>
+
+  <!-- Paw marks along the way: three toes and a pad, at walking angles. -->
+  <g fill="#0e5d5b" fill-opacity="0.055">
+    <g transform="translate(398 150) rotate(-16) scale(1.35)">
+      <ellipse cx="0" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="-2.2" rx="2.6" ry="3.6" />
+      <ellipse cx="14" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="8.4" rx="6.2" ry="4.9" />
+    </g>
+    <g transform="translate(436 186) rotate(-16) scale(1.35)">
+      <ellipse cx="0" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="-2.2" rx="2.6" ry="3.6" />
+      <ellipse cx="14" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="8.4" rx="6.2" ry="4.9" />
+    </g>
+    <g transform="translate(150 392) rotate(14) scale(1.35)">
+      <ellipse cx="0" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="-2.2" rx="2.6" ry="3.6" />
+      <ellipse cx="14" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="8.4" rx="6.2" ry="4.9" />
+    </g>
+    <g transform="translate(806 268) rotate(-4) scale(1.35)">
+      <ellipse cx="0" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="-2.2" rx="2.6" ry="3.6" />
+      <ellipse cx="14" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="8.4" rx="6.2" ry="4.9" />
+    </g>
+  </g>
+
+  <!-- Two hearts: where a case ended well. Amber, the warmest mark here. -->
+  <g fill="none" stroke="#9a620f" stroke-opacity="0.075" stroke-width="1.4">
+    <path d="M612 470c-2.6-6.4-12-6-12 1.6 0 6 8.2 11 12 13.4 3.8-2.4 12-7.4 12-13.4 0-7.6-9.4-8-12-1.6Z" />
+    <path d="M316 176c-2.2-5.4-10-5-10 1.4 0 5 6.8 9.2 10 11.2 3.2-2 10-6.2 10-11.2 0-6.4-7.8-6.8-10-1.4Z" />
+  </g>
+</svg>

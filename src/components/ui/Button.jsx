@@ -62,7 +62,10 @@ export function Button({
       aria-busy={isLoading || undefined}
       className={cn(
         'inline-flex items-center justify-center rounded-control font-medium',
-        'transition-[background-color,color,box-shadow] duration-150',
+        // Pressed state: the control gives a little under the pointer. 150ms,
+        // no bounce, and switched off entirely under reduced motion.
+        'transition-[background-color,color,box-shadow,transform] duration-150',
+        'active:not-disabled:translate-y-px',
         'disabled:cursor-not-allowed disabled:opacity-50',
         VARIANTS[variant],
         SIZES[size],

@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Users } from 'lucide-react'
 import logoMark from '@/assets/pawsfound-logo-mark.png'
 import { Button, Container } from '@/components/ui'
+import { WovenVeil } from '@/components/PatternVeil'
+import { RouteOrnament } from '@/components/Ornament'
 
 /**
  * Site footer.
@@ -43,7 +45,11 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-border bg-surface-warm">
+    // The page ends deliberately: a warm layer of its own, the woven
+    // microtexture under it, and a route leaving the canvas at the far edge.
+    <footer className="relative isolate mt-auto overflow-hidden border-t border-border bg-surface-warm">
+      <WovenVeil />
+      <RouteOrnament tone="teal" size={520} className="-top-10 -right-32 rotate-3" />
       {/* Phones: the four link groups sit two by two, tablets four across, with
           the brand block and the call-to-action card spanning the row. Stacked
           one above another they made the footer longer than a phone screen. */}
@@ -78,7 +84,9 @@ export function Footer() {
           </nav>
         ))}
 
-        <div className="col-span-2 self-start rounded-card bg-brand-soft p-4 sm:col-span-4 lg:col-span-1">
+        {/* The one thing in the footer that asks for an action, so it is the
+            one thing that lifts off it. */}
+        <div className="col-span-2 self-start rounded-card border border-brand/15 bg-brand-soft p-4 shadow-card sm:col-span-4 lg:col-span-1">
           <p className="flex items-start gap-2 text-sm font-semibold text-fg">
             <Users size={18} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
             Together, we can bring them home.

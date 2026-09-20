@@ -194,7 +194,7 @@ export function AdminUsersPage() {
         <>
           {/* Phones and tablets: one management card per account. A five-column
               table squeezed to 390px is unreadable and scrolls sideways. */}
-          <ul className="flex flex-col gap-3 lg:hidden">
+          <ul className="flex flex-col gap-3 rounded-card bg-sunken/60 p-3 lg:hidden">
             {visible.map((user) => (
               <UserCard
                 key={user.id}
@@ -205,7 +205,8 @@ export function AdminUsersPage() {
             ))}
           </ul>
 
-          <div className="hidden overflow-hidden rounded-card border border-border bg-panel lg:block">
+          <div className="hidden rounded-card bg-sunken/60 p-3 lg:block">
+            <div className="overflow-hidden rounded-card border border-border bg-panel">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-border bg-surface-muted text-fg">
                 <tr>
@@ -266,6 +267,7 @@ export function AdminUsersPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </>
       )}

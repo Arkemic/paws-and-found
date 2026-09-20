@@ -10,6 +10,8 @@ import { ReportMap } from '@/components/LazyMaps'
 import { cn } from '@/utils/cn'
 import { hasCoordinates } from '@/utils/location'
 import { FilterPanel } from '@/components/FilterPanel'
+import { PatternVeil } from '@/components/PatternVeil'
+import { RadarOrnament } from '@/components/Ornament'
 import { ActiveFilters } from '@/components/ActiveFilters'
 import { useAsync } from '@/hooks/useAsync'
 import { categoryService, petService } from '@/services'
@@ -154,7 +156,9 @@ export function ExplorePage() {
           the dog and cat are one 3:1 illustration, with the left side left
           clear for type. The text block is capped at half the width because
           past that the artwork darkens and muted text would fall below AA. */}
-      <section className="relative min-h-60 overflow-hidden rounded-card bg-brand-soft/60 lg:min-h-68">
+      <section className="relative isolate min-h-60 overflow-hidden rounded-card bg-brand-soft/60 lg:min-h-68">
+        {/* Search sweeps behind the illustration, running off the band. */}
+        <RadarOrnament tone="teal" size={460} className="-top-28 -left-24 lg:left-1/3" />
         {/* Shown from `lg` up only. The text column only narrows to half the
             band at `lg`; from `md` it ran straight across the dog and cat. The
             search row is capped too, or the input covers the animals' paws.
@@ -169,7 +173,7 @@ export function ExplorePage() {
             hard edge, so the search sits on the seam between the two. */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-surface/90"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-surface"
         />
 
         <div className="relative flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
@@ -225,8 +229,14 @@ export function ExplorePage() {
         </aside>
 
         {/* scroll-mt clears the sticky header, or paging lands with the first
-            row of cards hidden underneath it. */}
-        <div ref={resultsRef} className="flex min-w-0 flex-1 scroll-mt-24 flex-col gap-4">
+            row of cards hidden underneath it. The well and the route pattern
+            carry the header band's language down into the results, so the page
+            does not go from illustration to bare canvas in one step. */}
+        <div
+          ref={resultsRef}
+          className="relative isolate flex min-w-0 flex-1 scroll-mt-24 flex-col gap-4 overflow-hidden rounded-card bg-sunken/60 p-4 sm:p-5"
+        >
+          <PatternVeil className="h-72" />
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
             <p className="text-lg font-semibold text-fg" aria-live="polite">
               {/* The whole result set, not this page: "9 pets found" beside a

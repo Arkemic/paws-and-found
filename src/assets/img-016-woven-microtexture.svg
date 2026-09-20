@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <!--
+    IMG-016 — woven microtexture.
+
+    Offset diamonds and the thin lines between them: the rhythm of a banig
+    weave rather than a picture of one. Abstract and geometric on purpose —
+    this is a texture, not a cultural motif, and it must never read as
+    decoration borrowed from somebody's craft.
+
+    Teal at 3%, which lands near 1–2% once it is behind a warm surface. Used
+    only on the footer and a couple of warm public sections.
+  -->
+  <g stroke="#0e5d5b" stroke-opacity="0.03" stroke-width="1" fill="none">
+    <path d="M0 16 16 0 32 16 16 32Z" />
+    <path d="M32 16 48 0 64 16 48 32Z" />
+    <path d="M0 48 16 32 32 48 16 64Z" />
+    <path d="M32 48 48 32 64 48 48 64Z" />
+  </g>
+  <g stroke="#0e5d5b" stroke-opacity="0.018" stroke-width="1" fill="none">
+    <path d="M0 32h64M32 0v64" />
+  </g>
+</svg>
