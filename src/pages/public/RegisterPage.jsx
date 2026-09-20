@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button, Card, CardBody, Container, Input } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
+import { PatternVeil } from '@/components/PatternVeil'
 import { userService } from '@/services'
 
 /**
@@ -59,7 +60,8 @@ export function RegisterPage({ onSignedIn }) {
   }
 
   return (
-    <Container width="form" className="flex flex-col gap-6">
+    <Container width="form" className="relative isolate flex flex-col gap-6">
+      <PatternVeil className="-top-8 h-64" />
       <PageHeader
         title="Create an account"
         description="An account lets you file reports, follow possible matches, and receive notifications."

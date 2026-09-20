@@ -25,6 +25,7 @@ Assets in `src/assets/` and wired up.
 | IMG-005 | `pet-0NN-*.jpg` (24 files) | Every seeded report | Delivered |
 | IMG-011 | `pet-025-chico.png` … `pet-032-dog.png` (8 files) | The second batch of seeded reports | Delivered |
 | IMG-012 | `img-012-help-header-illustration.png` | Help — the header band, built like IMG-008 | Delivered |
+| IMG-014 | `img-014-community-pattern.svg` | The decorative background pattern — routes, location pins and paw prints, hand-built as SVG at 5–7% opacity, placed by `PatternVeil` | Delivered |
 | IMG-006 | `img-006-homepage-hero.jpg` | Homepage hero | Delivered |
 | IMG-007 | `img-007-about-intro.jpg` | About — "Why Paws&Found exists" | Delivered |
 | IMG-008 | `img-008-explore-header-illustration.jpg` | Explore — the whole header band | Delivered |

@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, MapPin, Scale, ShieldCheck, Sparkles } from 'lucide-react'
 import aboutIntro from '@/assets/img-007-about-intro.jpg'
 import { Container } from '@/components/ui'
+import { PatternVeil } from '@/components/PatternVeil'
 import { PageHeader } from '@/components/PageHeader'
 import { SectionHeading } from '@/components/SectionHeading'
 
@@ -19,7 +20,8 @@ export function AboutPage() {
 
 function WhyItExists() {
   return (
-    <section className="pt-10 pb-14 sm:pt-14 sm:pb-20">
+    <section className="hero-ground relative isolate pt-10 pb-14 sm:pt-14 sm:pb-20">
+      <PatternVeil />
       <Container className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
         <div className="flex min-w-0 flex-1 flex-col gap-5">
           <PageHeader
@@ -91,7 +93,8 @@ const CHANGES = [
 
 function ProblemAndChange() {
   return (
-    <section className="bg-surface-alt py-16 sm:py-24">
+    <section className="relative isolate border-y border-border/60 bg-surface-alt py-16 sm:py-24">
+      <PatternVeil />
       <Container className="flex flex-col gap-10">
         <SectionHeading
           title="What changes"
@@ -211,7 +214,8 @@ function BuiltForHere() {
 
 function StudentProject() {
   return (
-    <section className="bg-surface-alt py-14 sm:py-16">
+    <section className="closing-ground relative isolate bg-surface-alt py-14 sm:py-16">
+      <PatternVeil />
       <Container width="prose" className="flex flex-col gap-3 text-center">
         <h2 className="text-xl font-semibold text-fg">About this build</h2>
         <p className="text-fg-muted">

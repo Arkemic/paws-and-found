@@ -346,7 +346,9 @@ export function PetDetailPage({ role }) {
             bottom card would sit permanently below the fold with no way to
             scroll to it. */}
         <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto">
-          <Card>
+          {/* The summary is the quieter surface beside the report: tinted, so
+              the photographs and the description stay the white ones. */}
+          <Card tone="layer">
             <CardHeader titleAs="h2" title={<HeadingWithIcon icon={ClipboardList}>Report summary</HeadingWithIcon>} />
             <CardBody className="flex flex-col gap-4">
               {/* A `dl` may contain `dt`/`dd` directly, or wrapped one level
@@ -504,7 +506,7 @@ function PhotoGallery({ photos, petLabel }) {
           push the pet's details below the fold on a laptop. The full frame is
           a click away — identifying a pet means looking at scars, collars and
           coat patterns, which a cropped thumbnail hides. */}
-      <div className="relative">
+      <div className="group/photo relative">
         <button
           type="button"
           onClick={() => setIsFullscreen(true)}
@@ -513,14 +515,21 @@ function PhotoGallery({ photos, petLabel }) {
           <img
             src={active?.url ?? photoPlaceholder}
             alt={altText}
-            className="aspect-4/3 max-h-96 w-full rounded-card bg-surface-muted object-cover"
+            className="aspect-4/3 max-h-96 w-full rounded-card bg-surface-muted object-cover shadow-raised"
           />
           <span className="sr-only">View full photo</span>
         </button>
 
+        {/* A hint that the photograph opens, without a caption over the pet:
+            the corner control firms up and the image dims very slightly under
+            the pointer. */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute top-3 right-3 flex size-9 items-center justify-center rounded-control bg-panel/90 text-fg shadow-card backdrop-blur-sm"
+          className="pointer-events-none absolute inset-0 rounded-card bg-fg/0 transition-colors duration-200 group-hover/photo:bg-fg/6"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-3 right-3 flex size-9 items-center justify-center rounded-control bg-panel/80 text-fg shadow-card backdrop-blur-sm transition-all duration-200 group-hover/photo:bg-panel group-hover/photo:shadow-raised"
         >
           <Maximize2 size={16} />
         </span>

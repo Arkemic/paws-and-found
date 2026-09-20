@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import headerIllustration from '@/assets/img-012-help-header-illustration.png'
 import { Container } from '@/components/ui'
+import { PatternVeil } from '@/components/PatternVeil'
 import { PageHeader } from '@/components/PageHeader'
 import { SectionHeading } from '@/components/SectionHeading'
 
@@ -197,7 +198,8 @@ export function HelpPage() {
     <div className="-my-8 flex flex-col">
       {/* The page opens on its own ground rather than on flat white, so it
           reads as a destination the way Home and Explore do. */}
-      <section className="hero-ground border-b border-border pt-10 pb-12 sm:pt-14">
+      <section className="hero-ground relative isolate border-b border-border pt-10 pb-12 sm:pt-14">
+        <PatternVeil />
         <Container className="flex flex-col gap-10">
           {/* IMG-012, built the same way as Explore's IMG-008: the whole band
               is one 3:1 illustration with its left side left clear, so the
@@ -256,7 +258,8 @@ export function HelpPage() {
       </section>
 
       {/* Safety, given the weight the page title promises it. */}
-      <section className="border-b border-border bg-surface-alt py-12 sm:py-16">
+      <section className="relative isolate border-b border-border bg-surface-alt py-12 sm:py-16">
+        <PatternVeil />
         <Container className="flex flex-col gap-8">
           <SectionHeading
             title="Before you meet anyone"

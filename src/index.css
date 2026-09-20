@@ -45,19 +45,38 @@
   --color-accent-hover: #d98a26;
   --color-accent-soft: #fff1d6;
 
-  /* -- Neutrals -----------------------------------------------------------
-     The canvas is off-white, not pure white, so white cards lift off it. */
-  --color-surface: #fbf9f6; /* page canvas — warm off-white  */
-  --color-surface-alt: #f4f9f7; /* alternating section bands     */
-  --color-surface-warm: #fcf8f0; /* warmer neutral, for the footer      */
-  --color-surface-muted: #eef3f2; /* hover / subtle fills          */
-  --color-panel: #ffffff; /* cards, modals, nav bar        */
+  /* -- Neutrals: four surface levels --------------------------------------
+     The page itself is part of the design. Every surface belongs to one of
+     four levels, and nothing should sit on a level that does not say what it
+     is (docs/design-system.md):
+
+       1 canvas   `bg-surface` + `page-ground`  the warm off-white ground
+       2 band     `bg-surface-alt` / `-warm`    a full-width tinted chapter
+       3 surface  `bg-panel` / `bg-layer`       a card or panel on the canvas
+       4 elevated `shadow-raised`               floating: dialogs, dropdowns,
+                                                the homepage search
+
+     A white rectangle is not automatically a card: static information can
+     live on the canvas with a heading and space around it. Keep containers
+     for things that genuinely group or genuinely lift. */
+  --color-surface: #fbf9f6; /* 1 page canvas — warm off-white     */
+  --color-surface-alt: #f2f8f6; /* 2 tinted band — pale teal          */
+  --color-warm-band: #fdf7ec; /* 2 tinted band — warm cream         */
+  --color-surface-warm: #fcf8f0; /* warmer neutral, for the footer     */
+  --color-surface-muted: #eef3f2; /* hover / subtle fills               */
+  --color-panel: #ffffff; /* 3 cards, modals, nav bar           */
+  --color-layer: #f7fbfa; /* 3 a quieter panel: filter rails,
+                                        summary panels, progress rails   */
 
   --color-border: #dde6e4; /* dividers, card outlines    */
   --color-border-strong: #c7d5d2; /* form controls              */
 
   --color-fg: #21302f; /* headings and body          */
-  --color-fg-muted: #667573; /* metadata, descriptions     */
+  /* Deepened when the section bands were given a stronger tint: on the pale
+     teal band the old #667573 measured 4.48:1, just under AA. This clears it
+     on every surface muted text is used on (5.1:1 on the band, 5.5:1 on
+     white). */
+  --color-fg-muted: #5e6c6a; /* metadata, descriptions     */
   --color-fg-inverted: #ffffff;
 
   /* DECORATIVE ONLY — 3.06:1 on white, below the 4.5:1 needed for text.
@@ -107,7 +126,10 @@
      Restrained on purpose: a card lifts off the canvas, it does not float.
      No glow, no coloured shadows. */
   --shadow-card: 0 1px 2px rgb(33 48 47 / 0.04), 0 2px 8px rgb(33 48 47 / 0.05);
+  --shadow-hover: 0 2px 4px rgb(33 48 47 / 0.05), 0 6px 16px rgb(33 48 47 / 0.09);
   --shadow-raised: 0 2px 4px rgb(33 48 47 / 0.05), 0 8px 24px rgb(33 48 47 / 0.08);
+  /* The sticky header once the page has scrolled under it. */
+  --shadow-header: 0 1px 2px rgb(33 48 47 / 0.04), 0 4px 16px rgb(33 48 47 / 0.06);
 
   /* -- Layout -------------------------------------------------------------
      Spacing uses Tailwind's 0.25rem step (p-4 = 1rem). Do not invent
@@ -184,29 +206,106 @@
    section, so the photographs there sit on the plain canvas. */
 @utility hero-ground {
   background-image:
-    radial-gradient(64rem 48rem at 4% 2%, rgb(244 163 64 / 0.10), transparent 68%),
-    radial-gradient(60rem 44rem at 96% 0%, rgb(21 122 120 / 0.075), transparent 64%);
+    radial-gradient(64rem 48rem at 4% 2%, rgb(244 163 64 / 0.12), transparent 68%),
+    radial-gradient(60rem 44rem at 96% 0%, rgb(21 122 120 / 0.09), transparent 64%);
 }
 
 /* The same amber/teal atmosphere as the homepage hero, at roughly a third of
-   the strength, on every page. Enough that the interface reads as one warm
-   surface rather than cards floating on flat white; not enough to notice as a
-   gradient. Home keeps `hero-ground` on top of this for its stronger opening. */
+   the strength, on every page, plus a barely-there cool drift down the page.
+   Enough that the interface reads as one warm surface rather than cards
+   floating on flat white; not enough to notice as a gradient. Home keeps
+   `hero-ground` on top of this for its stronger opening. */
 @utility page-ground {
   background-image:
-    radial-gradient(70rem 40rem at 0% 0%, rgb(244 163 64 / 0.035), transparent 60%),
-    radial-gradient(64rem 38rem at 100% 4%, rgb(21 122 120 / 0.03), transparent 58%);
+    radial-gradient(70rem 40rem at 0% 0%, rgb(244 163 64 / 0.05), transparent 60%),
+    radial-gradient(64rem 38rem at 100% 4%, rgb(21 122 120 / 0.045), transparent 58%),
+    linear-gradient(180deg, #fbfaf7 0%, #f6f9f7 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+/* IMG-014 — the community pattern: routes, pins and paw prints, already at
+   5–7% inside the file. Decoration only, and never behind body copy at full
+   tile strength: use it on a heading region, a band, or an empty side.
+
+   `pattern-fade` is the usual pairing — the pattern at the top of a section,
+   gone by the time the text starts. */
+@utility pattern-community {
+  background-image: url('./assets/img-014-community-pattern.svg');
+  background-size: 30rem auto;
+  background-repeat: repeat;
+}
+
+/* Fades the layer it is on. It belongs on the decorative layer only — put it
+   on a section and it fades that section's text with it. `PatternVeil` is
+   the component that does this correctly. */
+@utility pattern-fade {
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.9) 0%, rgb(0 0 0 / 0.35) 45%, transparent 85%);
+}
+
+/* A workspace's heading region: the atmosphere the dashboard, staff and admin
+   areas open with. One tone each so the three environments are told apart
+   without reading the title — warm for a community member, teal for the
+   coordinator's operational workspace, cool and quiet for administration. */
+@utility ground-warm {
+  background-image:
+    radial-gradient(46rem 26rem at 2% 0%, rgb(244 163 64 / 0.10), transparent 62%),
+    radial-gradient(42rem 24rem at 98% 0%, rgb(21 122 120 / 0.06), transparent 60%);
+}
+
+@utility ground-teal {
+  background-image:
+    radial-gradient(46rem 26rem at 0% 0%, rgb(21 122 120 / 0.10), transparent 62%),
+    radial-gradient(40rem 24rem at 96% 0%, rgb(244 163 64 / 0.05), transparent 58%);
+}
+
+@utility ground-cool {
+  background-image:
+    radial-gradient(44rem 24rem at 0% 0%, rgb(21 122 120 / 0.06), transparent 60%),
+    linear-gradient(180deg, rgb(238 243 242 / 0.7), transparent 70%);
+}
+
+/* A card you can click. It lifts a little and deepens its shadow; it never
+   bounces, and it stays still for anyone who asked for reduced motion (the
+   base layer switches every transition off). Static cards keep `shadow-card`
+   and do not move — that difference is how the page says what is clickable. */
+@utility card-interactive {
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    border-color 180ms ease;
+
+  &:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+
+  &:has(a:focus-visible) {
+    box-shadow: var(--shadow-hover);
+  }
+}
+
+/* The reunions band: warm cream with an amber glow behind the first story.
+   The warmest moment on the page, which is the one it is describing. */
+@utility reunion-ground {
+  background-image:
+    radial-gradient(50rem 30rem at 12% 0%, rgb(244 163 64 / 0.10), transparent 62%),
+    radial-gradient(44rem 26rem at 92% 100%, rgb(51 138 85 / 0.05), transparent 60%);
+}
+
+/* The last band before the footer, easing the page into it rather than
+   stopping dead at a border. */
+@utility closing-ground {
+  background-image: linear-gradient(180deg, rgb(21 122 120 / 0.03), rgb(244 163 64 / 0.05));
 }
 
 /* The reporting wizard's ground. Amber for a lost report, teal for a found
    one — just enough that someone knows which workflow they are in without the
    whole form changing colour. */
 @utility lost-ground {
-  background-image: radial-gradient(56rem 34rem at 12% 0%, rgb(244 163 64 / 0.09), transparent 62%);
+  background-image: radial-gradient(56rem 34rem at 12% 0%, rgb(244 163 64 / 0.11), transparent 62%);
 }
 
 @utility found-ground {
-  background-image: radial-gradient(56rem 34rem at 12% 0%, rgb(21 122 120 / 0.07), transparent 62%);
+  background-image: radial-gradient(56rem 34rem at 12% 0%, rgb(21 122 120 / 0.09), transparent 62%);
 }

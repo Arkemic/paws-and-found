@@ -6,16 +6,27 @@ import { cn } from '@/utils/cn'
  * same primitive instead of becoming five near-identical components
  * (CLAUDE.md §17).
  *
+ * `tone` picks the surface level: `panel` is the white card (the default),
+ * `layer` is the quieter tinted one for a rail or a summary panel beside the
+ * main content, and `plain` drops the fill so the card is only an outline on
+ * whatever ground it sits on.
+ *
  * @example
  * <Card>
  *   <CardHeader title="My Reports" action={<Button size="sm">New</Button>} />
  *   <CardBody>…</CardBody>
  * </Card>
  */
-export function Card({ as: Component = 'div', className, children, ...rest }) {
+const TONES = {
+  panel: 'bg-panel shadow-card',
+  layer: 'bg-layer',
+  plain: 'bg-transparent',
+}
+
+export function Card({ as: Component = 'div', tone = 'panel', className, children, ...rest }) {
   return (
     <Component
-      className={cn('rounded-card border border-border bg-panel shadow-card', className)}
+      className={cn('rounded-card border border-border', TONES[tone], className)}
       {...rest}
     >
       {children}

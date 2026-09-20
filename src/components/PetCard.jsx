@@ -34,8 +34,10 @@ export function PetCard({ report, statusVariant = 'dot', className }) {
     <article
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-card border border-border bg-panel shadow-card',
-        'transition-all duration-150 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-raised',
-        'focus-within:-translate-y-0.5 focus-within:border-border-strong focus-within:shadow-raised',
+        // Level 3 at rest, level 4 under the pointer: lifting is how a card
+        // says it can be clicked (see `card-interactive` in index.css).
+        'card-interactive hover:border-border-strong',
+        'focus-within:-translate-y-0.5 focus-within:border-border-strong focus-within:shadow-hover',
         className,
       )}
     >

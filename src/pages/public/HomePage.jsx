@@ -18,6 +18,7 @@ import heroImage from '@/assets/img-006-homepage-hero.jpg'
 import emptyReportsImage from '@/assets/empty-no-reports.png'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { Button, Container, EmptyState, LoadingSkeleton, Select } from '@/components/ui'
+import { PatternVeil } from '@/components/PatternVeil'
 import { PetCard } from '@/components/PetCard'
 import { SectionHeading } from '@/components/SectionHeading'
 import { REPORT_STATUSES, REPORT_TYPE_LABELS, speciesLabel } from '@/constants'
@@ -34,8 +35,11 @@ import { cn } from '@/utils/cn'
  * with the two things they might need to do and proves the system works —
  * real recent reports, real reunions — rather than describing itself.
  *
- * Sections alternate between the warm canvas and a soft teal band so the page
- * reads as distinct chapters instead of one long scroll of white cards.
+ * Sections alternate between the warm canvas, a pale teal band and a warm
+ * cream one so the page reads as distinct chapters instead of one long scroll
+ * of white cards. The search panel straddles the seam between the hero and the
+ * content below it, which is what gives the top of the page a foreground and a
+ * background rather than one flat plane.
  */
 export function HomePage() {
   return (
@@ -45,13 +49,15 @@ export function HomePage() {
       {/* RootLayout pads <main>; the homepage runs its own full-bleed bands
           right up to the header and footer, so that padding is cancelled. */}
       <div className="-my-8 flex flex-col">
-        {/* Hero and search share one tinted ground; everything below returns
-            to the plain canvas so the photographs carry the page. */}
-        <div className="hero-ground">
+        {/* The hero's ground stops behind the search panel, which overlaps
+            the seam by a little over a centimetre; everything below returns to
+            the plain canvas so the photographs carry the page. */}
+        <div className="hero-ground relative isolate">
+          <PatternVeil />
           <Hero />
-          <SearchBand />
         </div>
 
+        <SearchBand />
         <RecentReports />
         <HowItWorks />
         <Reunions />
@@ -73,7 +79,7 @@ function Hero() {
   const { data: stats } = useAsync(loadHeroStats)
 
   return (
-    <section className="pt-10 pb-14 sm:pt-14 sm:pb-20">
+    <section className="pt-10 pb-24 sm:pt-14 sm:pb-28">
       <Container className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col items-start gap-6">
           <h1 className="text-4xl leading-[1.08] font-semibold tracking-tight text-balance text-fg sm:text-5xl">
@@ -168,10 +174,11 @@ function SearchBand() {
   }
 
   return (
-    <section className="pb-12 sm:pb-16">
+    // Pulled up over the bottom of the hero band: the panel belongs to both
+    // the hero and the content, which is what reads as depth.
+    <section className="relative z-10 -mt-10 pb-12 sm:-mt-12 sm:pb-16">
       <Container>
-        {/* Sits on the pale band rather than a white card, so it reads as part
-            of the hero rather than a form lifted from inside the app. */}
+        {/* The one genuinely elevated surface on the page — level 4. */}
         <form
           onSubmit={submit}
           className="rounded-card border border-border bg-panel p-6 shadow-raised sm:p-8"
@@ -329,7 +336,8 @@ function HowItWorks() {
   return (
     // A compact band: the four steps are a reference, not the reason anyone
     // came. The padding was spending more height than the content did.
-    <section className="bg-surface-alt py-12 sm:py-14">
+    <section className="relative isolate border-y border-border/60 bg-surface-alt py-12 sm:py-14">
+      <PatternVeil />
       <Container className="flex flex-col gap-8">
         <SectionHeading
           title="How Paws&Found works"
@@ -392,7 +400,7 @@ function Reunions() {
   const [featured, ...rest] = reunions
 
   return (
-    <section className="py-14 sm:py-20">
+    <section className="reunion-ground border-b border-border/60 bg-warm-band py-14 sm:py-20">
       <Container className="flex flex-col gap-8">
         <SectionHeading
           title={
@@ -531,7 +539,10 @@ const SAFETY = [
 
 function Safety() {
   return (
-    <section className="bg-surface-alt py-14 sm:py-16">
+    // The closing band: the page eases into the footer rather than stopping
+    // at a hairline.
+    <section className="closing-ground relative isolate bg-surface-alt py-14 sm:py-16">
+      <PatternVeil />
       <Container className="flex flex-col gap-8">
         <SectionHeading
           title="Helping is easier when everyone stays safe"

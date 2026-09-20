@@ -253,7 +253,9 @@ const STEP_HINTS = {
  */
 function Stepper({ steps, currentIndex }) {
   return (
-    <nav aria-label="Report progress">
+    // A tinted rail, so the progress reads as the frame around the form
+    // rather than another row of content floating on the canvas.
+    <nav aria-label="Report progress" className="rounded-card border border-border bg-layer px-4 py-4 sm:px-6">
       <ol className="flex items-start">
         {steps.map((step, index) => {
           const isCurrent = index === currentIndex

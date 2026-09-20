@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320" fill="none">
+  <!--
+    IMG-014 — community pattern.
+
+    Decoration only: routes between places, the pins that mark them, and a few
+    paw prints along the way. Hand-built rather than generated so it tiles
+    exactly and weighs nothing.
+
+    The opacity is baked in here (teal and amber at 5–7%) so a section can use
+    it with a plain `background-image` and no wrapper element. It must never
+    carry meaning — nothing on the page should depend on seeing it.
+  -->
+  <g stroke="#157a78" stroke-opacity="0.07" stroke-width="1.25" stroke-linecap="round" fill="none">
+    <path d="M-20 232C40 232 66 180 116 180s74 40 124 40 78-52 128-52 66 26 112 26" stroke-dasharray="7 9" />
+    <path d="M-20 88C34 88 58 120 104 120s70-44 118-44 76 36 120 36 60-24 118-24" />
+    <path d="M196 320c0-44 28-68 28-108s-26-58-26-96 22-60 22-116" stroke-dasharray="6 10" />
+  </g>
+
+  <g stroke="#d98a26" stroke-opacity="0.06" stroke-width="1.25" stroke-linecap="round" fill="none">
+    <path d="M-20 288c52 0 74-34 126-34s78 30 130 30 72-28 124-28 66 18 120 18" stroke-dasharray="5 11" />
+    <path d="M356 320c0-52-24-74-24-118s26-64 26-110c0-34-8-58-8-92" stroke-dasharray="6 10" />
+  </g>
+
+  <!-- Location pins: outline only, sitting on the routes. -->
+  <g stroke="#157a78" stroke-opacity="0.09" stroke-width="1.25" fill="none">
+    <path d="M104 108c0-7.2 5.8-13 13-13s13 5.8 13 13c0 9.8-13 21-13 21s-13-11.2-13-21Z" />
+    <circle cx="117" cy="108" r="4.2" />
+    <path d="M331 178c0-7.2 5.8-13 13-13s13 5.8 13 13c0 9.8-13 21-13 21s-13-11.2-13-21Z" />
+    <circle cx="344" cy="178" r="4.2" />
+  </g>
+  <g stroke="#d98a26" stroke-opacity="0.08" stroke-width="1.25" fill="none">
+    <path d="M211 262c0-7.2 5.8-13 13-13s13 5.8 13 13c0 9.8-13 21-13 21s-13-11.2-13-21Z" />
+    <circle cx="224" cy="262" r="4.2" />
+  </g>
+
+  <!-- Paw prints: three toes and a pad, walking along the routes. -->
+  <g fill="#157a78" fill-opacity="0.06">
+    <g transform="translate(58 44) rotate(-18)">
+      <ellipse cx="0" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="-2" rx="2.6" ry="3.6" />
+      <ellipse cx="14" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="8" rx="6" ry="4.8" />
+    </g>
+    <g transform="translate(398 96) rotate(12)">
+      <ellipse cx="0" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="-2" rx="2.6" ry="3.6" />
+      <ellipse cx="14" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="8" rx="6" ry="4.8" />
+    </g>
+  </g>
+  <g fill="#d98a26" fill-opacity="0.06">
+    <g transform="translate(258 148) rotate(-8)">
+      <ellipse cx="0" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="-2" rx="2.6" ry="3.6" />
+      <ellipse cx="14" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="8" rx="6" ry="4.8" />
+    </g>
+    <g transform="translate(140 296) rotate(6)">
+      <ellipse cx="0" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="-2" rx="2.6" ry="3.6" />
+      <ellipse cx="14" cy="0" rx="2.6" ry="3.6" />
+      <ellipse cx="7" cy="8" rx="6" ry="4.8" />
+    </g>
+  </g>
+
+  <!-- Nodes where routes meet. -->
+  <g fill="#157a78" fill-opacity="0.07">
+    <circle cx="228" cy="220" r="2.4" />
+    <circle cx="44" cy="232" r="2.4" />
+    <circle cx="452" cy="196" r="2.4" />
+    <circle cx="304" cy="64" r="2.4" />
+  </g>
+</svg>

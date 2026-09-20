@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { LogOut, Menu, X } from 'lucide-react'
 import logoMark from '@/assets/pawsfound-logo-mark.png'
@@ -45,13 +45,31 @@ const triggerClasses =
  */
 export function Navbar({ role, onRoleChange, onSignOut, user }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  // Flat while the page is at the top; once content has scrolled underneath,
+  // the header separates from it with a shadow instead of only a hairline.
+  const [isScrolled, setIsScrolled] = useState(false)
   const location = useLocation()
+
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 4)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
   const workspace = role ? WORKSPACE_BY_ROLE[role] : null
 
   const closeMenu = () => setIsMenuOpen(false)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-panel/95 backdrop-blur-sm">
+    <header
+      className={cn(
+        // Translucent rather than solid: the canvas and its gradients drift
+        // under the header as the page moves, which is most of the depth.
+        'sticky top-0 z-50 border-b bg-panel/92 backdrop-blur-[14px]',
+        'transition-[box-shadow,border-color] duration-200',
+        isScrolled ? 'border-brand/12 shadow-header' : 'border-border',
+      )}
+    >
       <Container className="flex h-16 items-center gap-6">
         {/* 1. Brand */}
         <Link

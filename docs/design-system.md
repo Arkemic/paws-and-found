@@ -54,14 +54,16 @@ Amber is **not** an error colour. Errors use `danger`.
 | Token | Hex | Use |
 | --- | --- | --- |
 | `surface` | `#FBF9F6` | Page canvas — warm off-white so cards lift off it |
-| `surface-alt` | `#F4F9F7` | Alternating full-bleed section bands |
+| `surface-alt` | `#F2F8F6` | Full-bleed section band — pale teal |
+| `warm-band` | `#FDF7EC` | Full-bleed section band — warm cream |
 | `surface-muted` | `#EEF3F2` | Hover fills, disabled inputs |
 | `surface-warm` | `#FCF8F0` | The footer — a warmer neutral than the body, so the page ends deliberately |
 | `panel` | `#FFFFFF` | Cards, modals, forms, the nav bar |
+| `layer` | `#F7FBFA` | The quieter panel: filter rails, summary panels, the wizard's progress rail |
 | `border` | `#DDE6E4` | Card outlines, dividers |
 | `border-strong` | `#C7D5D2` | Form controls |
 | `fg` | `#21302F` | Headings and body |
-| `fg-muted` | `#667573` | Metadata, descriptions, placeholders |
+| `fg-muted` | `#5E6C6A` | Metadata, descriptions, placeholders (5.1:1 on the teal band, 5.5:1 on white) |
 | `fg-subtle` | `#899694` | **Decorative only** — see accessibility below |
 | `fg-inverted` | `#FFFFFF` | Text on brand/danger fills |
 
@@ -103,6 +105,28 @@ Each also has a `-soft` variant for tinted backgrounds.
 
 Do not overuse danger red.
 
+## Surface levels
+
+The page itself is part of the design. Every surface belongs to one of four
+levels, and nothing sits on a level that does not describe it:
+
+| Level | How it is built | What belongs on it |
+| --- | --- | --- |
+| 1 Canvas | `bg-surface` + `page-ground` | The ground the whole application sits on: warm off-white with a far-off amber glow top-left and teal top-right, drifting a little cooler down the page |
+| 2 Band | `bg-surface-alt` / `bg-warm-band`, full-bleed | A chapter of a long page. Public pages alternate them; a band may carry `PatternVeil` |
+| 3 Surface | `bg-panel` (white) or `bg-layer` (tinted) | A card or panel. `layer` is the quieter one — a filter rail, a summary panel beside the main content, the wizard's progress rail |
+| 4 Elevated | `shadow-raised` | Something genuinely floating: dialogs, dropdowns, the homepage search panel, the report photograph, the map |
+
+A white rectangle is not automatically a card. Static information can live on
+the canvas with a heading and space around it; keep containers for content that
+genuinely groups or genuinely lifts, or nothing on the page stands out.
+
+**Decoration.** `PatternVeil` puts IMG-014 — routes, location pins and paw
+prints at 5–7% — behind a heading region, a band, or an empty side. It is a
+separate layer because it is faded with a mask, and a mask fades everything
+inside the element it sits on. Never behind body copy at full strength, and
+never carrying meaning.
+
 ## Shape and elevation
 
 | Token | Value | Use |
@@ -110,12 +134,17 @@ Do not overuse danger red.
 | `rounded-card` | 16px | Cards, modals, panels |
 | `rounded-control` | 10px | Buttons, inputs, small badges |
 | `rounded-pill` | full | Chips and status pills |
-| `shadow-card` | soft, 8px | Default card lift |
-| `shadow-raised` | soft, 24px | Hover, and elements floating over an image |
+| `shadow-card` | soft, 8px | A card at rest (level 3) |
+| `shadow-hover` | soft, 16px | A card under the pointer — paired with a 2px lift by `card-interactive` |
+| `shadow-raised` | soft, 24px | Level 4: dialogs, dropdowns, elements floating over an image |
+| `shadow-header` | soft, 16px | The sticky header, once the page has scrolled under it |
 
 Shadows are neutral and restrained — a card lifts off the canvas, it does not
-float. No coloured or glowing shadows. Avoid glassmorphism, neon, large
-gradients and excessive animation.
+float. **Only interactive cards move**: `card-interactive` raises them 2px and
+deepens the shadow over 180ms, and that difference is how the page says what can
+be clicked. Static cards keep `shadow-card` and stay still. No coloured or
+glowing shadows. Avoid glassmorphism, neon, large gradients and excessive
+animation; nothing bounces and nothing flies.
 
 ## Type scale
 

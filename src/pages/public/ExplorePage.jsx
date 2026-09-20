@@ -165,6 +165,13 @@ export function ExplorePage() {
           className="absolute inset-0 hidden size-full object-cover object-center lg:block"
         />
 
+        {/* The illustration fades into the canvas instead of stopping at a
+            hard edge, so the search sits on the seam between the two. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-surface/90"
+        />
+
         <div className="relative flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
           <div className="flex flex-col gap-2 lg:max-w-1/2">
             <h1 className="text-3xl font-semibold tracking-tight text-balance text-fg sm:text-4xl">
@@ -193,7 +200,7 @@ export function ExplorePage() {
                 value={searchDraft}
                 onChange={(event) => setSearchDraft(event.target.value)}
                 placeholder="Search by breed, colour, markings, pet name or place"
-                className="h-12 w-full rounded-control border border-border-strong bg-panel pr-4 pl-11 text-base text-fg shadow-card placeholder:text-fg-muted"
+                className="h-12 w-full rounded-control border border-border-strong bg-panel pr-4 pl-11 text-base text-fg shadow-raised placeholder:text-fg-muted"
               />
             </div>
             <Button type="submit" size="lg" className="sm:min-w-30">
@@ -343,7 +350,11 @@ export function ExplorePage() {
                   cheap and paging a map would be confusing. From `lg` it fills
                   the screen below the header: the filter panel beside it is far
                   taller than 36rem, and a fixed height left a gap under the map. */}
-              <ReportMap reports={reports} height="h-[36rem] lg:h-[max(36rem,calc(100dvh-8rem))]" />
+              <ReportMap
+                reports={reports}
+                height="h-[36rem] lg:h-[max(36rem,calc(100dvh-8rem))]"
+                className="shadow-raised"
+              />
 
               {unpinnedCount > 0 && (
                 <p className="text-sm text-fg-muted">

@@ -43,10 +43,11 @@ export function FilterPanel({
   speciesOptions = [],
 }) {
   return (
-    // One white panel rather than a bare column of controls: it separates
-    // filtering from the results beside it, and stops the sidebar reading as a
-    // form on the page background.
-    <div className="flex flex-col gap-5 rounded-card border border-border bg-panel p-5 shadow-card">
+    // A tinted rail rather than a white card: filtering is the layer between
+    // the canvas and the white report cards beside it, and three levels is
+    // what stops the page reading as one flat plane. No shadow — it groups,
+    // it does not lift.
+    <div className="flex flex-col gap-5 rounded-card border border-border bg-layer p-5">
       <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
         <h2 className="text-lg font-semibold text-fg">Filters</h2>
         {hasActiveFilters && (
