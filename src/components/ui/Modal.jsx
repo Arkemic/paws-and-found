@@ -56,6 +56,9 @@ function OpenModal({
     const dialog = dialogRef.current
     const opener = document.activeElement
     if (!dialog.open) dialog.showModal()
+    // A confirmation puts `data-autofocus` on its safe button (Cancel), so
+    // Enter straight after opening never commits the action.
+    dialog.querySelector('[data-autofocus]')?.focus()
     return () => opener?.focus?.()
   }, [])
 

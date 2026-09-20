@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Check, FolderTree, Pencil, Trash2, X } from 'lucide-react'
-import { Button, Card, CardBody, Input, LoadingSkeleton } from '@/components/ui'
+import { Check, FolderTree, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Button, Card, CardBody, EmptyState, Input, LoadingSkeleton } from '@/components/ui'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PageHeader } from '@/components/PageHeader'
 import { useAsync } from '@/hooks/useAsync'
 import { categoryService } from '@/services'
 import { cn } from '@/utils/cn'
+import { CategoryStatusBadge } from './AdminBadges'
 
 async function loadCategories() {
   const [categories, usage] = await Promise.all([
@@ -32,6 +34,9 @@ export function AdminCategoriesPage() {
   const [editLabel, setEditLabel] = useState('')
   const [actionError, setActionError] = useState(null)
   const [isBusy, setIsBusy] = useState(false)
+  const [added, setAdded] = useState(null)
+  // { category, kind: 'deactivate' | 'delete' }
+  const [asking, setAsking] = useState(null)
 
   const header = (
     <PageHeader
@@ -80,9 +85,25 @@ export function AdminCategoriesPage() {
 
   const add = async (event) => {
     event.preventDefault()
+    const label = newLabel.trim()
+    if (!label) return
     await run(async () => {
-      await categoryService.createCategory(newLabel)
+      await categoryService.createCategory(label)
       setNewLabel('')
+      setAdded(label)
+    })
+  }
+
+  const confirmed = async () => {
+    const { category, kind } = asking
+    setAdded(null)
+    await run(async () => {
+      if (kind === 'delete') {
+        await categoryService.deleteCategory(category.id)
+      } else {
+        await categoryService.setCategoryActive(category.id, false)
+      }
+      setAsking(null)
     })
   }
 
@@ -103,162 +124,285 @@ export function AdminCategoriesPage() {
             <Input
               label="Add a category"
               value={newLabel}
-              onChange={(event) => setNewLabel(event.target.value)}
+              onChange={(event) => {
+                setNewLabel(event.target.value)
+                setAdded(null)
+                setActionError(null)
+              }}
               maxLength={40}
               placeholder="e.g. Turtle"
+              hint="Two characters or more. It becomes available to new reports immediately."
               className="sm:flex-1"
             />
-            <Button type="submit" disabled={!newLabel.trim() || isBusy}>
+            <Button type="submit" disabled={newLabel.trim().length < 2 || isBusy}>
+              <Plus size={16} aria-hidden="true" />
               Add category
             </Button>
           </form>
+
+          {/* The server rejects a duplicate name; its message belongs here,
+              beside the field it is about, not at the top of the page. */}
+          {actionError && !asking && (
+            <p role="alert" className="mt-3 text-sm text-danger">
+              {actionError.message}
+            </p>
+          )}
+          {added && !actionError && (
+            <p role="status" className="mt-3 text-sm text-success-ink">
+              &ldquo;{added}&rdquo; was added.
+            </p>
+          )}
         </CardBody>
       </Card>
 
-      {actionError && (
-        <p role="alert" className="text-sm text-danger">
-          {actionError.message}
-        </p>
-      )}
-
-      {/* Compact rows, same as the user list. Nine categories as nine cards
-          was a page of scrolling to read nine words. */}
-      <div className="overflow-x-auto rounded-card border border-border bg-panel">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border bg-surface-muted text-fg">
-            <tr>
-              <th scope="col" className="px-4 py-2.5 font-medium">
-                Category
-              </th>
-              <th scope="col" className="hidden px-2 py-2.5 font-medium sm:table-cell">
-                Reports
-              </th>
-              <th scope="col" className="px-2 py-2.5 font-medium">
-                Status
-              </th>
-              <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-border">
+      {categories.length === 0 ? (
+        <EmptyState
+          icon={FolderTree}
+          title="No categories yet"
+          description="Add the first species above. Reports cannot be filed until at least one exists."
+        />
+      ) : (
+        <>
+          {/* Phones: one card per category, so the actions are not squeezed
+              into a fourth column. */}
+          <ul className="flex flex-col gap-3 sm:hidden">
             {categories.map((category) => {
               const inUse = usage[category.id] ?? 0
-              const isEditing = editingId === category.id
-
-              if (isEditing) {
-                return (
-                  <tr key={category.id} className="bg-surface">
-                    <td colSpan={4} className="px-4 py-3">
-                      <div className="flex flex-wrap items-end gap-2">
-                        <Input
-                          label={`Rename ${category.label}`}
-                          value={editLabel}
-                          onChange={(event) => setEditLabel(event.target.value)}
-                          maxLength={40}
-                        />
-                        <Button size="sm" onClick={() => saveRename(category.id)} disabled={isBusy}>
-                          <Check size={14} aria-hidden="true" />
-                          Save
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                          <X size={14} aria-hidden="true" />
-                          Cancel
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              }
 
               return (
-                <tr key={category.id} className="align-middle transition-colors hover:bg-surface">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-fg">{category.label}</p>
-                    <p className="text-fg-muted">
-                      Stored as <code>{category.id}</code>
-                      <span className="sm:hidden">
-                        {' '}
-                        · {inUse} {inUse === 1 ? 'report' : 'reports'}
-                      </span>
-                    </p>
-                  </td>
-
-                  <td className="hidden px-2 py-3 text-fg-muted tabular-nums sm:table-cell">
-                    {inUse}
-                  </td>
-
-                  <td className="px-2 py-3">
-                    <span
-                      className={cn(
-                        'inline-block rounded-pill px-2.5 py-0.5 text-xs font-medium',
-                        category.isActive
-                          ? 'bg-success-soft text-success-ink'
-                          : 'bg-surface-muted text-fg',
-                      )}
-                    >
-                      {category.isActive ? 'Available' : 'Hidden'}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        disabled={isBusy}
-                        onClick={() => {
+                <li
+                  key={category.id}
+                  className="flex flex-col gap-3 rounded-card border border-border bg-panel p-4 shadow-card"
+                >
+                  {editingId === category.id ? (
+                    <RenameForm
+                      category={category}
+                      value={editLabel}
+                      onChange={setEditLabel}
+                      onSave={() => saveRename(category.id)}
+                      onCancel={() => setEditingId(null)}
+                      isBusy={isBusy}
+                    />
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium text-fg">{category.label}</p>
+                        <CategoryStatusBadge isActive={category.isActive} />
+                      </div>
+                      <p className="text-sm text-fg-muted">
+                        Stored as <code>{category.id}</code> · {inUse}{' '}
+                        {inUse === 1 ? 'report' : 'reports'}
+                      </p>
+                      <CategoryActions
+                        category={category}
+                        inUse={inUse}
+                        isBusy={isBusy}
+                        onRename={() => {
                           setEditingId(category.id)
                           setEditLabel(category.label)
                         }}
-                      >
-                        <Pencil size={14} aria-hidden="true" />
-                        Rename
-                        <span className="sr-only"> {category.label}</span>
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={isBusy}
-                        onClick={() =>
-                          run(() =>
-                            categoryService.setCategoryActive(category.id, !category.isActive),
-                          )
+                        onReactivate={() =>
+                          run(() => categoryService.setCategoryActive(category.id, true))
                         }
-                      >
-                        {category.isActive ? 'Deactivate' : 'Reactivate'}
-                        <span className="sr-only"> {category.label}</span>
-                      </Button>
-
-                      {/* Only offered while nothing points at it. */}
-                      {inUse === 0 && (
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          disabled={isBusy}
-                          onClick={() => run(() => categoryService.deleteCategory(category.id))}
-                        >
-                          <Trash2 size={14} aria-hidden="true" />
-                          Delete
-                          <span className="sr-only"> {category.label}</span>
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                        onAsk={setAsking}
+                      />
+                    </>
+                  )}
+                </li>
               )
             })}
-          </tbody>
-        </table>
-      </div>
+          </ul>
+
+          <div className="hidden overflow-hidden rounded-card border border-border bg-panel sm:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-surface-muted text-fg">
+                <tr>
+                  <th scope="col" className="px-4 py-2.5 font-medium">
+                    Category
+                  </th>
+                  <th scope="col" className="px-2 py-2.5 font-medium">
+                    Reports
+                  </th>
+                  <th scope="col" className="px-2 py-2.5 font-medium">
+                    Status
+                  </th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-border">
+                {categories.map((category) => {
+                  const inUse = usage[category.id] ?? 0
+
+                  if (editingId === category.id) {
+                    return (
+                      <tr key={category.id} className="bg-surface">
+                        <td colSpan={4} className="px-4 py-3">
+                          <RenameForm
+                            category={category}
+                            value={editLabel}
+                            onChange={setEditLabel}
+                            onSave={() => saveRename(category.id)}
+                            onCancel={() => setEditingId(null)}
+                            isBusy={isBusy}
+                          />
+                        </td>
+                      </tr>
+                    )
+                  }
+
+                  return (
+                    <tr key={category.id} className="align-middle transition-colors hover:bg-surface">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-fg">{category.label}</p>
+                        <p className="text-fg-muted">
+                          Stored as <code>{category.id}</code>
+                        </p>
+                      </td>
+
+                      <td className="px-2 py-3 text-fg-muted tabular-nums">{inUse}</td>
+
+                      <td className="px-2 py-3">
+                        <CategoryStatusBadge isActive={category.isActive} />
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <CategoryActions
+                          category={category}
+                          inUse={inUse}
+                          isBusy={isBusy}
+                          align="end"
+                          onRename={() => {
+                            setEditingId(category.id)
+                            setEditLabel(category.label)
+                          }}
+                          onReactivate={() =>
+                            run(() => categoryService.setCategoryActive(category.id, true))
+                          }
+                          onAsk={setAsking}
+                        />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       <p className="text-sm text-fg-muted">
         Renaming is always safe — reports store the category id, not its name. A category in
         use cannot be deleted; deactivate it instead, which hides it from new reports without
         touching the ones already filed.
       </p>
+
+      {asking && (
+        <ConfirmDialog
+          isOpen
+          title={
+            asking.kind === 'delete'
+              ? `Delete ${asking.category.label}?`
+              : `Deactivate ${asking.category.label}?`
+          }
+          confirmLabel={asking.kind === 'delete' ? 'Delete category' : 'Deactivate category'}
+          tone={asking.kind === 'delete' ? 'danger' : 'primary'}
+          isBusy={isBusy}
+          error={actionError}
+          onCancel={() => {
+            setAsking(null)
+            setActionError(null)
+          }}
+          onConfirm={confirmed}
+        >
+          {asking.kind === 'delete' ? (
+            <p>
+              <span className="font-medium">{asking.category.label}</span> is not used by any
+              report, so it can be removed completely. This cannot be undone — you would have to
+              add it again.
+            </p>
+          ) : (
+            <p>
+              <span className="font-medium">{asking.category.label}</span> will no longer be
+              offered on new reports. The {usage[asking.category.id] ?? 0}{' '}
+              {(usage[asking.category.id] ?? 0) === 1 ? 'report' : 'reports'} already filed under
+              it are untouched, and it can be reactivated at any time.
+            </p>
+          )}
+        </ConfirmDialog>
+      )}
+    </div>
+  )
+}
+
+/** Rename in place. Safe — a report stores the id, never the label. */
+function RenameForm({ category, value, onChange, onSave, onCancel, isBusy }) {
+  return (
+    <div className="flex flex-wrap items-end gap-2">
+      <Input
+        label={`Rename ${category.label}`}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        maxLength={40}
+        className="min-w-48 flex-1"
+      />
+      <Button size="sm" onClick={onSave} disabled={isBusy || value.trim().length < 2}>
+        <Check size={14} aria-hidden="true" />
+        Save
+      </Button>
+      <Button size="sm" variant="ghost" onClick={onCancel} disabled={isBusy}>
+        <X size={14} aria-hidden="true" />
+        Cancel
+      </Button>
+    </div>
+  )
+}
+
+/**
+ * Rename is neutral, deactivating changes what reporters are offered, and
+ * deleting is destructive — so only the last one is red, and the last two ask
+ * first. Delete is only offered while nothing points at the category.
+ */
+function CategoryActions({ category, inUse, isBusy, align, onRename, onReactivate, onAsk }) {
+  return (
+    <div className={cn('flex flex-wrap gap-2', align === 'end' && 'justify-end')}>
+      <Button size="sm" variant="secondary" disabled={isBusy} onClick={onRename}>
+        <Pencil size={14} aria-hidden="true" />
+        Rename
+        <span className="sr-only"> {category.label}</span>
+      </Button>
+
+      {category.isActive ? (
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={isBusy}
+          onClick={() => onAsk({ category, kind: 'deactivate' })}
+        >
+          Deactivate
+          <span className="sr-only"> {category.label}</span>
+        </Button>
+      ) : (
+        <Button size="sm" variant="ghost" disabled={isBusy} onClick={onReactivate}>
+          Reactivate
+          <span className="sr-only"> {category.label}</span>
+        </Button>
+      )}
+
+      {inUse === 0 && (
+        <Button
+          size="sm"
+          variant="danger"
+          disabled={isBusy}
+          onClick={() => onAsk({ category, kind: 'delete' })}
+        >
+          <Trash2 size={14} aria-hidden="true" />
+          Delete
+          <span className="sr-only"> {category.label}</span>
+        </Button>
+      )}
     </div>
   )
 }

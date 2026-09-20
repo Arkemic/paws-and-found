@@ -23,36 +23,38 @@ export function MonthlyReportsChart({ months }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* The legend names each bar's position as well as its colour, and
+          every bar carries its own number, so nothing depends on telling
+          amber from teal. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         <span className="flex items-center gap-1.5 text-fg-muted">
           <span aria-hidden="true" className="size-2.5 rounded-xs bg-lost" />
-          Lost
+          Lost <span className="text-fg-muted">(left bar)</span>
         </span>
         <span className="flex items-center gap-1.5 text-fg-muted">
           <span aria-hidden="true" className="size-2.5 rounded-xs bg-found" />
-          Found
+          Found <span className="text-fg-muted">(right bar)</span>
         </span>
       </div>
 
-      <div aria-hidden="true" className="flex items-end gap-2 sm:gap-4">
+      <div aria-hidden="true" className="flex items-end gap-1 border-b border-border sm:gap-4">
         {months.map((month) => (
-          <div key={month.month} className="flex flex-1 flex-col items-center gap-2">
-            <span className="text-sm font-medium text-fg tabular-nums">{month.total}</span>
-
-            <div className="flex h-32 w-full items-end justify-center gap-1">
-              {/* A month with no reports draws no bar, which is the honest
-                  reading — not a stub that suggests something happened. */}
-              <span
-                className="w-2.5 rounded-t-xs bg-lost sm:w-3.5"
-                style={{ height: height(month.lost) }}
-              />
-              <span
-                className="w-2.5 rounded-t-xs bg-found sm:w-3.5"
-                style={{ height: height(month.found) }}
-              />
+          <div key={month.month} className="flex flex-1 flex-col items-center">
+            {/* Numbers sit above the bars; a month with no reports draws no
+                bar, which is the honest reading, but still shows its 0. */}
+            <div className="flex h-36 w-full items-end justify-center gap-1 sm:gap-1.5">
+              <Bar value={month.lost} height={height(month.lost)} className="bg-lost" />
+              <Bar value={month.found} height={height(month.found)} className="bg-found" />
             </div>
+          </div>
+        ))}
+      </div>
 
+      <div aria-hidden="true" className="-mt-2 flex gap-1 sm:gap-4">
+        {months.map((month) => (
+          <div key={month.month} className="flex flex-1 flex-col items-center">
             <span className="text-xs text-fg-muted">{month.label}</span>
+            <span className="text-sm font-semibold text-fg tabular-nums">{month.total}</span>
           </div>
         ))}
       </div>
@@ -80,8 +82,23 @@ export function MonthlyReportsChart({ months }) {
       </table>
 
       <p className="text-sm text-fg-muted">
-        {filed} {filed === 1 ? 'report' : 'reports'} filed in the last six months.
+        Month totals under each label.{' '}
+        <span className="font-medium text-fg">
+          {filed} {filed === 1 ? 'report' : 'reports'}
+        </span>{' '}
+        filed in the last six months.
       </p>
+    </div>
+  )
+}
+
+/** One bar with its value above it. */
+function Bar({ value, height, className }) {
+  return (
+    <div className="flex h-full w-3.5 flex-col items-center justify-end gap-1 sm:w-5">
+      <span className="text-[11px] leading-none text-fg-muted tabular-nums">{value}</span>
+      {/* `max-h` leaves room for the number above a full-height bar. */}
+      <span className={`block max-h-[calc(100%-1rem)] w-full rounded-t-xs ${className}`} style={{ height }} />
     </div>
   )
 }

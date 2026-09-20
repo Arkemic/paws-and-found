@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { RootLayout } from '@/layouts/RootLayout'
 import { WorkspaceLayout } from '@/layouts/WorkspaceLayout'
 import { loadDashboardCounts } from '@/pages/dashboard/dashboardSummary'
+import { loadAdminCounts } from '@/pages/admin/adminCounts'
 import { loadStaffCounts } from '@/pages/staff/staffCounts'
 import { RequireAccess } from '@/components/RequireAccess'
 import { ROLES } from '@/constants'
@@ -170,7 +171,6 @@ export default function App() {
                 <WorkspaceLayout
                   label="My account"
                   items={USER_NAV}
-                  variant="light"
                   loadCounts={loadDashboardCounts}
                 />
               </RequireAccess>
@@ -192,7 +192,6 @@ export default function App() {
                 <WorkspaceLayout
                   label="Staff workspace"
                   items={STAFF_NAV}
-                  variant="light"
                   loadCounts={loadStaffCounts}
                 />
               </RequireAccess>
@@ -222,7 +221,11 @@ export default function App() {
             path="/admin"
             element={
               <RequireAccess role={role} allowed={[ROLES.ADMIN]}>
-                <WorkspaceLayout label="Administration" items={ADMIN_NAV} />
+                <WorkspaceLayout
+                  label="Administration"
+                  items={ADMIN_NAV}
+                  loadCounts={loadAdminCounts}
+                />
               </RequireAccess>
             }
           >

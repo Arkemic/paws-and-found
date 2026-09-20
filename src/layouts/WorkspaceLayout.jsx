@@ -15,12 +15,11 @@ import { useAsync } from '@/hooks/useAsync'
  * @param {Object} props
  * @param {string} props.label  Workspace name, used to label the sidebar nav.
  * @param {Array} props.items   Sidebar links; see constants/navigation.js.
- * @param {'panel'|'light'} [props.variant]  Sidebar look; see Sidebar.
  * @param {() => Promise<Record<string, number>>} [props.loadCounts]  Fetches
  *   the sidebar's count badges. Re-read whenever the person moves to another
  *   section, so a count that changed on one page is right on the next.
  */
-export function WorkspaceLayout({ label, items, variant = 'panel', loadCounts }) {
+export function WorkspaceLayout({ label, items, loadCounts }) {
   const { pathname } = useLocation()
 
   const readCounts = useCallback(
@@ -31,7 +30,7 @@ export function WorkspaceLayout({ label, items, variant = 'panel', loadCounts })
 
   return (
     <Container className="flex flex-col gap-6 lg:flex-row lg:gap-10">
-      <Sidebar label={label} items={items} variant={variant} counts={counts} />
+      <Sidebar label={label} items={items} counts={counts} />
 
       <div className="min-w-0 flex-1">
         <Outlet />

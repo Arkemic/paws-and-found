@@ -95,8 +95,8 @@ const STAFF_STAGES = {
   ],
   [MATCH_STATUSES.UNDER_REVIEW]: ['bg-brand-soft text-brand-hover', 'More information requested'],
   [MATCH_STATUSES.CONFIRMED]: ['bg-success-soft text-success-ink', MATCH_STATUS_LABELS[MATCH_STATUSES.CONFIRMED]],
-  [MATCH_STATUSES.REJECTED]: ['bg-status-closed-soft text-fg-muted', 'Ruled out · by a coordinator'],
-  [MATCH_STATUSES.DISMISSED]: ['bg-status-closed-soft text-fg-muted', 'Ruled out · by the reporter'],
+  [MATCH_STATUSES.REJECTED]: ['bg-status-closed-soft text-fg', 'Ruled out · by a coordinator'],
+  [MATCH_STATUSES.DISMISSED]: ['bg-status-closed-soft text-fg', 'Ruled out · by the reporter'],
 }
 
 export function MatchStatusBadge({ status, className }) {

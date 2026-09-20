@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom'
-import { Flag, FolderTree, ListChecks, ShieldHalf, Users } from 'lucide-react'
+import { ArrowRight, Flag, FolderTree, ListChecks, ShieldHalf, Users } from 'lucide-react'
+import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { Button, Card, CardBody, CardHeader, LoadingSkeleton } from '@/components/ui'
+import { Avatar } from '@/components/Avatar'
 import { PageHeader } from '@/components/PageHeader'
 import { StatTile } from '@/components/StatTile'
 import { StatusBadge } from '@/components/StatusBadge'
+import { ReportTypeBadge } from '@/components/ReportTypeBadge'
 import { BreakdownBars } from '@/components/BreakdownBars'
 import { MonthlyReportsChart } from '@/components/MonthlyReportsChart'
 import {
@@ -13,10 +16,12 @@ import {
   REPORT_STATUS_LABELS,
   REPORT_STATUS_ORDER,
   ROLE_LABELS,
+  speciesLabel,
 } from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
 import { categoryService, moderationService, petService, userService } from '@/services'
-import { formatRelativeTime } from '@/utils/date'
+import { formatCardDate } from '@/utils/date'
+import { AccountStatusBadge } from './AdminBadges'
 
 async function loadAdminOverview() {
   const [users, reports, openCases, categories, stats] = await Promise.all([
@@ -37,6 +42,10 @@ async function loadAdminOverview() {
  *
  * Administration is about accounts, records, categories and moderation — not
  * day-to-day pet cases, which belong to the Pet Coordinators (CLAUDE.md §4.3).
+ *
+ * Read top to bottom: the numbers, then what needs an administrator, then the
+ * analytics. Only the flag count is emphasised — it is the one number that
+ * means someone has to act.
  */
 export function AdminOverviewPage() {
   const { data, error, isLoading } = useAsync(loadAdminOverview)
@@ -93,123 +102,223 @@ export function AdminOverviewPage() {
     .slice(0, 5)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {header}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatTile icon={Flag} label="Flags awaiting review" value={openCases.length} to="/admin/moderation" />
+        <StatTile
+          icon={Flag}
+          label="Flags awaiting review"
+          value={openCases.length}
+          to="/admin/moderation"
+          emphasis={openCases.length > 0}
+        />
         <StatTile icon={Users} label="Accounts" value={users.length} to="/admin/users" />
         <StatTile icon={ListChecks} label="Active reports" value={stats.totals.active} to="/admin/reports" />
         <StatTile icon={FolderTree} label="Pet categories" value={categories.length} to="/admin/categories" />
       </div>
 
-      <Card>
-        <CardHeader
-          titleAs="h2"
-          title="Reports filed"
-          subtitle="The last six months, counted by when each report was filed."
-        />
-        <CardBody>
-          <MonthlyReportsChart months={stats.monthly} />
-        </CardBody>
-      </Card>
+      <section aria-labelledby="attention-heading" className="flex flex-col gap-4">
+        <h2 id="attention-heading" className="text-xl font-semibold text-fg">
+          Needs your attention
+        </h2>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <FlagsCard openCases={openCases} />
+          <SuspendedCard suspended={suspended} />
+        </div>
+      </section>
+
+      <section aria-labelledby="activity-heading" className="flex flex-col gap-4">
+        <h2 id="activity-heading" className="text-xl font-semibold text-fg">
+          Activity
+        </h2>
+
         <Card>
           <CardHeader
-            titleAs="h2"
-            title="Where reports stand"
-            subtitle={`${stats.totals.total} reports in total.`}
+            title="Reports filed"
+            subtitle="The last six months, counted by when each report was filed."
           />
           <CardBody>
-            <BreakdownBars rows={statusRows} total={stats.totals.total} />
+            <MonthlyReportsChart months={stats.monthly} />
           </CardBody>
         </Card>
 
-        <Card>
-          <CardHeader
-            titleAs="h2"
-            title="Most reported animals"
-            subtitle={`${stats.totals.lost} lost, ${stats.totals.found} found.`}
-          />
-          <CardBody>
-            <BreakdownBars rows={speciesRows} total={stats.totals.total} />
-          </CardBody>
-        </Card>
-      </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader title="Reports by status" subtitle={`${stats.totals.total} reports in total.`} />
+            <CardBody>
+              <BreakdownBars rows={statusRows} total={stats.totals.total} />
+            </CardBody>
+          </Card>
 
-      {openCases.length > 0 && (
-        <Card>
-          <CardHeader
-            titleAs="h2"
-            title="Flags awaiting review"
-            action={
-              <Button as={Link} to="/admin/moderation" size="sm">
-                Open moderation
-              </Button>
-            }
-          />
-          <CardBody>
-            <ul className="flex flex-col divide-y divide-border">
-              {openCases.slice(0, 4).map(({ moderationCase, report }) => (
-                <li key={moderationCase.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
-                  <span className="font-medium text-fg">
+          <Card>
+            <CardHeader
+              title="Most reported animals"
+              subtitle={`${stats.totals.lost} lost, ${stats.totals.found} found.`}
+            />
+            <CardBody>
+              <BreakdownBars rows={speciesRows} total={stats.totals.total} />
+            </CardBody>
+          </Card>
+        </div>
+
+        <RecentlyClosed reports={recentlyClosed} />
+      </section>
+    </div>
+  )
+}
+
+/** Open flags: the queue's first few, and the way into it. */
+function FlagsCard({ openCases }) {
+  const count = openCases.length
+
+  return (
+    <Card className={count > 0 ? 'border-accent/50' : undefined}>
+      <CardHeader
+        title={
+          <span className="flex items-center gap-2">
+            Flags awaiting review
+            {count > 0 && (
+              <span className="rounded-pill bg-accent-soft px-2.5 py-0.5 text-sm font-semibold text-lost tabular-nums">
+                {count}
+              </span>
+            )}
+          </span>
+        }
+        subtitle={
+          count > 0
+            ? `${count === 1 ? 'A report was' : 'Reports were'} flagged by the community. Each needs a decision.`
+            : undefined
+        }
+        action={
+          <Button as={Link} to="/admin/moderation" size="sm" variant={count > 0 ? 'primary' : 'secondary'}>
+            Open moderation
+            <ArrowRight size={14} aria-hidden="true" />
+          </Button>
+        }
+      />
+      <CardBody className="py-2">
+        {count === 0 ? (
+          <p className="py-3 text-sm text-fg-muted">No flags are waiting. Nothing needs a decision.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border">
+            {openCases.slice(0, 4).map(({ moderationCase, report, reportedBy }) => (
+              <li key={moderationCase.id} className="flex flex-col gap-0.5 py-3 text-sm">
+                <p className="flex flex-wrap items-center gap-x-2">
+                  <span className="font-semibold text-fg">
                     {MODERATION_REASON_LABELS[moderationCase.reason]}
                   </span>
-                  <Link to={`/pet/${report.id}`} className="text-brand hover:underline">
-                    {report.petName ?? 'Found pet report'}
-                  </Link>
-                  <span className="text-fg-muted">
-                    {formatRelativeTime(moderationCase.createdAt)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </CardBody>
-        </Card>
-      )}
-
-      {suspended.length > 0 && (
-        <Card>
-          <CardHeader titleAs="h2" title="Suspended accounts" />
-          <CardBody>
-            <ul className="flex flex-col divide-y divide-border">
-              {suspended.map((user) => (
-                <li key={user.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
-                  <span className="font-medium text-fg">{user.fullName}</span>
-                  <span className="text-fg-muted">{ROLE_LABELS[user.role]}</span>
-                  <Link to="/admin/users" className="text-brand hover:underline">
-                    Manage
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </CardBody>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader titleAs="h2" title="Recently closed cases" />
-        <CardBody>
-          {recentlyClosed.length === 0 ? (
-            <p className="text-sm text-fg-muted">No cases have been closed yet.</p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-border">
-              {recentlyClosed.map((report) => (
-                <li key={report.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
+                  <span className="text-fg-muted">on</span>
                   <Link to={`/pet/${report.id}`} className="font-medium text-brand hover:underline">
                     {report.petName ?? 'Found pet report'}
                   </Link>
-                  <StatusBadge status={report.status} />
-                  <span className="text-fg-muted">
-                    {report.location.city} · {formatRelativeTime(report.updatedAt)}
+                </p>
+                <p className="text-fg-muted">
+                  Flagged by {reportedBy.fullName} · {formatCardDate(moderationCase.createdAt)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardBody>
+    </Card>
+  )
+}
+
+function SuspendedCard({ suspended }) {
+  return (
+    <Card>
+      <CardHeader
+        title="Suspended accounts"
+        subtitle={
+          suspended.length > 0
+            ? 'These people cannot sign in until an administrator reinstates them.'
+            : undefined
+        }
+      />
+      <CardBody className="py-2">
+        {suspended.length === 0 ? (
+          <p className="py-3 text-sm text-fg-muted">No accounts are suspended.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border">
+            {suspended.map((user) => (
+              <li key={user.id} className="flex items-center gap-3 py-3 text-sm">
+                <Avatar name={user.fullName} />
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="font-medium break-words text-fg">{user.fullName}</span>
+                  <span className="flex flex-wrap items-center gap-2 text-fg-muted">
+                    {ROLE_LABELS[user.role]}
+                    <AccountStatusBadge status={user.accountStatus} />
                   </span>
-                </li>
-              ))}
-            </ul>
-          )}
+                </div>
+                <Button
+                  as={Link}
+                  to="/admin/users?status=suspended"
+                  variant="secondary"
+                  size="sm"
+                  aria-label={`Manage ${user.fullName}`}
+                >
+                  Manage
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardBody>
+    </Card>
+  )
+}
+
+/** A compact activity preview, not a list of report cards. */
+function RecentlyClosed({ reports }) {
+  return (
+    <Card>
+      <CardHeader
+        title="Recently closed cases"
+        action={
+          <Button as={Link} to="/admin/reports?status=closed" variant="ghost" size="sm">
+            All closed reports
+          </Button>
+        }
+      />
+      {reports.length === 0 ? (
+        <CardBody>
+          <p className="text-sm text-fg-muted">No cases have been closed yet.</p>
         </CardBody>
-      </Card>
-    </div>
+      ) : (
+        <ul className="flex flex-col divide-y divide-border">
+          {reports.map((report) => {
+            const photo = report.photos.find((item) => item.isPrimary) ?? report.photos[0]
+
+            return (
+              // The whole row opens the report: the name is a stretched link.
+              <li
+                key={report.id}
+                className="relative flex flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 transition-colors hover:bg-surface has-[a:focus-visible]:bg-surface"
+              >
+                <img
+                  src={photo?.url ?? photoPlaceholder}
+                  alt=""
+                  loading="lazy"
+                  className="size-9 shrink-0 rounded-control bg-surface-muted object-cover"
+                />
+                <ReportTypeBadge reportType={report.reportType} size="sm" />
+                <Link
+                  to={`/pet/${report.id}`}
+                  className="text-sm font-medium text-fg after:absolute after:inset-0 hover:underline"
+                >
+                  {report.petName ?? `Found ${speciesLabel(report.species).toLowerCase()}`}
+                </Link>
+                <StatusBadge status={report.status} variant="pill" />
+                <span className="ml-auto text-sm whitespace-nowrap text-fg-muted">
+                  {report.location.city} · {formatCardDate(report.updatedAt)}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </Card>
   )
 }

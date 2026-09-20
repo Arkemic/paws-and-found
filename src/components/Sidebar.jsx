@@ -14,59 +14,19 @@ const linkClasses = ({ isActive }) =>
 /**
  * Workspace navigation for the dashboard, staff and admin areas.
  *
- * Two looks:
- *
- * - `panel` (administration): a white panel from `lg` up, and a wrapping row
- *   of links on smaller screens.
- * - `light` (the customer dashboard and the Staff workspace): no panel — the links sit on the page
- *   ground with a hairline divider, and only the current destination gets the
- *   pale-teal surface. The tall white panel around five links read as an empty,
- *   unfinished box. Below `lg` it becomes one compact "section" menu instead of
- *   a stack of links above the content.
+ * No panel — the links sit on the page ground with a hairline divider, and
+ * only the current destination gets the pale-teal surface. (A tall white
+ * panel around five links read as an empty, unfinished box.) Below `lg` it
+ * becomes one compact "section" menu instead of a stack of links above the
+ * content.
  *
  * @param {Object} props
  * @param {string} props.label  Names the nav for screen readers, e.g. "My Account".
  * @param {{ to: string, label: string, icon: React.ElementType, end?: boolean }[]} props.items
- * @param {'panel'|'light'} [props.variant]
  * @param {Record<string, number>} [props.counts]  Small count badges, keyed by
  *   link `to`. Only real, non-zero counts are shown.
  */
-export function Sidebar({ label, items, variant = 'panel', counts }) {
-  if (variant === 'light') {
-    return <LightSidebar label={label} items={items} counts={counts} />
-  }
-
-  return (
-    // A panel from `lg` up, the same treatment Explore's filter sidebar uses, so
-    // a signed-in workspace reads as part of the same site rather than as bare
-    // links on the page ground. On mobile it stays a plain row of links: a
-    // bordered card around four links would be chrome for its own sake.
-    <nav
-      aria-label={label}
-      className="lg:w-60 lg:shrink-0 lg:rounded-card lg:border lg:border-border lg:bg-panel lg:p-3 lg:shadow-card"
-    >
-      {/* Below `lg` the links wrap onto a second row rather than scroll: a
-          scrolling strip cut the last tabs off mid-word ("Possible Matc") with
-          nothing to say there was more. */}
-      <ul className="flex flex-wrap gap-1 pb-2 lg:flex-col lg:pb-0">
-        {items.map((item) => {
-          const Icon = item.icon
-
-          return (
-            <li key={item.to} className="shrink-0 lg:shrink">
-              <NavLink to={item.to} end={item.end} className={linkClasses}>
-                <Icon size={16} aria-hidden="true" />
-                <span className="whitespace-nowrap">{item.label}</span>
-              </NavLink>
-            </li>
-          )
-        })}
-      </ul>
-    </nav>
-  )
-}
-
-function LightSidebar({ label, items, counts }) {
+export function Sidebar({ label, items, counts }) {
   const { pathname } = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const menuId = useId()

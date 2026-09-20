@@ -26,7 +26,7 @@ const PILL_COLOURS = {
   [REPORT_STATUSES.ACTIVE]: 'bg-brand-soft text-brand-hover',
   [REPORT_STATUSES.POSSIBLE_MATCH]: 'bg-accent-soft text-lost',
   [REPORT_STATUSES.RETURNED]: 'bg-success-soft text-success-ink',
-  [REPORT_STATUSES.CLOSED]: 'bg-status-closed-soft text-fg-muted',
+  [REPORT_STATUSES.CLOSED]: 'bg-status-closed-soft text-fg',
 }
 
 /**
