@@ -15,6 +15,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import heroImage from '@/assets/img-006-homepage-hero.jpg'
+import reunionImage from '@/assets/img-015-reunion-home.jpg'
 import emptyReportsImage from '@/assets/empty-no-reports.png'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { Button, Container, EmptyState, LoadingSkeleton, Select } from '@/components/ui'
@@ -436,24 +437,50 @@ function Reunions() {
       <WovenVeil />
       <RouteOrnament tone="amber" size={520} className="-right-40 -bottom-16 rotate-6" />
       <Container className="flex flex-col gap-8">
-        <SectionHeading
-          title={
-            <span className="inline-flex items-center gap-2.5">
-              <Heart size={26} className="shrink-0 text-success" aria-hidden="true" />
-              Reunited
-            </span>
-          }
-          description="Cases that ended the way everybody wanted."
-          action={
-            <Link
-              to="/explore?status=returned"
-              className="inline-flex items-center gap-1.5 font-medium text-brand hover:text-brand-hover hover:underline"
-            >
-              See all reunions
-              <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-          }
-        />
+        {/* IMG-015 opens the chapter: what the cases below actually end in.
+            It sits slightly proud of the section's rhythm on wide screens —
+            the one place a photograph is allowed to break the grid — and
+            stacks above the text on a phone. */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-10">
+          <img
+            src={reunionImage}
+            alt="A dog back home, lying on the floor while somebody kneels beside it."
+            width="1400"
+            height="1050"
+            loading="lazy"
+            decoding="async"
+            className="w-full rounded-card object-cover shadow-raised lg:-my-6 lg:w-1/2 lg:max-w-md xl:max-w-lg"
+          />
+
+          <div className="min-w-0 flex-1">
+            <SectionHeading
+              title={
+                <span className="inline-flex items-center gap-2.5">
+                  <Heart size={26} className="shrink-0 text-success" aria-hidden="true" />
+                  Reunited
+                </span>
+              }
+              description="Cases that ended the way everybody wanted."
+              action={
+                <Link
+                  to="/explore?status=returned"
+                  className="inline-flex items-center gap-1.5 font-medium text-brand hover:text-brand-hover hover:underline"
+                >
+                  See all reunions
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              }
+            />
+
+            {/* One line of context so the column beside the photograph is not
+                simply empty: it also says what a reunion here actually is. */}
+            <p className="mt-4 max-w-prose text-fg-muted">
+              Every one of these began as two separate reports — a lost pet and a found one —
+              that the system paired on their characteristics and a Pet Coordinator verified
+              before anybody met.
+            </p>
+          </div>
+        </div>
 
         {/* One story told properly, then the others. The photographs are the
             point of this section — a reunion shown at thumbnail size is just

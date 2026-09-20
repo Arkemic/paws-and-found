@@ -13,7 +13,10 @@ import { cn } from '@/utils/cn'
 function canvasFor(pathname) {
   if (pathname.startsWith('/admin')) return 'canvas-admin'
   if (pathname.startsWith('/staff')) return 'canvas-staff'
-  if (pathname.startsWith('/dashboard')) return 'canvas-customer'
+  // Taller on the customer dashboard: the greeting, the quick actions and the
+  // first heading all sit inside the warm region, and it fades out under the
+  // cards rather than stopping just below the greeting.
+  if (pathname.startsWith('/dashboard')) return 'canvas-customer h-[58rem]'
   return 'canvas-public'
 }
 
@@ -46,7 +49,7 @@ export function RootLayout({ role, onRoleChange, onSignOut, user }) {
         <span
           aria-hidden="true"
           className={cn(
-            'pointer-events-none absolute inset-x-0 top-0 -z-10 h-[46rem]',
+            'canvas-fade pointer-events-none absolute inset-x-0 top-0 -z-10 h-[46rem]',
             canvasFor(pathname),
           )}
         />

@@ -81,7 +81,7 @@ export function Navbar({ role, onRoleChange, onSignOut, user }) {
         </Link>
 
         {/* 2. Public navigation */}
-        <nav aria-label="Main" className="hidden items-center gap-1 xl:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1.5 xl:flex 2xl:gap-2.5">
           {PUBLIC_NAV.map((item) =>
             item.children ? (
               <NavDropdown

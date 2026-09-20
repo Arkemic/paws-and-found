@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, Card, CardBody, Container, Input } from '@/components/ui'
+import { Button, Card, CardBody, Input } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
-import { PatternVeil } from '@/components/PatternVeil'
+import { AuthShell } from '@/components/AuthShell'
 import { userService } from '@/services'
 
 /**
@@ -60,8 +60,7 @@ export function RegisterPage({ onSignedIn }) {
   }
 
   return (
-    <Container width="form" className="relative isolate flex flex-col gap-6">
-      <PatternVeil className="-top-8 h-64" />
+    <AuthShell>
       <PageHeader
         title="Create an account"
         description="An account lets you file reports, follow possible matches, and receive notifications."
@@ -135,6 +134,6 @@ export function RegisterPage({ onSignedIn }) {
           </form>
         </CardBody>
       </Card>
-    </Container>
+    </AuthShell>
   )
 }

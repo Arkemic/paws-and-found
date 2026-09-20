@@ -265,6 +265,13 @@
   background-repeat: no-repeat;
 }
 
+/* Fades the environment layer out rather than ending it at a hard line. The
+   glows already fade horizontally; this is what stops the layer's bottom edge
+   being visible where the grain stops. */
+@utility canvas-fade {
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 1) 0%, rgb(0 0 0 / 0.85) 55%, transparent 100%);
+}
+
 /* The four environments. Each is the grain plus its own two glows; the page's
    own `bg-surface` stays underneath. */
 @utility canvas-public {

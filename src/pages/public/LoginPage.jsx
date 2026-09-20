@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Button, Card, CardBody, Container, Input } from '@/components/ui'
-import { PatternVeil } from '@/components/PatternVeil'
+import { Button, Card, CardBody, Input } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
+import { AuthShell } from '@/components/AuthShell'
 import { ROLES, ROLE_LABELS } from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
 import { userService } from '@/services'
@@ -71,8 +71,7 @@ export function LoginPage({ onSignedIn, onDemoSignIn }) {
   }
 
   return (
-    <Container width="form" className="relative isolate flex flex-col gap-6">
-      <PatternVeil className="-top-8 h-64" />
+    <AuthShell>
       <PageHeader title="Sign in" description="Access your reports, matches and notifications." />
 
       {returnTo && (
@@ -154,6 +153,6 @@ export function LoginPage({ onSignedIn, onDemoSignIn }) {
           </CardBody>
         </Card>
       )}
-    </Container>
+    </AuthShell>
   )
 }

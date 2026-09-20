@@ -139,8 +139,10 @@ the route, so nothing else has to think about it:
 | `canvas-admin` | `/admin` | Quietest: neutral with a restrained teal |
 
 The glows are large enough to run off the viewport, so no circular edge is ever
-visible, and the layer fades out before the content ends — the atmosphere
-belongs to the top of a page, not to the whole scroll.
+visible, and `canvas-fade` masks the layer out downwards so its bottom edge is
+never a line — the atmosphere belongs to the top of a page, not to the whole
+scroll. The customer canvas is the tall one (58rem rather than 46rem): the
+greeting, the quick actions and the first heading all sit inside it.
 
 **Decoration.** Three pieces, all `aria-hidden`, all behind the content:
 
@@ -149,8 +151,9 @@ belongs to the top of a page, not to the whole scroll.
   (`far`, the ambient setting) or closer in (`near`, for a band that is about
   the journey). It is a separate layer because it is faded with a mask, and a
   mask fades everything inside the element it sits on.
-- `WovenVeil` — IMG-016, the woven microtexture, at 1–3%. Footer and a couple
-  of warm public sections only.
+- `WovenVeil` — IMG-016, the woven microtexture, at 2% (it was 3%, where the
+  diamonds read as a repeating grid before they read as texture). Footer and a
+  couple of warm public sections only.
 - `RadarOrnament` / `RouteOrnament` — oversized single motifs that enter from a
   page edge and are clipped by it. Their container needs `overflow-hidden`, or
   they widen the page; they are hidden below `sm`, where there is no spare edge

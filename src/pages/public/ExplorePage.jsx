@@ -234,7 +234,7 @@ export function ExplorePage() {
             does not go from illustration to bare canvas in one step. */}
         <div
           ref={resultsRef}
-          className="relative isolate flex min-w-0 flex-1 scroll-mt-24 flex-col gap-4 overflow-hidden rounded-card bg-sunken/60 p-4 sm:p-5"
+          className="relative isolate flex min-w-0 flex-1 scroll-mt-24 flex-col gap-4 overflow-hidden rounded-card bg-sunken/35 p-4 sm:p-5"
         >
           <PatternVeil className="h-72" />
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">

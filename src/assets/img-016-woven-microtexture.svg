@@ -7,16 +7,18 @@
     this is a texture, not a cultural motif, and it must never read as
     decoration borrowed from somebody's craft.
 
-    Teal at 3%, which lands near 1–2% once it is behind a warm surface. Used
-    only on the footer and a couple of warm public sections.
+    Teal at 2%, which lands near 1% once it is behind a warm surface. It was
+    3% first, and at that strength the diamonds read as a repeating grid
+    before they read as texture. Used only on the footer and a couple of warm
+    public sections.
   -->
-  <g stroke="#0e5d5b" stroke-opacity="0.03" stroke-width="1" fill="none">
+  <g stroke="#0e5d5b" stroke-opacity="0.021" stroke-width="1" fill="none">
     <path d="M0 16 16 0 32 16 16 32Z" />
     <path d="M32 16 48 0 64 16 48 32Z" />
     <path d="M0 48 16 32 32 48 16 64Z" />
     <path d="M32 48 48 32 64 48 48 64Z" />
   </g>
-  <g stroke="#0e5d5b" stroke-opacity="0.018" stroke-width="1" fill="none">
+  <g stroke="#0e5d5b" stroke-opacity="0.012" stroke-width="1" fill="none">
     <path d="M0 32h64M32 0v64" />
   </g>
 </svg>
