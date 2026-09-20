@@ -46,7 +46,7 @@ function WhyItExists() {
           // Capped at the width the source can actually fill. Left uncapped it
           // stretched to the full container between `sm` and `lg` and was being
           // upscaled past its 800px source.
-          className="aspect-square w-full max-w-sm shrink-0 self-center rounded-card bg-surface-muted object-cover shadow-card lg:w-96 lg:max-w-none"
+          className="aspect-square w-full max-w-sm shrink-0 self-center rounded-[1.25rem] bg-surface-muted object-cover shadow-raised ring-1 ring-black/5 lg:-my-10 lg:w-[26rem] lg:max-w-none xl:w-[30rem]"
         />
       </Container>
     </section>

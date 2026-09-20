@@ -55,7 +55,9 @@ export function PageHeader({
             <h1
               className={cn(
                 'font-semibold tracking-tight text-balance text-fg',
-                compact ? 'text-[1.75rem] sm:text-[2rem]' : 'text-3xl sm:text-4xl',
+                compact
+                  ? 'text-[2rem] leading-[1.12] sm:text-[2.4rem]'
+                  : 'text-[2.25rem] leading-[1.1] sm:text-[2.75rem]',
               )}
             >
               {title}

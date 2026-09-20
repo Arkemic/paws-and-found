@@ -20,10 +20,10 @@ export function SectionHeading({ title, description, action, centered = false })
       }
     >
       <div className="max-w-prose">
-        <h2 className="text-2xl font-semibold tracking-tight text-balance text-fg sm:text-3xl">
+        <h2 className="text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-balance text-fg sm:text-[2rem]">
           {title}
         </h2>
-        {description && <p className="mt-1.5 text-fg-muted">{description}</p>}
+        {description && <p className="mt-2 text-[1.0625rem] text-fg-muted">{description}</p>}
       </div>
       {action}
     </div>

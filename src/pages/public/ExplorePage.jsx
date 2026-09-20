@@ -178,7 +178,7 @@ export function ExplorePage() {
 
         <div className="relative flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
           <div className="flex flex-col gap-2 lg:max-w-1/2">
-            <h1 className="text-3xl font-semibold tracking-tight text-balance text-fg sm:text-4xl">
+            <h1 className="text-[2.25rem] leading-[1.08] font-semibold tracking-tight text-balance text-fg sm:text-[2.75rem]">
               Explore reports
             </h1>
             {/* Full-strength ink, not `fg-muted`: on the tinted band muted text

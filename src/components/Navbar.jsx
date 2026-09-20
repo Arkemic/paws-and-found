@@ -70,13 +70,13 @@ export function Navbar({ role, onRoleChange, onSignOut, user }) {
         isScrolled ? 'border-brand/12 shadow-header' : 'border-border',
       )}
     >
-      <Container className="flex h-16 items-center gap-6">
+      <Container className="flex h-[4.5rem] items-center gap-6">
         {/* 1. Brand */}
         <Link
           to="/"
-          className="flex shrink-0 items-center gap-2.5 text-xl font-semibold tracking-tight text-fg"
+          className="mr-2 flex shrink-0 items-center gap-3 text-xl font-semibold tracking-tight text-fg"
         >
-          <img src={logoMark} alt="" className="size-10 shrink-0" />
+          <img src={logoMark} alt="" className="size-11 shrink-0" />
           Paws&amp;Found
         </Link>
 
@@ -106,8 +106,11 @@ export function Navbar({ role, onRoleChange, onSignOut, user }) {
           )}
         </nav>
 
-        {/* 3 and 4 sit together on the right, away from the public links. */}
+        {/* 3 and 4 sit together on the right, behind a divider: the public
+            links answer "where can I go", these answer "who am I", and without
+            a break between them the whole row reads as one list. */}
         <div className="ml-auto hidden items-center gap-4 xl:flex">
+          <span className="h-7 w-px bg-border" aria-hidden="true" />
           {/* 3. The role's own workspace — a destination, not a sixth link.
               A fixed width, and a fixed width on the account menu beside it, so
               "My Dashboard", "Staff Workspace" and "Administration" all start

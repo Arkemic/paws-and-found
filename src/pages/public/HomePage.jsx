@@ -89,7 +89,7 @@ function Hero() {
     <section className="pt-10 pb-20 sm:pt-14 sm:pb-24">
       <Container className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col items-start gap-6">
-          <h1 className="text-4xl leading-[1.08] font-semibold tracking-tight text-balance text-fg sm:text-5xl">
+          <h1 className="text-[2.75rem] leading-[1.04] font-semibold tracking-tight text-balance text-fg sm:text-[3.5rem] xl:text-[3.85rem]">
             Every lost pet has someone looking for them.
           </h1>
 
@@ -125,7 +125,7 @@ function Hero() {
         <div className="relative">
           {/* A 4:3 frame on a 1.599 source trims about 7% from each side —
               floor and railing, well clear of both animals. */}
-          <div className="aspect-4/3 overflow-hidden rounded-card bg-surface-muted">
+          <div className="aspect-4/3 overflow-hidden rounded-[1.25rem] bg-surface-muted shadow-raised ring-1 ring-black/5">
             <img
               src={heroImage}
               alt="A tan Aspin sitting beside its owner, who is holding a tabby cat, on the tiled porch of a Philippine home"
@@ -485,7 +485,7 @@ function Reunions() {
         {/* One story told properly, then the others. The photographs are the
             point of this section — a reunion shown at thumbnail size is just
             another row of data. */}
-        <ul className="grid gap-5 lg:grid-cols-2">
+        <ul className="grid gap-5 lg:grid-cols-[1.25fr_1fr]">
           <li className="lg:row-span-2">
             <ReunionStory report={featured} featured />
           </li>
@@ -519,7 +519,7 @@ function ReunionStory({ report, featured = false }) {
     <Link
       to={`/pet/${report.id}`}
       className={cn(
-        'group flex h-full overflow-hidden rounded-card border border-border bg-panel shadow-card transition-shadow hover:shadow-raised',
+        'card-interactive group flex h-full overflow-hidden rounded-card border border-border bg-panel shadow-card',
         featured ? 'flex-col' : 'flex-row',
       )}
     >

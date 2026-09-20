@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ChevronDown,
   Flag,
@@ -194,6 +195,20 @@ const TOPIC_TINTS = {
 }
 
 export function HelpPage() {
+  const [query, setQuery] = useState('')
+  const needle = query.trim().toLowerCase()
+
+  // Matches a topic by its own words or by any of its questions, so typing
+  // "collar" finds the question rather than nothing.
+  const matches = (topic) =>
+    !needle ||
+    [topic.title, topic.summary, ...topic.faqs.flatMap((faq) => [faq.q, faq.a])]
+      .join(' ')
+      .toLowerCase()
+      .includes(needle)
+
+  const topics = TOPICS.filter(matches)
+
   return (
     <div className="-my-8 flex flex-col">
       {/* The page opens on its own ground rather than on flat white, so it
@@ -222,6 +237,22 @@ export function HelpPage() {
                   title="Help & community safety"
                   description="How to file a report that helps, how a match is checked, and how to stay safe arranging a handover."
                 />
+
+                <label className="relative mt-5 block max-w-md">
+                  <span className="sr-only">Search help</span>
+                  <Search
+                    size={18}
+                    className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-fg-muted"
+                    aria-hidden="true"
+                  />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search help — try “collar”, “match” or “handover”"
+                    className="h-12 w-full rounded-control border border-border-strong bg-panel pr-4 pl-12 text-base text-fg shadow-card placeholder:text-fg-muted"
+                  />
+                </label>
               </div>
             </div>
           </section>
@@ -229,15 +260,20 @@ export function HelpPage() {
           {/* Jump links rather than a search box: with seven topics, scanning
               them is faster than typing, and there is no index to search. */}
           <nav aria-label="Help topics">
+            <p className="sr-only" aria-live="polite">
+              {needle
+                ? `${topics.length} ${topics.length === 1 ? 'topic' : 'topics'} match ${query}`
+                : `${TOPICS.length} topics`}
+            </p>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {TOPICS.map((topic) => {
+              {topics.map((topic) => {
                 const Icon = topic.icon
 
                 return (
                   <li key={topic.id}>
                     <a
                       href={`#${topic.id}`}
-                      className="flex h-full gap-4 rounded-card border border-border bg-panel p-5 shadow-card transition-shadow hover:shadow-raised"
+                      className="card-interactive flex h-full gap-4 rounded-card border border-border bg-panel p-5 shadow-card"
                     >
                       <span
                         className={`flex size-10 shrink-0 items-center justify-center rounded-control ${TOPIC_TINTS[topic.id]}`}

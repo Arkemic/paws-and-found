@@ -211,6 +211,20 @@ animation; nothing bounces and nothing flies.
 
 ## Type scale
 
+Refined 2026-09-20: the steps were too close together. A page title at 36px
+above a section at 30px above a card at 18px reads as three sizes of the same
+thing, so the top two steps were pulled apart.
+
+| Step | Size | Where |
+| --- | --- | --- |
+| Hero headline | 44px → 62px | The homepage only |
+| Public page title | 36px → 44px | Explore, About, Help, a report |
+| Workspace title | 36px → 44px, greeting 32px → 38px | `PageHeader`, `compact` for the dashboard greeting |
+| Section title | 28px → 32px | `SectionHeading` |
+| Card title | 18px | `CardHeader` |
+| Body | 16px, lead 17px | |
+
+
 Body copy is **`text-base` (16px)**. `text-sm` is for metadata only — it was
 overused early on and made the whole interface read as annotations.
 
