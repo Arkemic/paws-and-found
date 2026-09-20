@@ -197,6 +197,7 @@ nothing that moves a large region of the page.
 | Button | Background transition, 150ms, and a 1px press |
 | Report photograph | The image dims very slightly and the expand control firms up, 200ms |
 | Dialog | Fades in with a 2% rise, 160ms, `motion-safe` only |
+| Filter sheet | Rises 2rem from the bottom edge, 200ms, `motion-safe` only |
 | Header | Border and shadow change once the page scrolls under it, 200ms |
 
 Every one of these is switched off by the `prefers-reduced-motion` rule in the

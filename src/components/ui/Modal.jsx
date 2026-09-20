@@ -21,6 +21,10 @@ import { Button } from './Button'
  * @param {string} [props.description]
  * @param {React.ReactNode} [props.footer] Action row, usually Buttons.
  * @param {'sm'|'md'|'lg'} [props.size]
+ * @param {'centre'|'sheet'} [props.placement]  `sheet` docks the dialog to the
+ *   bottom of the screen at full width — for something long on a phone, like
+ *   a filter panel, where a centred box wastes the space it has and puts its
+ *   controls out of thumb's reach.
  */
 const SIZES = {
   sm: 'max-w-sm',
@@ -41,6 +45,7 @@ function OpenModal({
   description,
   footer,
   size = 'md',
+  placement = 'centre',
   className,
   children,
 }) {
@@ -86,17 +91,24 @@ function OpenModal({
         // `m-auto` is what centres it. A native dialog is centred by the browser's
         // own `margin: auto`, and Tailwind's reset sets `margin: 0` on every
         // element — which silently pinned every dialog to the top-left corner.
-        'm-auto w-[calc(100%-2rem)] rounded-card border border-border bg-panel p-0 text-fg shadow-lg',
+        placement === 'sheet'
+          ? // Docked to the bottom edge, full width, rounded only along the
+            // top — `mt-auto` is what pins it there, the same way `m-auto`
+            // centres the ordinary one.
+            'mt-auto mb-0 ml-0 max-h-[88dvh] w-full max-w-none rounded-t-card rounded-b-none border border-b-0 border-border bg-panel p-0 text-fg shadow-lg'
+          : 'm-auto w-[calc(100%-2rem)] rounded-card border border-border bg-panel p-0 text-fg shadow-lg',
         // Opens with a gentle fade and a 2% rise. Never a spring, and the
         // base layer turns it off for anyone who asked for reduced motion.
-        'motion-safe:animate-[dialog-in_160ms_ease-out] motion-safe:backdrop:animate-[backdrop-in_160ms_ease-out]',
+        placement === 'sheet'
+          ? 'motion-safe:animate-[sheet-in_200ms_ease-out] motion-safe:backdrop:animate-[backdrop-in_160ms_ease-out]'
+          : 'motion-safe:animate-[dialog-in_160ms_ease-out] motion-safe:backdrop:animate-[backdrop-in_160ms_ease-out]',
         // A tall dialog scrolls inside itself instead of running off a short
         // screen. `overflow-x-hidden` is required, not decoration: a box with
         // `auto` on one axis promotes `visible` on the other to `auto` too,
         // which put a stray horizontal scrollbar along the bottom.
-        'max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto',
+        placement === 'sheet' ? 'overflow-x-hidden overflow-y-auto' : 'max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto',
         'backdrop:bg-black/40',
-        SIZES[size],
+        placement === 'sheet' ? undefined : SIZES[size],
         className,
       )}
     >

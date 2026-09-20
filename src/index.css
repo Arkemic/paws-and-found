@@ -193,6 +193,14 @@
   }
 }
 
+/* The filter sheet rises from the bottom edge rather than fading in place. */
+@keyframes sheet-in {
+  from {
+    transform: translateY(2rem);
+    opacity: 0;
+  }
+}
+
 @keyframes backdrop-in {
   from {
     opacity: 0;

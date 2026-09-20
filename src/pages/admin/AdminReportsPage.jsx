@@ -233,9 +233,9 @@ export function AdminReportsPage() {
           </ul>
 
           <div className="hidden rounded-card bg-sunken/60 p-3 lg:block">
-            <div className="overflow-hidden rounded-card border border-border bg-panel">
+            <div className="rounded-card border border-border bg-panel">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-surface-muted text-fg">
+              <thead className="sticky top-[4.5rem] z-10 border-b border-border bg-surface-muted text-fg shadow-[0_1px_0_var(--color-border)] [&>tr>th:first-child]:rounded-tl-card [&>tr>th:last-child]:rounded-tr-card">
                 <tr>
                   <th scope="col" className="w-14 py-2.5 pl-4">
                     <span className="sr-only">Photo</span>

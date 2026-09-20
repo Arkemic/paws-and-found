@@ -54,6 +54,24 @@ export function ExplorePage() {
     city: searchParams.get('city') ?? '',
   }))
   const [searchDraft, setSearchDraft] = useState(() => searchParams.get('q') ?? '')
+  const searchRef = useRef(null)
+
+  // "/" puts the cursor in the search box, unless you are already typing
+  // somewhere. This is a page people come back to repeatedly while a pet is
+  // missing, and reaching for the mouse each time is the slow way.
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      event.preventDefault()
+      searchRef.current?.focus()
+      searchRef.current?.select()
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
   const [sort, setSort] = useState('newest')
   const [page, setPage] = useState(1)
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
@@ -200,7 +218,9 @@ export function ExplorePage() {
               />
               <input
                 id="explore-search"
+                ref={searchRef}
                 type="search"
+                aria-keyshortcuts="/"
                 value={searchDraft}
                 onChange={(event) => setSearchDraft(event.target.value)}
                 placeholder="Search by breed, colour, markings, pet name or place"
@@ -402,9 +422,12 @@ export function ExplorePage() {
         </div>
       </div>
 
+      {/* A sheet from the bottom edge rather than a centred box: the panel is
+          tall, and on a phone its controls belong within reach of a thumb. */}
       <Modal
         isOpen={isFilterDialogOpen}
         onClose={() => setIsFilterDialogOpen(false)}
+        placement="sheet"
         title="Filters"
         footer={
           <Button onClick={() => setIsFilterDialogOpen(false)}>

@@ -213,9 +213,9 @@ export function AdminCategoriesPage() {
             })}
           </ul>
 
-          <div className="hidden overflow-hidden rounded-card border border-border bg-panel sm:block">
+          <div className="hidden rounded-card border border-border bg-panel sm:block">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-surface-muted text-fg">
+              <thead className="sticky top-[4.5rem] z-10 border-b border-border bg-surface-muted text-fg shadow-[0_1px_0_var(--color-border)] [&>tr>th:first-child]:rounded-tl-card [&>tr>th:last-child]:rounded-tr-card">
                 <tr>
                   <th scope="col" className="px-4 py-2.5 font-medium">
                     Category

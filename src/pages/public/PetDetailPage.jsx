@@ -151,8 +151,23 @@ export function PetDetailPage({ role }) {
   const isFound = report.reportType === REPORT_TYPES.FOUND
   const heading = report.petName ?? `${speciesLabel(report.species)} (name unknown)`
 
+  // Passing a report around is how a search actually spreads, so this uses
+  // the phone's own share sheet where there is one — into a group chat, which
+  // is where the neighbours are — and falls back to the clipboard everywhere
+  // else. A cancelled share is not an error.
   const shareLink = async () => {
-    await navigator.clipboard?.writeText(window.location.href)
+    const url = window.location.href
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${heading} · Paws&Found`, url })
+        return
+      } catch (caught) {
+        if (caught?.name === 'AbortError') return
+      }
+    }
+
+    await navigator.clipboard?.writeText(url)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -478,8 +493,12 @@ export function PetDetailPage({ role }) {
             <CardBody className="flex flex-col gap-2">
               <Button variant="secondary" fullWidth onClick={shareLink}>
                 <LinkIcon size={16} aria-hidden="true" />
-                {copied ? 'Link copied' : 'Copy link'}
+                {copied ? 'Link copied' : 'Share this report'}
               </Button>
+              <p className="-mt-1 text-sm text-fg-muted">
+                The more people who have seen {report.petName ?? 'this report'}, the better
+                the chances.
+              </p>
 
               {role ? (
                 <Button variant="ghost" fullWidth onClick={() => setIsFlagOpen(true)}>

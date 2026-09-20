@@ -3,6 +3,7 @@ import { ImagePlus, Star, Trash2 } from 'lucide-react'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { Button, Input } from '@/components/ui'
 import { createId } from '@/utils/id'
+import { cn } from '@/utils/cn'
 import { LIMITS, PHOTO_RULES } from './reportFormModel'
 
 /**
@@ -17,6 +18,7 @@ import { LIMITS, PHOTO_RULES } from './reportFormModel'
  * refusing the report would lose the sighting entirely.
  */
 export function PhotosStep({ values, onChange }) {
+  const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [fileErrors, setFileErrors] = useState([])
   const inputRef = useRef(null)
 
@@ -88,7 +90,32 @@ export function PhotosStep({ values, onChange }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-card border-2 border-dashed border-border-strong bg-surface-alt px-6 py-10 text-center">
+      {/* A drop target as well as a button. The same `addFiles` validates
+          either way, so a dropped file gets the same size and type checks as
+          a chosen one. The button stays: dropping is not possible on a phone,
+          and not everyone can drag. */}
+      <div
+        onDragOver={(event) => {
+          event.preventDefault()
+          setIsDraggingOver(true)
+        }}
+        onDragLeave={(event) => {
+          // Only when the pointer actually leaves the target, not when it
+          // crosses one of the children inside it.
+          if (!event.currentTarget.contains(event.relatedTarget)) setIsDraggingOver(false)
+        }}
+        onDrop={(event) => {
+          event.preventDefault()
+          setIsDraggingOver(false)
+          addFiles(event.dataTransfer.files)
+        }}
+        className={cn(
+          'rounded-card border-2 border-dashed px-6 py-10 text-center transition-colors',
+          isDraggingOver
+            ? 'border-brand bg-brand-soft'
+            : 'border-border-strong bg-surface-alt',
+        )}
+      >
         <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-panel text-brand shadow-card">
           <ImagePlus size={26} aria-hidden="true" />
         </span>
@@ -99,6 +126,9 @@ export function PhotosStep({ values, onChange }) {
         </p>
         <p className="mt-1 text-sm text-fg-muted">
           Up to {PHOTO_RULES.maxCount} images · JPEG, PNG or WebP · 5 MB each
+        </p>
+        <p className="mt-1 hidden text-sm text-fg-muted sm:block">
+          {isDraggingOver ? 'Drop them here' : 'Drag them here, or choose them below.'}
         </p>
 
         <input
