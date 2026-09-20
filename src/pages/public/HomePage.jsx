@@ -147,16 +147,15 @@ function Hero() {
     <section className="pt-6 pb-8 sm:pt-8">
       <Container>
         <div className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-panel/80 shadow-raised backdrop-blur-sm">
-          <div className="grid lg:grid-cols-[1.05fr_1fr]">
+          <div className="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
             <div className="flex flex-col items-start gap-6 p-6 sm:p-10 lg:py-14">
               <h1 className="text-[2.75rem] leading-[1.04] font-semibold tracking-tight text-balance text-fg sm:text-[3.5rem] xl:text-[3.85rem]">
                 Every lost pet has someone looking for them.
               </h1>
 
-              <p className="max-w-xl text-lg leading-relaxed text-fg-muted">
-                Paws&amp;Found brings lost and found reports into one place, so the search
-                stops depending on who saw which post. Describe the pet, and the system
-                looks for reports that could be the same animal.
+              <p className="max-w-lg text-lg leading-relaxed text-fg-muted">
+                Lost and found reports in one place, compared on the details that identify
+                a pet — so the search stops depending on who saw which post.
               </p>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -174,38 +173,40 @@ function Hero() {
             {/* IMG-006, filling its half of the panel and bleeding to the
                 edges. The subjects are centred in the frame, so the crop keeps
                 both animals in view at every width. */}
-            <div className="relative sm:min-h-[28rem] lg:min-h-full">
+            <div className="relative sm:min-h-[26rem] lg:min-h-full">
               <img
                 src={heroImage}
                 alt="A tan Aspin sitting beside its owner, who is holding a tabby cat, on the tiled porch of a Philippine home"
-                // On a phone the photograph is a band of its own with the
-                // promises underneath it: overlapping them there left a
-                // sliver of picture behind a card.
-                className="h-64 w-full object-cover sm:absolute sm:inset-0 sm:h-full"
+                // Framed left of centre: the dog is the left two-thirds of the
+                // source, and a centre crop in a tall column put the tiled
+                // floor between the animals in the middle of the panel.
+                className="h-72 w-full object-cover object-[38%_45%] sm:absolute sm:inset-0 sm:h-full"
                 fetchPriority="high"
               />
-
-              {/* What the system promises, on its own surface over the
-                  photograph — never text directly on the image. */}
-              <ul className="m-4 flex flex-col gap-3 rounded-card border border-white/70 bg-panel/92 p-4 backdrop-blur-sm sm:absolute sm:right-6 sm:bottom-6 sm:left-auto sm:m-0 sm:w-80">
-                {PROMISES.map((promise) => {
-                  const Icon = promise.icon
-
-                  return (
-                    <li key={promise.title} className="flex items-start gap-3">
-                      <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
-                        <Icon size={16} aria-hidden="true" />
-                      </span>
-                      <span className="flex min-w-0 flex-col">
-                        <span className="text-sm font-semibold text-fg">{promise.title}</span>
-                        <span className="text-sm text-fg-muted">{promise.body}</span>
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
             </div>
           </div>
+
+          {/* What the system promises, on a strip of its own between the
+              photograph and the search. It used to float over the picture,
+              where it covered the dog — the photograph is the point of this
+              panel, so nothing sits on top of it. */}
+          <ul className="grid gap-x-6 gap-y-4 border-t border-border/70 bg-panel/70 px-6 py-5 sm:px-10 md:grid-cols-3">
+            {PROMISES.map((promise) => {
+              const Icon = promise.icon
+
+              return (
+                <li key={promise.title} className="flex items-start gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
+                    <Icon size={17} aria-hidden="true" />
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-sm font-semibold text-fg">{promise.title}</span>
+                    <span className="text-sm text-fg-muted">{promise.body}</span>
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
 
           {/* The search sits inside the panel, along its bottom edge: looking
               is the third thing somebody might have come to do, and it belongs
