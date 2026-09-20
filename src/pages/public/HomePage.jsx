@@ -507,7 +507,12 @@ function Reunions() {
  */
 function ReunionStory({ report, featured = false }) {
   const photo = report.photos.find((p) => p.isPrimary) ?? report.photos[0]
-  const heading = report.petName ?? speciesLabel(report.species)
+  // A found pet often has no name, and two unnamed cats both read "Cat is
+  // home", which looks like the same story told twice. The city separates
+  // them, and it is the next thing anybody wants to know anyway.
+  const heading = report.petName
+    ? `${report.petName} is home`
+    : `A ${speciesLabel(report.species).toLowerCase()} in ${report.location.city} is home`
   const days = daysToReunion(report)
 
   return (
@@ -540,7 +545,7 @@ function ReunionStory({ report, featured = false }) {
             className="shrink-0 text-success"
             aria-hidden="true"
           />
-          {heading} is home
+          {heading}
         </p>
 
         <p className={cn('text-fg-muted', featured ? 'text-base' : 'text-sm')}>

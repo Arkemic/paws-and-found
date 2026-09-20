@@ -1,4 +1,5 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { cn } from '@/utils/cn'
@@ -31,7 +32,20 @@ function canvasFor(pathname) {
  * @param {Object|null} props.user
  */
 export function RootLayout({ role, onRoleChange, onSignOut, user }) {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
+  const navigationType = useNavigationType()
+
+  // Open every page at the top. A single-page app keeps the scroll position
+  // when the route changes, so following a link from halfway down a long list
+  // landed you halfway down the next page.
+  //
+  // Two exceptions: a link carrying a `#match-3` style anchor scrolls itself
+  // once its data has loaded, and going Back (`POP`) should return you to
+  // where you were, which the browser already handles.
+  useEffect(() => {
+    if (hash || navigationType === 'POP') return
+    window.scrollTo({ top: 0, left: 0 })
+  }, [pathname, hash, navigationType])
 
   return (
     <div className="page-ground flex min-h-screen flex-col bg-surface">
