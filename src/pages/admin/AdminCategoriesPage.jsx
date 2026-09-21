@@ -232,7 +232,7 @@ export function AdminCategoriesPage() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border [&>tr:last-child>td:first-child]:rounded-bl-card [&>tr:last-child>td:last-child]:rounded-br-card">
                 {categories.map((category) => {
                   const inUse = usage[category.id] ?? 0
 

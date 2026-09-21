@@ -228,7 +228,7 @@ export function AdminUsersPage() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border [&>tr:last-child>td:first-child]:rounded-bl-card [&>tr:last-child>td:last-child]:rounded-br-card">
                 {visible.map((user) => {
                   const isSelf = user.id === currentUser?.id
 

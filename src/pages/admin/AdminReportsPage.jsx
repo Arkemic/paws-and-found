@@ -261,7 +261,7 @@ export function AdminReportsPage() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border [&>tr:last-child>td:first-child]:rounded-bl-card [&>tr:last-child>td:last-child]:rounded-br-card">
                 {shown.map((report) => {
                   const reporter = usersById[report.reporterId]
 

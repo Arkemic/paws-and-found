@@ -243,7 +243,7 @@ export function StaffReportsPage() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border [&>tr:last-child>td:first-child]:rounded-bl-card [&>tr:last-child>td:last-child]:rounded-br-card">
                 {sorted.map((report) => {
                   const matchCount = matchCountFor(report.id)
 
