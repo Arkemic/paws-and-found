@@ -7,17 +7,13 @@ import { REPORT_TYPES } from '@/constants'
 export function ReportLostPage() {
   return (
     <div className="lost-ground -my-8 py-8">
-      {/* Wider than the old `wizard` container, because the guidance now sits
-          beside the form rather than above it. The form column keeps the
-          reading width it had; the panel uses space that was empty margin. */}
-      <Container
-        width="page"
-        className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-10"
-      >
+
+      {/* The wizard owns its own two-column layout, so the step indicator can
+          run the full width above the fields and the guidance. */}
+      <Container width="page" className="flex flex-col gap-8">
         <title>Report a lost pet · Paws&Found</title>
 
-        <div className="flex min-w-0 flex-col gap-8">
-          <div className="flex flex-col gap-3 border-b border-border pb-6">
+        <div className="flex max-w-3xl flex-col gap-3 border-b border-border pb-6">
             <p className="inline-flex w-fit items-center gap-2 rounded-pill bg-lost-soft px-3 py-1 text-sm font-semibold text-lost">
               <TriangleAlert size={15} aria-hidden="true" />
               Report lost
@@ -36,15 +32,15 @@ export function ReportLostPage() {
               <Lock size={14} className="shrink-0 text-fg-subtle" aria-hidden="true" />
               Exact addresses are never shown publicly.
             </p>
-          </div>
-
-          <ReportForm reportType={REPORT_TYPES.LOST} />
         </div>
 
-        {/* Second in the DOM as well as on screen, so Tab reaches the form
-            first. Nobody arrives here wanting to read the advice before
-            filling anything in. */}
-        <ReportGuidance reportType={REPORT_TYPES.LOST} />
+        {/* The guidance is passed in, and the wizard renders it second in the
+            DOM as well as on screen — Tab reaches the fields first. Nobody
+            arrives here wanting to read the advice before filling anything in. */}
+        <ReportForm
+          reportType={REPORT_TYPES.LOST}
+          guidance={<ReportGuidance reportType={REPORT_TYPES.LOST} />}
+        />
       </Container>
     </div>
   )

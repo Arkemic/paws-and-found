@@ -46,8 +46,12 @@ const STEPS_WITH_REQUIRED_FIELDS = ['details', 'incident']
  * @param {Object} props
  * @param {'lost'|'found'} [props.reportType]  Required when creating.
  * @param {Object} [props.report]  Pass to edit an existing report.
+ * @param {React.ReactNode} [props.guidance]  Rendered beside the step. The
+ *   form owns the two-column layout rather than the page, so the step
+ *   indicator can span both columns above it — which is what stops the
+ *   guidance reading as an unrelated card parked next to a form.
  */
-export function ReportForm({ reportType, report }) {
+export function ReportForm({ reportType, report, guidance }) {
   const isEditing = Boolean(report)
   const navigate = useNavigate()
 
@@ -179,9 +183,12 @@ export function ReportForm({ reportType, report }) {
   return (
     // onKeyDown on the wrapper rather than on each field: one rule, in one
     // place, for every control the wizard will ever contain.
-    <div className="flex flex-col gap-6" onKeyDown={handleKeyDown}>
+    <div className="flex flex-col gap-7" onKeyDown={handleKeyDown}>
+      {/* Full width, above both columns: the progress belongs to the whole
+          task, not to the column the fields happen to be in. */}
       <Stepper steps={STEPS} currentIndex={stepIndex} />
 
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-10">
       <Card>
         <div className="border-b border-border px-6 py-5">
           <p className="text-xs font-medium tracking-wide text-fg-muted uppercase">
@@ -266,6 +273,9 @@ export function ReportForm({ reportType, report }) {
           )}
         </CardFooter>
       </Card>
+
+      {guidance}
+      </div>
     </div>
   )
 }
@@ -276,6 +286,14 @@ function submitLabel(isEditing, isSubmitting) {
 }
 
 /** One line of context per step, shown under its heading. */
+/** Four words under the step you are on, so the progress says what it wants. */
+const STEP_SUBLABELS = {
+  details: 'What the animal looks like',
+  incident: 'Where and when',
+  photos: 'Add clear photographs',
+  review: 'Check and submit',
+}
+
 const STEP_HINTS = {
   details: 'What the animal looks like. These are the details the system compares against other reports.',
   incident: 'When and where it happened, and how people can reach you.',
@@ -317,9 +335,13 @@ function Stepper({ steps, currentIndex }) {
                 <span
                   aria-current={isCurrent ? 'step' : undefined}
                   className={cn(
-                    'flex size-10 shrink-0 items-center justify-center rounded-full border-2 text-base font-semibold',
+                    'flex size-11 shrink-0 items-center justify-center rounded-full border-2 text-base font-semibold transition-colors',
                     isDone && 'border-brand bg-brand text-fg-inverted',
-                    isCurrent && 'border-brand bg-panel text-brand',
+                    // Filled, not outlined. An outlined circle beside a filled
+                    // "done" one reads as the weaker of the two, which is the
+                    // wrong way round: where you ARE matters more than where
+                    // you have been. The ring lifts it off the rail.
+                    isCurrent && 'border-brand bg-brand text-fg-inverted ring-4 ring-brand-soft',
                     !isDone && !isCurrent && 'border-border bg-panel text-fg-muted',
                   )}
                 >
@@ -337,13 +359,22 @@ function Stepper({ steps, currentIndex }) {
                 />
               </div>
 
-              <span
-                className={cn(
-                  'hidden text-center text-sm sm:block',
-                  isCurrent ? 'font-medium text-fg' : 'text-fg-muted',
+              <span className="hidden flex-col items-center gap-0.5 text-center sm:flex">
+                <span
+                  className={cn(
+                    'text-sm',
+                    isCurrent ? 'font-semibold text-fg' : 'text-fg-muted',
+                  )}
+                >
+                  {step.label}
+                </span>
+                {/* Only under the step you are on. Under all four it became a
+                    paragraph of small print holding the progress apart. */}
+                {isCurrent && (
+                  <span className="max-w-40 text-xs leading-snug text-fg-muted">
+                    {STEP_SUBLABELS[step.id]}
+                  </span>
                 )}
-              >
-                {step.label}
               </span>
             </li>
           )
