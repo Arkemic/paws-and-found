@@ -22,6 +22,12 @@ require_once __DIR__ . '/helpers.php';
 
 send_cors_headers();
 
+// Every request that changes something must carry this session's CSRF token.
+// Checked here, once, rather than inside each handler — so an endpoint added
+// later is protected by existing rather than by somebody remembering to add a
+// line to it. Reads pass straight through.
+verify_csrf();
+
 // Work out the path relative to this API, whatever folder it is installed in.
 // .htaccess passes it as ?_route=..., and the query string fallback keeps the
 // API usable if mod_rewrite is ever unavailable.

@@ -170,12 +170,166 @@ function current_user(): ?array
         return null;
     }
 
-    // A suspended account keeps its session cookie but loses its access.
-    if ($user['account_status'] === 'suspended') {
+    // A suspended or locked account keeps its session cookie but loses its
+    // access — on every device at once, because this runs on every request and
+    // reads the account as it is now rather than as it was at sign-in.
+    //
+    // Written as "not active" rather than as a list of the two bad states, so
+    // that a future state added to the ENUM is refused by default instead of
+    // quietly allowed.
+    if ($user['account_status'] !== 'active') {
         return null;
     }
 
     return $user;
+}
+
+// -----------------------------------------------------------------------------
+// Cross-site request forgery
+// -----------------------------------------------------------------------------
+
+/**
+ * This session's CSRF token, created on first use.
+ *
+ * The problem this solves: the session cookie is sent by the browser on every
+ * request to this origin, including one triggered by a form on somebody else's
+ * website. The cookie alone therefore proves the request came from a browser
+ * that is signed in — not that the person meant to make it.
+ *
+ * `SameSite=Lax` on the cookie already blocks the common version of that
+ * attack, and is a real defence. It is the browser's promise rather than ours,
+ * though, and it stops applying the moment the cookie has to become
+ * `SameSite=None`. So the token is the one we enforce ourselves: it is handed
+ * out in a response body, which another origin cannot read, and required back
+ * in a header, which a plain HTML form cannot set.
+ */
+function csrf_token(): string
+{
+    start_session();
+
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    return $_SESSION['csrf_token'];
+}
+
+/** A fresh token. Called when the session id changes, so the two stay paired. */
+function rotate_csrf_token(): string
+{
+    start_session();
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Refuse a state-changing request that does not carry this session's token.
+ *
+ * Called once, in index.php, for every method that is not a read — so a new
+ * endpoint is protected by existing, rather than by somebody remembering to
+ * protect it.
+ *
+ * `hash_equals` rather than `===`: comparing secrets with a function that
+ * returns early on the first different byte leaks, over many attempts, how much
+ * of a guess was right.
+ */
+function verify_csrf(): void
+{
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+    // Reads change nothing, so there is nothing to forge.
+    if (in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) {
+        return;
+    }
+
+    start_session();
+
+    $expected = $_SESSION['csrf_token'] ?? '';
+    $given = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+
+    if ($expected === '' || !is_string($given) || !hash_equals($expected, $given)) {
+        // `csrf` in the body so the browser can tell this apart from an
+        // ordinary refusal, fetch a fresh token and try once more — a token
+        // that rotated under a tab left open all afternoon is a nuisance, not
+        // an attack.
+        json_error('That request could not be verified. Please try again.', 403, ['csrf' => true]);
+    }
+}
+
+/**
+ * Forget the failed sign-in attempts recorded against an address.
+ *
+ * Two callers, which is why it lives here rather than beside the rest of the
+ * lock: signing in successfully clears your own counter (`api/auth.php`), and
+ * an administrator unlocking an account clears theirs (`api/users.php`).
+ */
+function clear_login_attempts(string $email): void
+{
+    $statement = db()->prepare('DELETE FROM login_attempts WHERE email = :email');
+    $statement->execute([':email' => $email]);
+}
+
+// -----------------------------------------------------------------------------
+// Audit logging
+// -----------------------------------------------------------------------------
+
+/**
+ * Record something that happened to an account.
+ *
+ * Append-only: this writes rows and nothing anywhere updates or deletes them.
+ * The `detail` is a short sentence meant to be read by a person — never a
+ * password, a token or a session id.
+ *
+ * Failing to write the log must never fail the action it was describing. A
+ * suspension that worked but could not be logged is still a suspension, and
+ * throwing here would roll it back and confuse everybody.
+ */
+function audit_log(
+    string $action,
+    ?int $actorUserId = null,
+    ?string $actorEmail = null,
+    ?string $targetType = null,
+    ?int $targetId = null,
+    string $outcome = 'success',
+    ?string $detail = null,
+): void {
+    try {
+        $statement = db()->prepare(
+            'INSERT INTO audit_logs
+                    (actor_user_id, actor_email, action, target_type, target_id,
+                     outcome, detail, ip_address)
+             VALUES (:actor, :email, :action, :target_type, :target_id,
+                     :outcome, :detail, :ip)'
+        );
+
+        $statement->execute([
+            ':actor' => $actorUserId,
+            ':email' => $actorEmail,
+            ':action' => $action,
+            ':target_type' => $targetType,
+            ':target_id' => $targetId,
+            ':outcome' => $outcome,
+            ':detail' => $detail,
+            ':ip' => client_ip(),
+        ]);
+    } catch (PDOException $exception) {
+        error_log('[pawsandfound] audit log failed: ' . $exception->getMessage());
+    }
+}
+
+/**
+ * The caller's address, for the audit log.
+ *
+ * REMOTE_ADDR only. A proxy header such as X-Forwarded-For is set by whoever
+ * sent the request, so trusting it would let an attacker write any address
+ * they liked into our own audit trail.
+ */
+function client_ip(): ?string
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+
+    return is_string($ip) && $ip !== '' ? substr($ip, 0, 45) : null;
 }
 
 /** Stop unless somebody is signed in. Returns the user so callers can use it. */
@@ -225,7 +379,9 @@ function send_cors_headers(): void
     if (in_array($origin, ALLOWED_ORIGINS, true)) {
         header("Access-Control-Allow-Origin: {$origin}");
         header('Access-Control-Allow-Credentials: true');
-        header('Access-Control-Allow-Headers: Content-Type');
+        // X-CSRF-Token is named here or the browser's preflight refuses to let
+        // the real request send it, and every write from `npm run dev` fails.
+        header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
         header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
         header('Vary: Origin');
     }

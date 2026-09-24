@@ -60,8 +60,19 @@ class Session:
         self.jar = http.cookiejar.CookieJar()
         self.opener = urllib.request.build_opener(
             urllib.request.HTTPCookieProcessor(self.jar))
+        # This session's CSRF token, exactly as a browser would hold it: picked
+        # up from a response body and sent back in a header on every write.
+        self.csrf = None
 
-    def call(self, method, path, body=None, raw=None, content_type=None):
+    def prime_csrf(self):
+        """Fetch a token, the way the app does on load."""
+        _, payload = self.call('GET', '/auth/me')
+        self.csrf = payload.get('csrf_token')
+        return self.csrf
+
+    def call(self, method, path, body=None, raw=None, content_type=None, csrf=True):
+        """Make a request. `csrf=False` deliberately omits the token, which is
+        how the CSRF tests prove the check is doing something."""
         data = None
         headers = {}
         if raw is not None:
@@ -70,10 +81,21 @@ class Session:
             data = json.dumps(body).encode()
             headers['Content-Type'] = 'application/json'
 
+        writes = method.upper() not in ('GET', 'HEAD', 'OPTIONS')
+        if writes and csrf:
+            if self.csrf is None:
+                self.prime_csrf()
+            if self.csrf:
+                headers['X-CSRF-Token'] = self.csrf
+
         req = urllib.request.Request(API + path, data=data, headers=headers, method=method)
         try:
             with self.opener.open(req, timeout=25) as r:
-                return r.status, json.loads(r.read() or b'{}')
+                payload = json.loads(r.read() or b'{}')
+                # Signing in and out rotate the token; keep up, as the app does.
+                if isinstance(payload, dict) and payload.get('csrf_token'):
+                    self.csrf = payload['csrf_token']
+                return r.status, payload
         except urllib.error.HTTPError as e:
             payload = e.read()
             try:

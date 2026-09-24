@@ -62,16 +62,16 @@ export function HomePage() {
             hero panel is the foreground object standing on it. */}
         <div className="hero-ground relative isolate overflow-hidden pb-4">
           <PatternVeil />
-          <RadarOrnament tone="teal" size={620} className="-top-40 -right-56 lg:-right-40" />
-          <RouteOrnament tone="amber" size={420} className="-bottom-10 -left-32" />
+          <RadarOrnament tone="teal" size={660} strength={3.2} className="-top-32 -right-40 lg:-right-24" />
+          <RouteOrnament tone="amber" size={520} strength={3} className="top-56 -left-28 lg:left-[26rem]" />
           <UrgentLine />
           <Hero />
+          <Promises />
           <SpeciesRow />
           <SectionCurve to="surface" />
         </div>
 
         <RecentReports />
-        <CommunityNumbers />
         <HowItWorks />
         <Reunions />
         <Safety />
@@ -143,76 +143,111 @@ const PROMISES = [
  * page have a foreground standing on a background instead of two columns.
  */
 function Hero() {
+  const { data: stats } = useAsync(loadHeroStats)
+
   return (
-    <section className="pt-6 pb-8 sm:pt-8">
-      <Container>
-        <div className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-panel/80 shadow-raised backdrop-blur-sm">
-          <div className="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-            <div className="flex flex-col items-start gap-6 p-6 sm:p-10 lg:py-14">
-              <h1 className="text-[2.75rem] leading-[1.04] font-semibold tracking-tight text-balance text-fg sm:text-[3.5rem] xl:text-[3.85rem]">
-                Every lost pet has someone looking for them.
-              </h1>
+    <section className="pt-4 pb-10 sm:pt-6 lg:pb-14">
+      <Container className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)] lg:gap-14">
+        {/* Left: the claim, then the one object that does something about it. */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <h1 className="text-[2.75rem] leading-[1.03] font-semibold tracking-tight text-balance text-fg sm:text-[3.4rem] xl:text-[3.75rem]">
+            Every lost pet has{' '}
+            <span className="text-brand">someone looking for them.</span>
+          </h1>
 
-              <p className="max-w-lg text-lg leading-relaxed text-fg-muted">
-                Lost and found reports in one place, compared on the details that identify
-                a pet — so the search stops depending on who saw which post.
-              </p>
+          <p className="max-w-lg text-lg leading-relaxed text-fg-muted">
+            Lost and found reports in one place, compared on the details that identify a pet —
+            so the search stops depending on who saw which post.
+          </p>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Button as={Link} to="/report/lost" variant="accent" size="lg">
-                  <TriangleAlert size={18} aria-hidden="true" />
-                  Report a lost pet
-                </Button>
-                <Button as={Link} to="/report/found" variant="primary" size="lg">
-                  <PawPrint size={18} aria-hidden="true" />
-                  I found a pet
-                </Button>
-              </div>
+          {/* The action card. Everything somebody might have arrived to do is
+              on this one raised surface: look for a pet, report one, or see
+              how much is already here. It floats on the environment rather
+              than the whole hero being a panel — which is what lets the
+              photograph run to the edge behind it. */}
+          <div className="flex flex-col gap-5 rounded-[1.5rem] border border-border/70 bg-panel/90 p-5 shadow-raised backdrop-blur-sm sm:p-6">
+            <SearchBand />
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button as={Link} to="/report/lost" variant="accent" size="lg" fullWidth>
+                <TriangleAlert size={18} aria-hidden="true" />
+                Report a lost pet
+              </Button>
+              <Button as={Link} to="/report/found" variant="primary" size="lg" fullWidth>
+                <PawPrint size={18} aria-hidden="true" />
+                I found a pet
+              </Button>
             </div>
 
-            {/* IMG-006, filling its half of the panel and bleeding to the
-                edges. The subjects are centred in the frame, so the crop keeps
-                both animals in view at every width. */}
-            <div className="relative sm:min-h-[26rem] lg:min-h-full">
-              <img
-                src={heroImage}
-                alt="A tan Aspin sitting beside its owner, who is holding a tabby cat, on the tiled porch of a Philippine home"
-                // Framed left of centre: the dog is the left two-thirds of the
-                // source, and a centre crop in a tall column put the tiled
-                // floor between the animals in the middle of the panel.
-                className="h-72 w-full object-cover object-[38%_45%] sm:absolute sm:inset-0 sm:h-full"
-                fetchPriority="high"
-              />
-            </div>
+            {/* Counted from the reports actually in the database. The
+                reference design shows four-figure numbers; ours are the real
+                ones, and a real 32 is worth more than an invented 1,284. */}
+            {stats && (
+              <dl className="grid grid-cols-3 gap-2 border-t border-border/70 pt-4">
+                <HeroFigure value={stats.total} label="reports filed" />
+                <HeroFigure value={stats.reunited} label="pets back home" />
+                <HeroFigure value={stats.cities} label="cities covered" />
+              </dl>
+            )}
           </div>
-
-          {/* What the system promises, on a strip of its own between the
-              photograph and the search. It used to float over the picture,
-              where it covered the dog — the photograph is the point of this
-              panel, so nothing sits on top of it. */}
-          <ul className="grid gap-x-6 gap-y-4 border-t border-border/70 bg-panel/70 px-6 py-5 sm:px-10 md:grid-cols-3">
-            {PROMISES.map((promise) => {
-              const Icon = promise.icon
-
-              return (
-                <li key={promise.title} className="flex items-start gap-3">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
-                    <Icon size={17} aria-hidden="true" />
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="text-sm font-semibold text-fg">{promise.title}</span>
-                    <span className="text-sm text-fg-muted">{promise.body}</span>
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-
-          {/* The search sits inside the panel, along its bottom edge: looking
-              is the third thing somebody might have come to do, and it belongs
-              with the other two rather than in a section of its own. */}
-          <SearchBand />
         </div>
+
+        {/* Right: IMG-006, large and unboxed. The subjects are centred in the
+            source, so the crop keeps both animals in view at every width. */}
+        <div className="relative order-first lg:order-none">
+          <img
+            src={heroImage}
+            alt="A tan Aspin sitting beside its owner, who is holding a tabby cat, on the tiled porch of a Philippine home"
+            className="h-64 w-full rounded-[1.5rem] object-cover object-[38%_45%] shadow-raised ring-1 ring-black/5 sm:h-80 lg:h-[30rem]"
+            fetchPriority="high"
+          />
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+/** One real number and what it counts. */
+function HeroFigure({ value, label }) {
+  return (
+    <div className="flex flex-col">
+      <dt className="sr-only">{label}</dt>
+      <dd className="text-[1.6rem] leading-none font-semibold text-fg tabular-nums">{value}</dd>
+      <dd aria-hidden="true" className="mt-1 text-sm leading-snug text-fg-muted">
+        {label}
+      </dd>
+    </div>
+  )
+}
+
+/**
+ * What the system promises, on a strip of its own under the hero.
+ *
+ * It used to sit inside the hero panel. The panel is gone — the photograph
+ * needed the room — so the three promises became a band on the canvas, which
+ * is also where the eye goes next.
+ */
+function Promises() {
+  return (
+    <section className="pb-8">
+      <Container>
+        <ul className="grid gap-x-6 gap-y-4 rounded-card border border-border/60 bg-panel/70 px-5 py-5 backdrop-blur-sm sm:px-7 md:grid-cols-3">
+          {PROMISES.map((promise) => {
+            const Icon = promise.icon
+
+            return (
+              <li key={promise.title} className="flex items-start gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
+                  <Icon size={17} aria-hidden="true" />
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="text-sm font-semibold text-fg">{promise.title}</span>
+                  <span className="text-sm text-fg-muted">{promise.body}</span>
+                </span>
+              </li>
+            )
+          })}
+        </ul>
       </Container>
     </section>
   )
@@ -276,47 +311,6 @@ function SpeciesRow() {
  * The numbers, counted from the reports themselves rather than written into
  * the page — if the seed changes, these change with it.
  */
-function CommunityNumbers() {
-  const { data: stats } = useAsync(loadHeroStats)
-  if (!stats) return null
-
-  const figures = [
-    { value: stats.total, label: 'reports filed', icon: ClipboardList },
-    { value: stats.reunited, label: 'pets back home', icon: Heart },
-    { value: stats.cities, label: 'cities covered', icon: MapPin },
-    { value: stats.species, label: 'kinds of animal', icon: PawPrint },
-  ]
-
-  return (
-    <section className="pb-16 sm:pb-20">
-      <Container>
-        <ul className="grid grid-cols-2 gap-3 rounded-card bg-sunken/70 p-4 sm:gap-4 sm:p-6 lg:grid-cols-4">
-          {figures.map((figure) => {
-            const Icon = figure.icon
-
-            return (
-              <li
-                key={figure.label}
-                className="flex items-center gap-3.5 rounded-card border border-border bg-panel px-4 py-4 shadow-card"
-              >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
-                  <Icon size={19} aria-hidden="true" />
-                </span>
-                <span className="flex min-w-0 flex-col">
-                  <span className="text-[1.75rem] leading-none font-semibold text-fg tabular-nums">
-                    {figure.value}
-                  </span>
-                  <span className="mt-1 text-sm text-fg-muted">{figure.label}</span>
-                </span>
-              </li>
-            )
-          })}
-        </ul>
-      </Container>
-    </section>
-  )
-}
-
 /** The last thing on the page is the first thing somebody came to do. */
 function ClosingCall() {
   return (
@@ -381,65 +375,64 @@ function SearchBand() {
   }
 
   return (
-    // Inside the hero panel now, along its bottom edge, so looking for a pet
-    // sits with reporting one instead of in a section of its own.
-    <div className="border-t border-border/70 bg-surface/70">
-      <form onSubmit={submit} className="p-6 sm:p-8">
-        <div className="flex items-center gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
-            <SearchCheck size={20} aria-hidden="true" />
-          </span>
-          <h2 className="text-xl font-semibold text-fg">Find or report a pet near you</h2>
+    // Inside the hero's action card. Two rows rather than the old four-across
+    // strip: the card is half the page wide, and four controls on one line
+    // squeezed each of them below a usable width.
+    <form onSubmit={submit} className="flex flex-col gap-3">
+      <div className="flex items-center gap-2.5">
+        <SearchCheck size={18} className="shrink-0 text-brand" aria-hidden="true" />
+        <h2 className="font-semibold text-fg">Find a pet near you</h2>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="home-city" className="text-sm font-medium text-fg">
+            Location
+          </label>
+          <div className="relative">
+            <MapPin
+              size={17}
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle"
+              aria-hidden="true"
+            />
+            <input
+              id="home-city"
+              value={city}
+              onChange={(event) => setCity(event.target.value)}
+              placeholder="City or barangay"
+              className="h-11 w-full rounded-control border border-border-strong bg-panel pr-3 pl-10 text-base text-fg placeholder:text-fg-muted"
+            />
+          </div>
         </div>
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
-            <Select
-              label="Species"
-              value={species}
-              onChange={(event) => setSpecies(event.target.value)}
-              options={[
-                { value: '', label: 'All species' },
-                ...(categories ?? []).map((c) => ({ value: c.id, label: c.label })),
-              ]}
-            />
+        <Select
+          label="Species"
+          value={species}
+          onChange={(event) => setSpecies(event.target.value)}
+          options={[
+            { value: '', label: 'All species' },
+            ...(categories ?? []).map((c) => ({ value: c.id, label: c.label })),
+          ]}
+        />
+      </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="home-city" className="text-sm font-medium text-fg">
-                Location
-              </label>
-              <div className="relative">
-                <MapPin
-                  size={17}
-                  className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle"
-                  aria-hidden="true"
-                />
-                <input
-                  id="home-city"
-                  value={city}
-                  onChange={(event) => setCity(event.target.value)}
-                  placeholder="City or barangay"
-                  className="h-11 w-full rounded-control border border-border-strong bg-panel pr-3 pl-10 text-base text-fg placeholder:text-fg-muted"
-                />
-              </div>
-            </div>
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+        <Select
+          label="Report type"
+          value={type}
+          onChange={(event) => setType(event.target.value)}
+          options={[
+            { value: '', label: 'Lost & found' },
+            ...optionsFromLabels(REPORT_TYPE_LABELS),
+          ]}
+        />
 
-            <Select
-              label="Type"
-              value={type}
-              onChange={(event) => setType(event.target.value)}
-              options={[
-                { value: '', label: 'Lost & found' },
-                ...optionsFromLabels(REPORT_TYPE_LABELS),
-              ]}
-            />
-
-            <Button type="submit" size="lg" className="lg:mb-0.5 lg:min-w-38">
-              <Search size={18} aria-hidden="true" />
-              Search
-            </Button>
-          </div>
-      </form>
-    </div>
+        <Button type="submit" size="lg" className="sm:min-w-32">
+          <Search size={18} aria-hidden="true" />
+          Search
+        </Button>
+      </div>
+    </form>
   )
 }
 

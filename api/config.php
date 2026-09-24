@@ -31,3 +31,23 @@ const ALLOWED_ORIGINS = [
 /** Rows per page when a request does not ask for a specific size. */
 const DEFAULT_PAGE_SIZE = 9;
 const MAX_PAGE_SIZE = 50;
+
+/**
+ * How many times a sign-in may fail before the account is locked and an
+ * administrator has to unlock it.
+ *
+ * Counted per email address in the `login_attempts` table, so the count
+ * survives a browser refresh, a new browser and a different device — it is not
+ * kept in the session, which the person failing to sign in controls.
+ */
+const MAX_LOGIN_ATTEMPTS = 3;
+
+/**
+ * The date the privacy notice last changed.
+ *
+ * Stored against each agreement in `privacy_consents`, so a change to the
+ * wording can be told apart from the version somebody actually agreed to.
+ * Change this whenever src/pages/public/PrivacyPage.jsx changes in a way that
+ * alters what people are agreeing to.
+ */
+const PRIVACY_NOTICE_VERSION = '2026-09-23';

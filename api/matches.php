@@ -105,6 +105,28 @@ function match_decide(int $id): never
         json_error('Write what you need from the reporters before asking.', 422);
     }
 
+    // Confirming moves both reports to 'returned', which is the one place a
+    // report's status is written without passing through REPORT_TRANSITIONS in
+    // api/reports.php. So the same rule is applied here: both reports must
+    // still be open. Otherwise a pairing raised before a moderation decision
+    // closed one of the reports could be confirmed afterwards, quietly
+    // reopening a closed case as a reunion.
+    //
+    // Before the transaction starts, so nothing has to be unwound.
+    if ($action === 'confirm') {
+        foreach (['lost_report_id', 'found_report_id'] as $key) {
+            $check = db()->prepare('SELECT status FROM pet_reports WHERE report_id = :id');
+            $check->execute([':id' => (int) $match[$key]]);
+
+            if (!in_array($check->fetchColumn(), ['active', 'possible_match'], true)) {
+                json_error(
+                    'One of these reports is no longer open, so this pairing cannot be confirmed.',
+                    409
+                );
+            }
+        }
+    }
+
     $pdo = db();
     $pdo->beginTransaction();
 

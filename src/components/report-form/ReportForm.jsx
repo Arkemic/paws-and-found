@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, CircleCheck } from 'lucide-react'
-import { Button, Card, CardBody, CardFooter } from '@/components/ui'
+import { Button, Card, CardBody, CardFooter, RequiredNote } from '@/components/ui'
 import { REPORT_TYPES } from '@/constants'
 import { categoryService, userService, petService } from '@/services'
 import { useAsync } from '@/hooks/useAsync'
@@ -19,6 +19,14 @@ import {
 } from './reportFormModel'
 
 const loadActiveCategories = () => categoryService.getActiveCategories()
+
+/**
+ * The steps that contain at least one required field.
+ *
+ * Photographs are optional — a finder often has no chance to take one — and
+ * the review step only repeats what has already been entered.
+ */
+const STEPS_WITH_REQUIRED_FIELDS = ['details', 'incident']
 
 /**
  * The lost/found reporting wizard.
@@ -88,6 +96,29 @@ export function ReportForm({ reportType, report }) {
     setStepIndex(index)
   }
 
+  /**
+   * Enter, inside a single-line field, moves to the next step.
+   *
+   * The wizard is not a `<form>`, so until now Enter did nothing at all —
+   * which is its own kind of broken: somebody finishes typing, presses Enter
+   * out of habit, and the page sits there.
+   *
+   * Three deliberate exclusions:
+   *   * the review step, where Enter would file the report. Submitting is a
+   *     decision, and it stays a deliberate click.
+   *   * textareas, where Enter is a new line and always should be.
+   *   * buttons and links, which have their own Enter behaviour already.
+   */
+  const handleKeyDown = (event) => {
+    if (event.key !== 'Enter' || isLastStep || isSubmitting) return
+
+    const target = event.target
+    if (!(target instanceof HTMLInputElement)) return
+
+    event.preventDefault()
+    handleNext()
+  }
+
   const handleNext = () => {
     const stepErrors = validateStep(step.id, values)
     setErrors(stepErrors)
@@ -146,7 +177,9 @@ export function ReportForm({ reportType, report }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    // onKeyDown on the wrapper rather than on each field: one rule, in one
+    // place, for every control the wizard will ever contain.
+    <div className="flex flex-col gap-6" onKeyDown={handleKeyDown}>
       <Stepper steps={STEPS} currentIndex={stepIndex} />
 
       <Card>
@@ -162,6 +195,13 @@ export function ReportForm({ reportType, report }) {
             {step.label}
           </h2>
           <p className="mt-1.5 text-fg-muted">{STEP_HINTS[step.id]}</p>
+
+          {/* Only on the steps that actually have a required field. Saying it
+              above the photographs step, which has none, would teach the
+              reader to stop reading it. */}
+          {STEPS_WITH_REQUIRED_FIELDS.includes(step.id) && (
+            <RequiredNote className="mt-2 text-sm text-fg-muted" />
+          )}
         </div>
 
         <CardBody className="flex flex-col gap-6 px-6 py-6">

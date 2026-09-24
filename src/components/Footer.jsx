@@ -39,6 +39,7 @@ const COLUMNS = [
     links: [
       { to: '/help', label: 'Help & safety' },
       { to: '/help', label: 'Safe handovers' },
+      { to: '/privacy', label: 'Privacy Notice' },
     ],
   },
 ]
