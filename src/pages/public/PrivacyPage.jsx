@@ -12,7 +12,7 @@ import { SectionHeading } from '@/components/SectionHeading'
  * together, or the record will say people agreed to a version that never
  * existed.
  */
-export const PRIVACY_NOTICE_VERSION = '2026-09-23'
+export const PRIVACY_NOTICE_VERSION = '2026-09-25'
 
 /**
  * The Privacy Notice.
@@ -109,8 +109,10 @@ export function PrivacyPage() {
 
       <Section title="Why we collect it">
         <p>
-          Each piece is there for a job, and nothing is collected because it might be useful one
-          day:
+          Everything on this page is collected because you agreed to it when you created your
+          account — that agreement is the basis we rely on, and it is recorded against the version
+          of this notice that was showing at the time. Each piece is there for a job, and nothing
+          is collected because it might be useful one day:
         </p>
         <List
           items={[
@@ -154,6 +156,30 @@ export function PrivacyPage() {
         />
       </Section>
 
+      <Section title="How matching works, and what it does on its own">
+        <p>
+          Paws&amp;Found compares every new report against the reports already filed and suggests
+          the ones that might be the same animal. The comparison is arithmetic, not judgement: it
+          scores species, breed, colour, size, how far apart the two locations are and how far
+          apart the two dates are, and adds the parts up. There is no artificial intelligence in
+          it and no photograph is analysed — the pictures are for people to look at, and only
+          people look at them.
+        </p>
+        <p>
+          A suggestion is only a suggestion.{' '}
+          <strong className="font-medium text-fg">
+            Nothing is decided about you automatically.
+          </strong>{' '}
+          A possible match does not change your report, does not release your contact details, and
+          does not tell anyone the pet is theirs. A person has to open it, a person has to claim
+          it, and a Pet Coordinator has to verify it before anything happens.
+        </p>
+        <p>
+          Every suggestion shows the reasons it was made and what it scored on each, so you can see
+          why the system thought two reports were worth comparing — and disagree with it.
+        </p>
+      </Section>
+
       <Section title="How long we keep it">
         <p>
           Accounts are suspended rather than deleted. That is a deliberate choice: reports and case
@@ -190,15 +216,28 @@ export function PrivacyPage() {
         <p>
           All of the pets, people and incidents in the demonstration data are fictional. Questions
           about your information, or a request to see, correct or remove it, should go to the
-          project's contact person:
+          project team:
         </p>
 
         {/* A privacy notice has to name somebody reachable, or the rights it
-            describes have nowhere to go. */}
+            describes have nowhere to go.
+
+            "Privacy contact" rather than "Data Protection Officer": a DPO is a
+            role an organisation formally designates under the Data Privacy Act,
+            and nobody has designated one here. Claiming the title would be the
+            one false statement on a page about honesty.
+
+            An institutional address and no personal mobile number. The Act asks
+            for contact details that reach the people responsible, not for a
+            private phone number published where anything can crawl it. */}
         <dl className="flex flex-col gap-2 rounded-card border border-border bg-layer p-4 text-sm not-italic">
           <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-            <dt className="text-fg-muted sm:w-28">Contact person</dt>
-            <dd className="font-medium text-fg">Kyle Michael V. Austria — Project Manager</dd>
+            <dt className="text-fg-muted sm:w-28">Privacy contact</dt>
+            <dd className="font-medium text-fg">Paws&amp;Found Project Team</dd>
+          </div>
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+            <dt className="text-fg-muted sm:w-28">Institution</dt>
+            <dd className="text-fg">Mapúa University — Makati Campus</dd>
           </div>
           <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
             <dt className="text-fg-muted sm:w-28">Email</dt>
@@ -211,31 +250,22 @@ export function PrivacyPage() {
               </a>
             </dd>
           </div>
-          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-            <dt className="text-fg-muted sm:w-28">Telephone</dt>
-            <dd>
-              <a href="tel:+639176385291" className="font-medium text-fg hover:underline">
-                0917 638 5291
-              </a>
-            </dd>
-          </div>
-          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-            <dt className="text-fg-muted sm:w-28">Institution</dt>
-            <dd className="text-fg">Mapúa Makati University</dd>
-          </div>
         </dl>
 
         <p>
-          If you are not satisfied with how we answer, you may complain to the National Privacy
-          Commission at <span className="whitespace-nowrap">privacy.gov.ph</span>.
+          Write to that address for a copy of what we hold about you, for a correction, for
+          deletion, or for any other concern about your personal information. If you are not
+          satisfied with how we answer, you may complain to the National Privacy Commission at{' '}
+          <span className="whitespace-nowrap">privacy.gov.ph</span>.
         </p>
       </Section>
 
       <Section title="If this notice changes">
         <p>
           Each agreement is recorded against the version of this notice that was showing at the
-          time. If the wording changes in a way that alters what you agreed to, the date at the
-          top changes with it and we will ask again rather than assuming the old answer still
+          time, so we can tell who agreed to which wording. If this notice changes in a way that
+          alters what you agreed to, the date at the top changes with it, and we ask the people
+          who agreed to the older version again rather than assuming the old answer still
           stands.
         </p>
       </Section>

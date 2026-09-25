@@ -81,7 +81,7 @@ defined('MAX_LOGIN_ATTEMPTS') || define('MAX_LOGIN_ATTEMPTS', 3);
  * Change this whenever src/pages/public/PrivacyPage.jsx changes in a way that
  * alters what people are agreeing to.
  */
-defined('PRIVACY_NOTICE_VERSION') || define('PRIVACY_NOTICE_VERSION', '2026-09-23');
+defined('PRIVACY_NOTICE_VERSION') || define('PRIVACY_NOTICE_VERSION', '2026-09-25');
 
 /**
  * In production, PHP must never print anything.
