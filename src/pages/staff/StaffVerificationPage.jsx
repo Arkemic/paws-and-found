@@ -10,7 +10,6 @@ import {
   Lock,
   Mail,
   Phone,
-  ShieldCheck,
   X,
 } from 'lucide-react'
 import { Button, EmptyState, LoadingSkeleton, Modal, Textarea } from '@/components/ui'
@@ -20,6 +19,7 @@ import { MATCH_STATUSES_AWAITING_STAFF } from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
 import { matchService, userService } from '@/services'
 import { hasCoordinates } from '@/utils/location'
+import emptyQueueClear from '@/assets/empty-queue-clear.webp'
 
 async function loadVerificationQueue() {
   const [staff, pairings] = await Promise.all([
@@ -143,7 +143,7 @@ export function StaffVerificationPage() {
 
       {waiting.length === 0 ? (
         <EmptyState
-          icon={ShieldCheck}
+          illustration={emptyQueueClear}
           title="Nothing waiting"
           description="When a reporter asks for a possible match to be checked, it will appear here."
         />

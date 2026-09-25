@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Users } from 'lucide-react'
-import logoMark from '@/assets/pawsfound-logo-mark.png'
+import logoMark from '@/assets/pawsfound-logo-mark-v2.webp'
 import { Button, Container } from '@/components/ui'
 import { WovenVeil } from '@/components/PatternVeil'
 import { RouteOrnament } from '@/components/Ornament'

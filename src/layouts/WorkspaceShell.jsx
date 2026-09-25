@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { ArrowLeft, LogOut, Menu, X } from 'lucide-react'
-import logoMark from '@/assets/pawsfound-logo-mark.png'
+import logoMark from '@/assets/pawsfound-logo-mark-v2.webp'
 import { ROLE_LABELS } from '@/constants'
 import { cn } from '@/utils/cn'
 

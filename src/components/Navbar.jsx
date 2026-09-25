@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { LogOut, Menu, X } from 'lucide-react'
-import logoMark from '@/assets/pawsfound-logo-mark.png'
+import logoMark from '@/assets/pawsfound-logo-mark-v2.webp'
 import { Button, Container } from '@/components/ui'
 import { DemoRoleSelector } from './DemoRoleSelector'
 import { NavDropdown, NavDropdownItem } from './NavDropdown'

@@ -48,15 +48,15 @@ replaced it in the redesign and the file has been deleted.
 | ID | File | Used by | Priority | Status |
 | --- | --- | --- | --- | --- |
 | IMG-013 | `pet-009-rex.jpg` | Report 009 (Rex) — the only seeded report still without a photograph | Medium | Needed |
-| IMG-018 | `img-018-hero-environment.png` | Homepage hero — the illustrated ground the whole page stands on | **High** | Needed |
+| IMG-018 | `img-018-hero-environment.webp` | Homepage hero — the illustrated ground the whole page stands on | **High** | **Delivered** |
 | IMG-019 | `img-019-footer-horizon.webp` | The footer band on every public page | **High** | **Delivered** |
 | IMG-020 | `img-020-companions.webp` | Dog and cat pair, cut out — dashboard greeting, auth, header bands | **High** | **Delivered**, not yet placed |
-| IMG-021 | `img-021-landscape-strip.webp` | Reusable header band: report wizard, customer dashboard, workspace headers | Medium | Delivered at 1290x143 — see note |
+| IMG-021 | `img-021-landscape-strip.webp` | Reusable header band: report wizard, customer dashboard, workspace headers | Medium | **Delivered** at 1908x824, not yet placed |
 | IMG-022 | `img-022-workspace-foot.png` | The illustration at the bottom of the staff and admin rails | Medium | Needed |
-| IMG-023 | `pawsfound-logo-*.png` | Logo refresh — mark, horizontal lockup, light-on-dark variant | Medium | Needed |
-| IMG-024 | `empty-no-matches.png` | `EmptyState` — no possible matches yet | Low | Needed |
-| IMG-025 | `empty-no-notifications.png` | `EmptyState` — nothing unread | Low | Needed |
-| IMG-026 | `empty-queue-clear.png` | `EmptyState` — nothing awaiting a coordinator | Low | Needed |
+| IMG-023 | `pawsfound-logo-mark-v2.webp`, `-horizontal`, `-on-dark` | Logo refresh — mark in the navbar, footer and workspace rails; the other two not yet placed | Medium | **Delivered** |
+| IMG-024 | `empty-no-matches.webp` | `EmptyState` — no possible matches yet | Low | **Delivered**, text cropped off |
+| IMG-025 | `empty-no-notifications.webp` | `EmptyState` — nothing unread | Low | **Delivered**, text cropped off |
+| IMG-026 | `empty-queue-clear.webp` | `EmptyState` — nothing awaiting a coordinator | Low | **Delivered**, text cropped off |
 
 ### What the generated mockups need, in detail
 

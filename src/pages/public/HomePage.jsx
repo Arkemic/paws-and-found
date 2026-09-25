@@ -20,6 +20,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import heroImage from '@/assets/img-006-homepage-hero.jpg'
+import heroEnvironment from '@/assets/img-018-hero-environment.webp'
 import reunionImage from '@/assets/img-015-reunion-home.jpg'
 import emptyReportsImage from '@/assets/empty-no-reports.png'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
@@ -61,9 +62,32 @@ export function HomePage() {
             pattern, and a search sweep running off the top-right corner. The
             hero panel is the foreground object standing on it. */}
         <div className="hero-ground relative isolate overflow-hidden pb-4">
+          {/* IMG-018: the ground the opening stands on.
+              
+              Everything above this was an approximation of an illustration
+              drawn with CSS — line art at four per cent opacity — and it was
+              never going to read as a place. This is the place.
+              
+              The artwork's own left third is open sky, which is where the
+              headline goes; the fade at the foot hands the page back to the
+              canvas rather than stopping at a hard edge. Hidden below `sm`,
+              where the hero stacks and the photograph is doing this job
+              already. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[38rem] overflow-hidden sm:block"
+          >
+            <img
+              src={heroEnvironment}
+              alt=""
+              className="size-full object-cover object-[60%_35%] opacity-90"
+              fetchPriority="high"
+            />
+            <span className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent to-surface" />
+          </div>
+
           <PatternVeil />
-          <RadarOrnament tone="teal" size={660} strength={3.2} className="-top-32 -right-40 lg:-right-24" />
-          <RouteOrnament tone="amber" size={520} strength={3} className="top-56 -left-28 lg:left-[26rem]" />
+          <RadarOrnament tone="teal" size={660} strength={2} className="-top-32 -right-40 lg:-right-24" />
           <UrgentLine />
           <Hero />
           <Promises />
@@ -89,7 +113,13 @@ export function HomePage() {
 function UrgentLine() {
   return (
     <Container className="pt-6 sm:pt-8">
-      <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-fg-muted">
+      {/* Its own pale surface rather than sitting straight on IMG-018.
+          
+          Measured: against the lightest part of the artwork this line reads at
+          5.1:1, but a dark leaf drifting behind it at some widths takes it to
+          2.4. Text on a picture cannot promise its own contrast, so it stops
+          depending on the picture. */}
+      <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-pill bg-surface/85 px-4 py-2 text-sm text-fg-muted backdrop-blur-sm sm:w-fit">
         <span className="inline-flex items-center gap-2 rounded-pill bg-accent-soft px-3 py-1 font-medium text-lost">
           <span className="size-1.5 rounded-full bg-accent-hover" aria-hidden="true" />
           Lost a pet today?
