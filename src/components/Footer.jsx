@@ -4,6 +4,7 @@ import logoMark from '@/assets/pawsfound-logo-mark.png'
 import { Button, Container } from '@/components/ui'
 import { WovenVeil } from '@/components/PatternVeil'
 import { RouteOrnament } from '@/components/Ornament'
+import footerHorizon from '@/assets/img-019-footer-horizon.webp'
 
 /**
  * Site footer.
@@ -46,8 +47,11 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    // The page ends deliberately: a warm layer of its own, the woven
-    // microtexture under it, and a route leaving the canvas at the far edge.
+    // The page ends on a horizon: the links sit on the warm layer, and the
+    // illustrated band closes the page underneath them — hills, a dog and a
+    // cat watching a low sun. IMG-019's sky is transparent, so the wave along
+    // its top edge meets the warm fill above it instead of cutting a white
+    // rectangle out of the page.
     <footer className="relative isolate mt-auto overflow-hidden border-t border-border bg-surface-warm">
       <WovenVeil />
       <RouteOrnament tone="teal" size={520} className="-top-10 -right-32 rotate-3" />
@@ -105,7 +109,34 @@ export function Footer() {
         </div>
       </Container>
 
-      <div className="border-t border-border">
+      {/* The horizon, and the copyright line sitting on it.
+          
+          One block rather than an image with text under it: the band carries
+          its own dark ground, so the line reads as part of the scene instead
+          of a caption beneath a picture. `aria-hidden` because it says
+          nothing — the words are the words below it.
+          
+          Hidden below `sm`: at 390px a 3:1 band is a 130px sliver of mud, and
+          the phone footer is long enough already. */}
+      <div className="relative isolate mt-6 hidden sm:block">
+        <img
+          src={footerHorizon}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          className="pointer-events-none w-full select-none"
+        />
+        <Container className="absolute inset-x-0 bottom-0 pb-4">
+          <p className="text-sm text-fg-inverted/75">
+            &copy; 2026 Paws&amp;Found. Academic project for Web Systems and Technologies 2.
+            All pets, people and reports shown are fictional demonstration data.
+          </p>
+        </Container>
+      </div>
+
+      {/* Phones get the same words on the plain warm ground. */}
+      <div className="border-t border-border sm:hidden">
         <Container className="py-4">
           <p className="text-sm text-fg-muted">
             &copy; 2026 Paws&amp;Found. Academic project for Web Systems and Technologies 2.

@@ -49,9 +49,9 @@ replaced it in the redesign and the file has been deleted.
 | --- | --- | --- | --- | --- |
 | IMG-013 | `pet-009-rex.jpg` | Report 009 (Rex) — the only seeded report still without a photograph | Medium | Needed |
 | IMG-018 | `img-018-hero-environment.png` | Homepage hero — the illustrated ground the whole page stands on | **High** | Needed |
-| IMG-019 | `img-019-footer-horizon.png` | The footer band on every public page | **High** | Needed |
-| IMG-020 | `img-020-companions.png` | Dog and cat pair, cut out — dashboard greeting, auth, header bands | **High** | Needed |
-| IMG-021 | `img-021-landscape-strip.png` | Reusable header band: report wizard, customer dashboard, workspace headers | Medium | Needed |
+| IMG-019 | `img-019-footer-horizon.webp` | The footer band on every public page | **High** | **Delivered** |
+| IMG-020 | `img-020-companions.webp` | Dog and cat pair, cut out — dashboard greeting, auth, header bands | **High** | **Delivered**, not yet placed |
+| IMG-021 | `img-021-landscape-strip.webp` | Reusable header band: report wizard, customer dashboard, workspace headers | Medium | Delivered at 1290x143 — see note |
 | IMG-022 | `img-022-workspace-foot.png` | The illustration at the bottom of the staff and admin rails | Medium | Needed |
 | IMG-023 | `pawsfound-logo-*.png` | Logo refresh — mark, horizontal lockup, light-on-dark variant | Medium | Needed |
 | IMG-024 | `empty-no-matches.png` | `EmptyState` — no possible matches yet | Low | Needed |
