@@ -11,6 +11,8 @@ column, and it never drops the data that is already there.
 
     001_login_lockout.sql   account lock state and the failed-attempt counter
     002_audit_logs.sql      who did what, and when
+    003_privacy_consent.sql who agreed to which version of the privacy notice
+    004_audit_actions.sql   the case events join the audit vocabulary
 
 ## Applying one
 

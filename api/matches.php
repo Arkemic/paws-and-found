@@ -139,11 +139,23 @@ function match_decide(int $id): never
             'confirm'              => match_confirm($id, $match, $user, $note),
         };
 
+        $after = $pdo->prepare('SELECT match_status FROM match_claims WHERE match_id = :id');
+        $after->execute([':id' => $id]);
+        $matchStatusAfter = (string) $after->fetchColumn();
+
         $pdo->commit();
     } catch (Throwable $exception) {
         $pdo->rollBack();
         throw $exception;
     }
+
+    // `match_claims.reviewed_by_user_id` already says who last touched this
+    // pairing, but it holds one name and is overwritten by the next decision.
+    // The audit row is appended, so a pairing that was asked about, then
+    // rejected, then complained about reads as three entries in order rather
+    // than one name with no history behind it.
+    audit_log('match_decided', (int) $user['user_id'], $user['email'],
+        'match', $id, 'success', "{$action}: {$match['match_status']} -> {$matchStatusAfter}");
 
     match_detail($id);
 }

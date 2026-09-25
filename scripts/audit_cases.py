@@ -607,6 +607,16 @@ def error_handling():
     check(C, 'EH-06', 'Errors disclose no SQL, path or exception text', 'clean',
           'clean' if clean else 'LEAKS DETAIL', clean)
 
+    # Only /reports/{id}/photos has a third path segment. Every other handler
+    # takes the resource and the identifier, so an extra segment used to be
+    # dropped and the request answered as though it had not been typed:
+    # /matches/1/claims returned the match. A URL that does not exist has to
+    # say so, or the API quietly invents endpoints it does not have.
+    status(C, 'EH-07', 'An invented sub-path on a real resource', 'guest', 'GET', '/matches/1/claims', None, 404)
+    status(C, 'EH-08', 'An invented sub-path on a protected resource', 'admin', 'GET', '/users/1/password', None, 404)
+    status(C, 'EH-09', 'A fourth path segment', 'customer', 'POST', '/reports/1/photos/extra', None, 404)
+    status(C, 'EH-10', 'The one real sub-path still works', 'guest', 'GET', '/matches/1', None, 200)
+
 
 
 # ===================================================================== SUMMARY

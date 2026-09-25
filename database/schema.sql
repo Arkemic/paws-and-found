@@ -505,9 +505,14 @@ CREATE TABLE audit_logs (
   actor_user_id INT UNSIGNED     NULL,   -- NULL when the sign-in failed
   actor_email   VARCHAR(190)     NULL,
 
+  -- Account events first, then the case events added by migration 004. The
+  -- order matters: MySQL stores an ENUM as the position of the word, so moving
+  -- one of these rewrites the meaning of every row already in the table.
   action        ENUM('login','login_failed','account_locked','account_unlocked',
                      'logout','register','role_changed','account_suspended',
-                     'account_reinstated') NOT NULL,
+                     'account_reinstated',
+                     'report_status_changed','match_decided',
+                     'moderation_resolved','category_changed') NOT NULL,
 
   target_type   ENUM('user','report','match','category','moderation_case') NULL,
   target_id     INT UNSIGNED     NULL,

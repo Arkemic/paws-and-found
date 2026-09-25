@@ -386,6 +386,17 @@ function report_set_status(int $id): never
         throw $exception;
     }
 
+    // After the commit, like every other audit entry: the trail records what
+    // happened, not what was attempted.
+    //
+    // Only this route logs. `status_logs` also carries the row written when a
+    // report is created and the one written when matching moves a report to
+    // "possible match" on its own — neither is a person changing something,
+    // and an audit log full of the system talking to itself is harder to read
+    // than one that is not.
+    audit_log('report_status_changed', (int) $user['user_id'], $user['email'],
+        'report', $id, 'success', "{$report['status']} -> {$status}");
+
     report_detail($id);
 }
 

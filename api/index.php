@@ -40,6 +40,15 @@ $identifier = $segments[1] ?? null;
 $sub = $segments[2] ?? null;
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+// That is the *only* route with a third segment. Every other handler takes
+// just the resource and the identifier, so without this check a third segment
+// was silently dropped and the request answered as though it had not been
+// typed: GET /matches/1/claims returned the match, and GET /users/1/password
+// returned the user. A URL that does not exist has to say so.
+if (count($segments) > 3 || ($sub !== null && $resource !== 'reports')) {
+    json_error('No such endpoint.', 404);
+}
+
 try {
     switch ($resource) {
         case '':

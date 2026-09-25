@@ -223,13 +223,39 @@ be confirmed afterwards, quietly reopening a closed case as a reunion.
 Editing a `Returned` or `Closed` report is refused as well (was G11), and the
 interface no longer offers an Edit button that could only fail.
 
-### G5 — No audit log
+### G5 — No audit log  ·  **closed 25 September 2026**
 
 `status_logs` records report status changes and nothing else. Logins, failed
 logins, locks, unlocks, role changes, suspensions and moderation decisions leave
 no trace. "Who suspended this account, and when?" currently has no answer.
 
 **Needs:** an `audit_logs` table and writes at each of those points.
+
+**Done in two parts.** Migration `002` created the table and the account events:
+`login`, `login_failed`, `account_locked`, `account_unlocked`, `logout`,
+`register`, `role_changed`, `account_suspended`, `account_reinstated`.
+
+That left the half of the question actually asked about a *case*. Each of those
+events did record a person on its own row — `status_logs.updated_by_user_id`,
+`match_claims.reviewed_by_user_id`, `moderation_cases.resolved_by_admin_id` —
+but in three different places and three different shapes, none readable in time
+order, and a category had no record at all: renaming or deleting a species left
+nothing behind but the changed row.
+
+Migration `004` adds four more verbs — `report_status_changed`, `match_decided`,
+`moderation_resolved`, `category_changed` — written at
+`api/reports.php:397`, `api/matches.php:157`, `api/moderation.php:274` and three
+points in `api/categories.php`. The specific action goes in `detail`, as a
+sentence: `reject: suggested -> rejected`, `dismiss on report 6`,
+`Audit Trail Renamed: retired`.
+
+`target_type` needed nothing — `002` had already allowed `report`, `match`,
+`category` and `moderation_case`.
+
+Two deliberate exclusions, both visible in the code: a report's *creation* and
+the automatic move to "possible match" are in `status_logs` but not here.
+Neither is a person changing something, and an audit log full of the system
+talking to itself is harder to read than one that is not.
 
 ### G6 — No session inventory, so sessions cannot be revoked
 
@@ -305,7 +331,14 @@ part of the system, these are deliverables, not decoration.
 * The demo selector's dead code still ships in the bundle (the *password* does
   not). "It is not in the production build" is a better sentence than "it is in
   the build but never runs."
-* No `429` anywhere; no `409` outside `match_decide()` and `moderation_decide()`.
+* No `429` anywhere; no `409` outside `match_decide()`, `moderation_decide()`
+  and `report_update()`.
+* ~~A third path segment was silently dropped, so the router answered a URL
+  that does not exist: `GET /matches/1/claims` returned the match, and
+  `GET /users/1/password` returned the user.~~ Closed 25 September 2026.
+  `api/index.php` now refuses any third segment except `/reports/{id}/photos`,
+  which is the only route that has one. Found by asking the API for endpoints
+  it does not have, not by reading it. Cases EH-07 to EH-10.
 
 ---
 
