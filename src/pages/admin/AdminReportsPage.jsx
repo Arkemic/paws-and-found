@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ListChecks, Search } from 'lucide-react'
+import { CircleCheck, HandHeart, ListChecks, Search, TriangleAlert } from 'lucide-react'
 import photoPlaceholder from '@/assets/pet-photo-placeholder.png'
 import { Button, EmptyState, LoadingSkeleton, Select, SidePanel } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { Pagination } from '@/components/Pagination'
+import { StatTile } from '@/components/StatTile'
 import { ReportTypeBadge } from '@/components/ReportTypeBadge'
 import { StatusBadge } from '@/components/StatusBadge'
 import {
@@ -137,6 +138,37 @@ export function AdminReportsPage() {
   return (
     <div className="flex flex-col gap-6">
       {header}
+
+      {/* The shape of the whole record set, before any filter narrows it.
+          Counted from `reports` rather than from the filtered view on purpose:
+          these answer "what is in the system", and a total that moved every
+          time somebody typed in the search box would answer nothing. */}
+      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <li className="contents">
+          <StatTile icon={ListChecks} label="Records" value={reports.length} />
+        </li>
+        <li className="contents">
+          <StatTile
+            icon={TriangleAlert}
+            label="Lost reports"
+            value={reports.filter((r) => r.reportType === REPORT_TYPES.LOST).length}
+          />
+        </li>
+        <li className="contents">
+          <StatTile
+            icon={HandHeart}
+            label="Found reports"
+            value={reports.filter((r) => r.reportType === REPORT_TYPES.FOUND).length}
+          />
+        </li>
+        <li className="contents">
+          <StatTile
+            icon={CircleCheck}
+            label="Back home"
+            value={reports.filter((r) => r.status === 'returned').length}
+          />
+        </li>
+      </ul>
 
       <div className="flex flex-col gap-3">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_10rem_11rem_10rem]">

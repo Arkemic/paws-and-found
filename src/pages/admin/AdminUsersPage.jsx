@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Users } from 'lucide-react'
+import { Search, ShieldAlert, UserCog, UserRound, Users } from 'lucide-react'
 import { Button, EmptyState, LoadingSkeleton, Select, SidePanel } from '@/components/ui'
 import { Avatar } from '@/components/Avatar'
+import { StatTile } from '@/components/StatTile'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PageHeader } from '@/components/PageHeader'
 import { ROLES, ROLE_LABELS } from '@/constants'
@@ -134,6 +135,41 @@ export function AdminUsersPage() {
   return (
     <div className="flex flex-col gap-6">
       {header}
+
+      {/* Four counts, each one a question an administrator opens this page to
+          answer. They are small numbers because the system is small; a count
+          of 10 is a fact, not an embarrassment, and hiding it would only mean
+          counting the rows by hand.
+          
+          "Needs attention" is the one that earns its place: suspended and
+          locked accounts are the two states somebody is waiting on, and they
+          are otherwise three filter clicks apart. */}
+      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <li className="contents">
+          <StatTile icon={Users} label="Accounts" value={users.length} />
+        </li>
+        <li className="contents">
+          <StatTile
+            icon={UserRound}
+            label="Community members"
+            value={users.filter((user) => user.role === ROLES.USER).length}
+          />
+        </li>
+        <li className="contents">
+          <StatTile
+            icon={UserCog}
+            label="Coordinators and admins"
+            value={users.filter((user) => user.role !== ROLES.USER).length}
+          />
+        </li>
+        <li className="contents">
+          <StatTile
+            icon={ShieldAlert}
+            label="Need attention"
+            value={users.filter((user) => user.accountStatus !== 'active').length}
+          />
+        </li>
+      </ul>
 
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_11rem_11rem]">
         <label className="relative">
