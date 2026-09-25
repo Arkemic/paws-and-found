@@ -268,6 +268,15 @@ export function HelpPage() {
             className="absolute inset-0 hidden size-full object-cover object-[75%_50%] lg:block"
           />
 
+          {/* The same scrim the homepage and About heroes carry. The amber
+              route ribbon in IMG-028 runs left across the band at 1366px and
+              lands under the description, which measured 2.53:1 there — the
+              heading was fine, so looking at it would not have caught it. */}
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(254,249,240,0.97)_0%,rgba(254,249,240,0.96)_38%,rgba(254,249,240,0.90)_50%,rgba(254,249,240,0.45)_60%,transparent_74%)] lg:block"
+          />
+
           <Container className="relative flex flex-col justify-center py-11 sm:py-14 lg:min-h-[25rem] lg:pb-20">
             <div className="lg:max-w-[46%]">
               <PageHeader

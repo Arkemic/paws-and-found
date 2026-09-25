@@ -83,15 +83,30 @@ export function HomePage() {
               className="size-full object-cover object-[60%_35%] opacity-90"
               fetchPriority="high"
             />
+            {/* A scrim, not a filter.
+            
+                The headline, the paragraph and the announcement strip all sit
+                over this photograph, and what is behind any one word depends
+                on the crop — a mountain at one width, open sky at another.
+                Darkening or blurring the whole image would fix that by
+                throwing away the picture.
+            
+                This lightens only the left, where the text is, and is gone by
+                the time it reaches the artwork that matters. Measured after
+                the fact rather than guessed: see the contrast readings in
+                docs/design-system.md. */}
+            <span className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,249,246,0.97)_0%,rgba(251,249,246,0.93)_28%,rgba(251,249,246,0.66)_46%,rgba(251,249,246,0.18)_60%,transparent_72%)]" />
             <span className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent to-surface" />
           </div>
 
           <PatternVeil />
-          <RadarOrnament tone="teal" size={660} strength={2} className="-top-32 -right-40 lg:-right-24" />
+          {/* Halved, and pushed further out. IMG-018 is already a landscape; a radar
+              sweep at full strength on top of it was two decorations arguing over
+              the same corner while the headline tried to be read underneath. */}
+          <RadarOrnament tone="teal" size={660} strength={1} className="-top-32 -right-44 opacity-50 lg:-right-28" />
           <UrgentLine />
           <Hero />
           <Promises />
-          <SpeciesRow />
           <SectionCurve to="surface" />
         </div>
 
@@ -118,8 +133,16 @@ function UrgentLine() {
           Measured: against the lightest part of the artwork this line reads at
           5.1:1, but a dark leaf drifting behind it at some widths takes it to
           2.4. Text on a picture cannot promise its own contrast, so it stops
-          depending on the picture. */}
-      <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-pill bg-surface/85 px-4 py-2 text-sm text-fg-muted backdrop-blur-sm sm:w-fit">
+          depending on the picture.
+
+          `rounded-card` until `sm`, pill only once it fits on one line. A pill
+          radius on a block that has wrapped to three lines is half its height,
+          and the corner it cuts away reaches into the text: at 390px the
+          "Report a lost pet" link began 18px outside its own background and
+          was sitting on the page. Found by measuring, not by looking — it
+          reads as a slightly odd corner until you check what is under the
+          first two letters. */}
+      <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-card bg-surface/95 px-4 py-2 text-sm text-fg backdrop-blur-sm sm:w-fit sm:rounded-pill">
         <span className="inline-flex items-center gap-2 rounded-pill bg-accent-soft px-3 py-1 font-medium text-lost">
           <span className="size-1.5 rounded-full bg-accent-hover" aria-hidden="true" />
           Lost a pet today?
@@ -185,7 +208,11 @@ function Hero() {
             <span className="text-brand">someone looking for them.</span>
           </h1>
 
-          <p className="max-w-lg text-lg leading-relaxed text-fg-muted">
+          {/* `fg`, not `fg-muted`. Measured over the scrimmed photograph at
+              1366px the muted ink reads 4.46:1 — under AA by four hundredths,
+              which is not a rounding error, it is a fail. A darker neutral
+              costs nothing here and does not depend on where the crop lands. */}
+          <p className="max-w-lg text-lg leading-relaxed text-fg">
             Lost and found reports in one place, compared on the details that identify a pet —
             so the search stops depending on who saw which post.
           </p>
@@ -265,7 +292,7 @@ function HeroFigure({ value, label }) {
  */
 function Promises() {
   return (
-    <section className="pb-8">
+    <section className="pb-14 sm:pb-16">
       <Container>
         <ul className="grid gap-x-6 gap-y-4 rounded-card border border-border/60 bg-panel/70 px-5 py-5 backdrop-blur-sm sm:px-7 md:grid-cols-3">
           {PROMISES.map((promise) => {
@@ -293,8 +320,17 @@ function Promises() {
 const SPECIES_ICONS = { dog: Dog, cat: Cat, bird: Bird, rabbit: Rabbit }
 
 /**
- * Straight into Explore, filtered. The reference shops open with a row of
- * departments; the equivalent here is the animal somebody is looking for.
+ * Browse by pet.
+ *
+ * This row used to sit on its own between the promises strip and the recent
+ * reports, belonging to neither — a line of controls with nothing above or
+ * below explaining what they filtered. It now opens the section it actually
+ * acts on, under a label that says so.
+ *
+ * Chips, not buttons. They are a way of narrowing what is listed underneath,
+ * and dressing them like the Lost and Found actions said they were the same
+ * kind of thing. "All reports" carries the filled state because it is where
+ * the section already stands.
  */
 function SpeciesRow() {
   const { data: categories } = useAsync(loadActiveCategories)
@@ -311,15 +347,18 @@ function SpeciesRow() {
       return rank(a.id) - rank(b.id) || a.label.localeCompare(b.label)
     })
 
+  const chip =
+    'inline-flex h-11 shrink-0 items-center gap-2 rounded-pill border px-4 text-sm font-medium whitespace-nowrap transition-colors'
+
   return (
-    <Container className="pb-10 sm:pb-14">
-      <ul className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-        <li>
-          <Link
-            to="/explore"
-            className="inline-flex items-center gap-2 rounded-pill border border-border-strong bg-panel px-4 py-2 text-sm font-medium text-fg shadow-card transition-colors hover:bg-surface-muted"
-          >
-            <Search size={15} className="text-brand" aria-hidden="true" />
+    <nav aria-label="Browse reports by pet" className="flex flex-col gap-2.5">
+      <h3 className="text-sm font-medium text-fg-muted">Browse by pet</h3>
+      {/* Scrolls rather than wraps on a phone: five chips on two lines pushed
+          the first report card off the fold, and none of them may disappear. */}
+      <ul className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+        <li className="snap-start">
+          <Link to="/explore" className={cn(chip, 'border-brand/30 bg-brand-soft text-brand-hover')}>
+            <Search size={16} aria-hidden="true" />
             All reports
           </Link>
         </li>
@@ -327,19 +366,19 @@ function SpeciesRow() {
           const Icon = SPECIES_ICONS[category.id] ?? PawPrint
 
           return (
-            <li key={category.id}>
+            <li key={category.id} className="snap-start">
               <Link
                 to={`/explore?species=${category.id}`}
-                className="inline-flex items-center gap-2 rounded-pill border border-border-strong bg-panel px-4 py-2 text-sm font-medium text-fg shadow-card transition-colors hover:bg-surface-muted"
+                className={cn(chip, 'border-border-strong bg-panel text-fg hover:bg-surface-muted')}
               >
-                <Icon size={15} className="text-brand" aria-hidden="true" />
+                <Icon size={16} className="text-brand" aria-hidden="true" />
                 {category.label}
               </Link>
             </li>
           )
         })}
       </ul>
-    </Container>
+    </nav>
   )
 }
 
@@ -495,6 +534,8 @@ function RecentReports() {
             </Link>
           }
         />
+
+        <SpeciesRow />
 
         {isLoading && (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-busy="true">
@@ -653,29 +694,23 @@ function Reunions() {
 
   if (isLoading || !reunions || reunions.length === 0) return null
 
-  const [featured, ...rest] = reunions
+  // Three, so the row is even. "See all reunions" is where the rest live.
+  const stories = reunions.slice(0, 3)
 
   return (
     <section className="reunion-ground relative isolate overflow-hidden bg-warm-band py-14 sm:py-20">
       <WovenVeil />
       <RouteOrnament tone="amber" size={520} className="-right-40 -bottom-16 rotate-6" />
-      <Container className="flex flex-col gap-8">
-        {/* IMG-015 opens the chapter: what the cases below actually end in.
-            It sits slightly proud of the section's rhythm on wide screens —
-            the one place a photograph is allowed to break the grid — and
-            stacks above the text on a phone. */}
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-10">
-          <img
-            src={reunionImage}
-            alt="A dog back home, lying on the floor while somebody kneels beside it."
-            width="1400"
-            height="1050"
-            loading="lazy"
-            decoding="async"
-            className="w-full rounded-card object-cover shadow-raised lg:-my-6 lg:w-1/2 lg:max-w-md xl:max-w-lg"
-          />
+      <Container className="flex flex-col gap-10">
+        {/* The chapter opening: what these cases are, and one photograph of
+            what one looks like afterwards.
 
-          <div className="min-w-0 flex-1">
+            IMG-015 used to be half the width and taller than the text beside
+            it, which made it compete with the stories below for the same job.
+            It is shallower now and clearly editorial — the stories are the
+            cards; this is the picture at the top of the page. */}
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12">
+          <div className="min-w-0 lg:w-[55%]">
             <SectionHeading
               title={
                 <span className="inline-flex items-center gap-2.5">
@@ -695,24 +730,30 @@ function Reunions() {
               }
             />
 
-            {/* One line of context so the column beside the photograph is not
-                simply empty: it also says what a reunion here actually is. */}
             <p className="mt-4 max-w-prose text-fg-muted">
               Every one of these began as two separate reports — a lost pet and a found one —
               that the system paired on their characteristics and a Pet Coordinator verified
               before anybody met.
             </p>
           </div>
+
+          <img
+            src={reunionImage}
+            alt="A dog back home, lying on the floor while somebody kneels beside it."
+            width="1400"
+            height="1050"
+            loading="lazy"
+            decoding="async"
+            className="aspect-16/9 w-full rounded-card object-cover object-center shadow-raised lg:w-[45%]"
+          />
         </div>
 
-        {/* One story told properly, then the others. The photographs are the
-            point of this section — a reunion shown at thumbnail size is just
-            another row of data. */}
-        <ul className="grid gap-5 lg:grid-cols-[1.25fr_1fr]">
-          <li className="lg:row-span-2">
-            <ReunionStory report={featured} featured />
-          </li>
-          {rest.map((report) => (
+        {/* Three of the same card. The featured-plus-two arrangement gave one
+            case a photograph four times the size of the others for no reason
+            anybody could point at — and on a page being marked, an
+            inconsistency reads as an accident rather than as editing. */}
+        <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {stories.map((report) => (
             <li key={report.id}>
               <ReunionStory report={report} />
             </li>
@@ -725,10 +766,10 @@ function Reunions() {
 }
 
 /**
- * One reunion. The featured variant leads with a large photograph above the
- * story; the others put a smaller one alongside it.
+ * One reunion: the same photograph, the same heading, the same summary and the
+ * same link, in the same order, at the same height as the two beside it.
  */
-function ReunionStory({ report, featured = false }) {
+function ReunionStory({ report }) {
   const photo = report.photos.find((p) => p.isPrimary) ?? report.photos[0]
   // A found pet often has no name, and two unnamed cats both read "Cat is
   // home", which looks like the same story told twice. The city separates
@@ -741,43 +782,30 @@ function ReunionStory({ report, featured = false }) {
   return (
     <Link
       to={`/pet/${report.id}`}
-      className={cn(
-        'card-interactive group flex h-full overflow-hidden rounded-card border border-border bg-panel shadow-card',
-        featured ? 'flex-col' : 'flex-row',
-      )}
+      className="card-interactive group flex h-full flex-col overflow-hidden rounded-card border border-border bg-panel shadow-card"
     >
       <img
         src={photo?.url ?? photoPlaceholder}
         alt=""
-        className={cn(
-          'shrink-0 bg-surface-muted object-cover',
-          featured ? 'aspect-16/10 w-full' : 'aspect-square w-2/5',
-        )}
+        className="aspect-16/10 w-full shrink-0 bg-surface-muted object-cover"
         loading="lazy"
       />
 
-      <div className={cn('flex min-w-0 flex-col gap-2', featured ? 'p-6' : 'p-5')}>
-        <p
-          className={cn(
-            'flex items-center gap-2 font-semibold text-fg',
-            featured ? 'text-2xl' : 'text-lg',
-          )}
-        >
-          <Heart
-            size={featured ? 20 : 16}
-            className="shrink-0 text-success"
-            aria-hidden="true"
-          />
+      <div className="flex min-w-0 flex-1 flex-col gap-2 p-5">
+        <p className="flex items-start gap-2 text-lg font-semibold text-fg">
+          <Heart size={17} className="mt-1 shrink-0 text-success" aria-hidden="true" />
           {heading}
         </p>
 
-        <p className={cn('text-fg-muted', featured ? 'text-base' : 'text-sm')}>
+        <p className="text-sm text-fg-muted">
           Reported {REPORT_TYPE_LABELS[report.reportType].toLowerCase()} in{' '}
           {report.location.city} on {formatDate(report.incidentDate)}, and reunited after a
           coordinator confirmed the match.
         </p>
 
-        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-2">
+        {/* `mt-auto` is what keeps this row on the same line across all three
+            when one summary runs longer than the others. */}
+        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-3">
           {days !== null && (
             <span className="rounded-pill bg-success-soft px-2.5 py-0.5 text-sm font-medium text-success-ink">
               Reunited in {days} {days === 1 ? 'day' : 'days'}

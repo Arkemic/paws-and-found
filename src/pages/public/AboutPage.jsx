@@ -9,10 +9,10 @@ import {
   Sparkles,
 } from 'lucide-react'
 import aboutIntro from '@/assets/img-007-about-intro.jpg'
+import aboutHero from '@/assets/img-029-about-community-hero.webp'
 import { Container } from '@/components/ui'
 import { PatternVeil } from '@/components/PatternVeil'
 import { RouteOrnament } from '@/components/Ornament'
-import { PageHeader } from '@/components/PageHeader'
 import { SectionHeading } from '@/components/SectionHeading'
 
 export function AboutPage() {
@@ -20,6 +20,7 @@ export function AboutPage() {
     // RootLayout pads <main>; this page runs its own full-bleed bands, so the
     // padding is cancelled and each section supplies its own.
     <div className="-my-8 flex flex-col">
+      <AboutHero />
       <WhyItExists />
       <ProblemAndChange />
       <BuiltForHere />
@@ -29,13 +30,85 @@ export function AboutPage() {
   )
 }
 
-function WhyItExists() {
+/**
+ * The page's opening.
+ *
+ * About used to start on "Why Paws&Found exists", which is a chapter, not an
+ * introduction — the page began mid-sentence while Explore and Help both
+ * announced themselves. This says what the project is; the section below it
+ * says why it was needed.
+ *
+ * Deliberately not built like Help. Help's band has a hard lower edge with a
+ * search field straddling it, because Help is somewhere you do something.
+ * Nothing here is a control: an eyebrow, a sentence set large, two lines of
+ * explanation, and a band that dissolves into the page rather than ending on
+ * an edge.
+ */
+function AboutHero() {
   return (
-    <section className="hero-ground relative isolate pt-10 pb-14 sm:pt-14 sm:pb-20">
+    <section className="relative isolate overflow-hidden bg-warm-band">
+      {/* IMG-029 from `lg`, where the text is capped clear of the scene. The
+          artwork's left half is open sky, which is where the words go. Below
+          `lg` it is hidden and the band keeps the cream on its own — the
+          neighbourhood is on the right-hand third and would sit under the
+          heading at any narrower width. */}
+      <img
+        src={aboutHero}
+        alt=""
+        className="absolute inset-0 hidden size-full object-cover object-[72%_50%] lg:block"
+        fetchPriority="high"
+      />
+
+      {/* The same scrim the homepage hero uses, for the same reason: IMG-029's
+          bottom-left corner is a stand of dark leaves, and at 1366px the
+          paragraph lands on them and reads 1.17:1. Lightening only the left
+          fixes it without touching the picture. Measured at 390, 768, 1366 and
+          1920 — see docs/design-system.md. */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(253,247,236,0.97)_0%,rgba(253,247,236,0.94)_30%,rgba(253,247,236,0.70)_48%,rgba(253,247,236,0.22)_62%,transparent_74%)] lg:block"
+      />
+
+      {/* Hands the band back to the canvas instead of stopping on a line. */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-surface"
+      />
+
+      <Container className="relative flex flex-col justify-center py-14 sm:py-16 lg:min-h-[24rem] lg:py-20">
+        <div className="flex flex-col gap-5 lg:max-w-[52%]">
+          <p className="text-sm font-semibold tracking-[0.14em] text-brand uppercase">
+            About Paws&amp;Found
+          </p>
+          <h1 className="text-[2.25rem] leading-[1.1] font-semibold tracking-tight text-balance text-fg sm:text-[2.75rem] lg:text-[3.25rem]">
+            Helping lost pets find their way home.
+          </h1>
+          {/* `fg`, not `fg-muted`: the right end of this paragraph reaches the
+              foliage at the left of IMG-029, which the scrim lightens but does
+              not erase. Muted ink measured 3.02:1 there at 1366px. */}
+          <p className="max-w-prose text-lg leading-relaxed text-fg">
+            Paws&amp;Found brings lost and found reports into one structured community system,
+            so they can be searched, compared and verified instead of scrolled past. It is
+            built by five students for the neighbourhoods they live in.
+          </p>
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+function WhyItExists() {
+  // Scaled down now that the hero is above it: this is the first chapter of
+  // the page, not a second opening.
+  return (
+    <section className="hero-ground relative isolate py-12 sm:py-16">
       <PatternVeil />
       <Container className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
         <div className="flex min-w-0 flex-1 flex-col gap-5">
-          <PageHeader
+          {/* A section heading, not a PageHeader: the hero above owns the
+              page's only `h1` now, and two of them is the heading-order fault
+              axe was catching before the redesign. */}
+          <SectionHeading
             title="Why Paws&Found exists"
             description="A missing pet is an emergency with no obvious place to go."
           />
@@ -57,7 +130,7 @@ function WhyItExists() {
           // Capped at the width the source can actually fill. Left uncapped it
           // stretched to the full container between `sm` and `lg` and was being
           // upscaled past its 800px source.
-          className="aspect-square w-full max-w-sm shrink-0 self-center rounded-[1.25rem] bg-surface-muted object-cover shadow-raised ring-1 ring-black/5 lg:-my-10 lg:w-[26rem] lg:max-w-none xl:w-[30rem]"
+          className="aspect-square w-full max-w-xs shrink-0 self-center rounded-[1.25rem] bg-surface-muted object-cover shadow-raised ring-1 ring-black/5 lg:w-[21rem] lg:max-w-none xl:w-[24rem]"
         />
       </Container>
     </section>
@@ -284,7 +357,7 @@ function WhoUsesIt() {
 
 function StudentProject() {
   return (
-    <section className="closing-ground relative isolate bg-surface-alt py-14 sm:py-16">
+    <section className="closing-ground relative isolate bg-surface-alt py-9 sm:py-10">
       <PatternVeil />
       <Container width="prose" className="flex flex-col gap-3 text-center">
         <h2 className="text-xl font-semibold text-fg">About this build</h2>

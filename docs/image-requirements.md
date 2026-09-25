@@ -59,6 +59,7 @@ replaced it in the redesign and the file has been deleted.
 | IMG-026 | `empty-queue-clear.webp` | `EmptyState` — nothing awaiting a coordinator | Low | **Delivered**, text cropped off |
 | IMG-027 | `img-027-homepage-reunion.webp` | The homepage hero photograph | **High** | **Delivered** at 1448×1086, placed |
 | IMG-028 | `img-028-help-safety.webp` | The Help & community safety hero band | **High** | **Delivered** at 1896×829, placed |
+| IMG-029 | `img-029-about-community-hero.webp` | The About page hero band | **High** | **Delivered** at 2000×434, placed |
 
 ### What the generated mockups need, in detail
 
@@ -97,6 +98,18 @@ search field stepping off the lower edge. Keying the cream out to put the
 artwork on teal was tried and abandoned: the route ribbon and the hills are
 drawn in near-white and came away with the background, leaving a pale wedge
 through the middle. A teal version would have to be generated as one.
+
+**IMG-029 — About community hero.** A wide illustrated band: a neighbourhood,
+a map pin, two people greeting a dog at a gate. Used as the ground of the About
+hero. Its left 45% is open sky, which is where the eyebrow, heading and
+paragraph sit; the scrim over it is what guarantees they stay readable, because
+the bottom-left corner is a stand of dark leaves that the text reaches at 1366
+and 1920. Below `lg` it is hidden and the band keeps the cream on its own.
+
+The four public bands now read as four different things, which was the point of
+generating them separately: **IMG-027** the reunion on the homepage, **IMG-008**
+discovery on Explore, **IMG-028** guidance on Help, **IMG-029** the community
+on About.
 
 **IMG-019 — footer horizon.** Dark teal band: hills, trees, a dog and a cat in
 silhouette, a warm low sun. The top edge should be a gentle wave rather than a
