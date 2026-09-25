@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Users } from 'lucide-react'
-import logoMark from '@/assets/pawsfound-logo-mark-v2.webp'
+import logoLockup from '@/assets/pawsfound-logo-horizontal.webp'
 import { Button, Container } from '@/components/ui'
 import { WovenVeil } from '@/components/PatternVeil'
 import { RouteOrnament } from '@/components/Ornament'
@@ -60,9 +60,8 @@ export function Footer() {
           one above another they made the footer longer than a phone screen. */}
       <Container className="grid grid-cols-2 gap-x-8 gap-y-8 py-12 sm:grid-cols-4 lg:grid-cols-[1.7fr_repeat(4,1fr)_1.5fr]">
         <div className="col-span-2 flex flex-col gap-2.5 sm:col-span-4 lg:col-span-1">
-          <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold text-fg">
-            <img src={logoMark} alt="" className="size-9" />
-            Paws&amp;Found
+          <Link to="/" className="flex w-fit items-center">
+            <img src={logoLockup} alt="Paws&Found" className="h-10 w-auto" />
           </Link>
           <p className="text-sm text-fg-muted">
             A community platform that helps lost pets and the people looking for them find

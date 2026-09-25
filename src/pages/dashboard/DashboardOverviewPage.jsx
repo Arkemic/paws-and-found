@@ -11,6 +11,7 @@ import { petService } from '@/services'
 import { cn } from '@/utils/cn'
 import { formatDate, formatShortDate } from '@/utils/date'
 import { loadDashboardSummary } from './dashboardSummary'
+import companions from '@/assets/img-020-companions.webp'
 
 /** How many timeline entries the Overview shows. It summarises; it is not the log. */
 const TIMELINE_LIMIT = 5
@@ -95,15 +96,30 @@ export function DashboardOverviewPage() {
             <p className="text-lg text-fg-muted">Here is where your cases stand today.</p>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
-            <Button as={Link} to="/report/lost" variant="accent" size="lg">
-              <TriangleAlert size={18} aria-hidden="true" />
-              Report a lost pet
-            </Button>
-            <Button as={Link} to="/report/found" size="lg">
-              <HandHeart size={18} aria-hidden="true" />
-              Report a found pet
-            </Button>
+          <div className="flex shrink-0 items-center gap-6">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button as={Link} to="/report/lost" variant="accent" size="lg">
+                <TriangleAlert size={18} aria-hidden="true" />
+                Report a lost pet
+              </Button>
+              <Button as={Link} to="/report/found" size="lg">
+                <HandHeart size={18} aria-hidden="true" />
+                Report a found pet
+              </Button>
+            </div>
+
+            {/* IMG-020, at the far end of the greeting. Decoration with a
+                subject rather than content — it carries no alt text because it
+                says nothing the heading beside it does not. Shown from `xl`
+                only: below that the buttons need the width. */}
+            <img
+              src={companions}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+              className="hidden h-32 w-auto shrink-0 xl:block"
+            />
           </div>
         </div>
       </section>

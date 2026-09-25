@@ -189,8 +189,45 @@ export function PrivacyPage() {
         </p>
         <p>
           All of the pets, people and incidents in the demonstration data are fictional. Questions
-          about your information, or a request to correct or remove it, should go to the project
-          team.
+          about your information, or a request to see, correct or remove it, should go to the
+          project's contact person:
+        </p>
+
+        {/* A privacy notice has to name somebody reachable, or the rights it
+            describes have nowhere to go. */}
+        <dl className="flex flex-col gap-2 rounded-card border border-border bg-layer p-4 text-sm not-italic">
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+            <dt className="text-fg-muted sm:w-28">Contact person</dt>
+            <dd className="font-medium text-fg">Kyle Michael V. Austria — Project Manager</dd>
+          </div>
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+            <dt className="text-fg-muted sm:w-28">Email</dt>
+            <dd>
+              <a
+                href="mailto:kmvaustria@mymail.mapua.edu.ph"
+                className="font-medium break-all text-brand hover:underline"
+              >
+                kmvaustria@mymail.mapua.edu.ph
+              </a>
+            </dd>
+          </div>
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+            <dt className="text-fg-muted sm:w-28">Telephone</dt>
+            <dd>
+              <a href="tel:+639176385291" className="font-medium text-fg hover:underline">
+                0917 638 5291
+              </a>
+            </dd>
+          </div>
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+            <dt className="text-fg-muted sm:w-28">Institution</dt>
+            <dd className="text-fg">Mapúa Makati University</dd>
+          </div>
+        </dl>
+
+        <p>
+          If you are not satisfied with how we answer, you may complain to the National Privacy
+          Commission at <span className="whitespace-nowrap">privacy.gov.ph</span>.
         </p>
       </Section>
 

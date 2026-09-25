@@ -3,10 +3,24 @@ import { Container } from '@/components/ui'
 import { ReportForm } from '@/components/report-form/ReportForm'
 import { ReportGuidance } from '@/components/report-form/ReportGuidance'
 import { REPORT_TYPES } from '@/constants'
+import landscapeStrip from '@/assets/img-021-landscape-strip.webp'
 
 export function ReportLostPage() {
   return (
-    <div className="lost-ground -my-8 py-8">
+    <div className="lost-ground relative isolate -my-8 overflow-hidden py-8">
+      {/* IMG-021 behind the page introduction, fading out before the
+          form begins. The wizard is a long task and the reference gives
+          it a place to start rather than a bare heading; below the fade
+          the fields sit on plain canvas, where they belong. Hidden below
+          `sm` — the header stacks there and the artwork would push the
+          first field off a phone screen. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-72 overflow-hidden sm:block"
+      >
+        <img src={landscapeStrip} alt="" className="size-full object-cover object-[70%_60%] opacity-55" />
+        <span className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-surface" />
+      </div>
 
       {/* The wizard owns its own two-column layout, so the step indicator can
           run the full width above the fields and the guidance. */}

@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { ArrowLeft, LogOut, Menu, X } from 'lucide-react'
-import logoMark from '@/assets/pawsfound-logo-mark-v2.webp'
+import logoLockup from '@/assets/pawsfound-logo-horizontal.webp'
 import { ROLE_LABELS } from '@/constants'
 import { cn } from '@/utils/cn'
 
@@ -107,9 +107,8 @@ export function WorkspaceShell({ label, items, counts, user, onSignOut, children
       {/* Phones and tablets: a bar with the brand and one button. The rail
           below it would otherwise push the actual work off the first screen. */}
       <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-panel px-4 py-2.5 lg:hidden">
-        <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight text-fg">
-          <img src={logoMark} alt="" className="size-8 shrink-0" />
-          Paws&amp;Found
+        <Link to="/" className="flex items-center">
+          <img src={logoLockup} alt="Paws&Found" className="h-8 w-auto" />
         </Link>
 
         <button
@@ -136,12 +135,8 @@ export function WorkspaceShell({ label, items, counts, user, onSignOut, children
       {/* Desktop: a fixed rail. `sticky` with its own scroll, so a long queue
           scrolls under navigation that stays put. */}
       <div className="hidden w-60 shrink-0 border-r border-border bg-panel lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
-        <Link
-          to="/"
-          className="flex items-center gap-2.5 border-b border-border px-4 py-4 text-lg font-semibold tracking-tight text-fg"
-        >
-          <img src={logoMark} alt="" className="size-9 shrink-0" />
-          Paws&amp;Found
+        <Link to="/" className="flex items-center border-b border-border px-4 py-4">
+          <img src={logoLockup} alt="Paws&Found" className="h-9 w-auto" />
         </Link>
 
         <div className="px-4 pt-4 pb-2">
