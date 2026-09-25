@@ -49,7 +49,7 @@ replaced it in the redesign and the file has been deleted.
 | --- | --- | --- | --- | --- |
 | IMG-013 | `pet-009-rex.jpg` | Report 009 (Rex) — the only seeded report still without a photograph | Medium | Needed |
 | IMG-018 | `img-018-hero-environment.webp` | Homepage hero — the illustrated ground the whole page stands on | **High** | **Delivered** |
-| IMG-019 | `img-019-footer-horizon.webp` | The footer band on every public page | **High** | **Delivered** |
+| IMG-019 | `img-019-footer-horizon.webp` | The footer band on every public page | **High** | **Delivered**, trimmed 2000×667 → 2000×517 |
 | IMG-020 | `img-020-companions.webp` | Dog and cat pair, cut out — dashboard greeting, auth, header bands | **High** | **Delivered**, not yet placed |
 | IMG-021 | `img-021-landscape-strip.webp` | Reusable header band: report wizard, customer dashboard, workspace headers | Medium | **Delivered** at 1908x824, not yet placed |
 | IMG-022 | `img-022-workspace-foot.png` | The illustration at the bottom of the staff and admin rails | Medium | Needed |
@@ -57,6 +57,8 @@ replaced it in the redesign and the file has been deleted.
 | IMG-024 | `empty-no-matches.webp` | `EmptyState` — no possible matches yet | Low | **Delivered**, text cropped off |
 | IMG-025 | `empty-no-notifications.webp` | `EmptyState` — nothing unread | Low | **Delivered**, text cropped off |
 | IMG-026 | `empty-queue-clear.webp` | `EmptyState` — nothing awaiting a coordinator | Low | **Delivered**, text cropped off |
+| IMG-027 | `img-027-homepage-reunion.webp` | The homepage hero photograph | **High** | **Delivered** at 1448×1086, placed |
+| IMG-028 | `img-028-help-safety.webp` | The Help & community safety hero band | **High** | **Delivered** at 1896×829, placed |
 
 ### What the generated mockups need, in detail
 
@@ -73,6 +75,28 @@ palette in `src/index.css`. **No animals** — the photograph sits on top of it.
 The left third must stay pale and uncluttered or the headline loses contrast.
 Landscape, **2400x1100**, transparent or pale-cream background. This is the one
 that changes the homepage most.
+
+**IMG-027 — homepage reunion.** Replaced IMG-006, which was a good photograph
+of a person with two pets — ownership, not the moment this site exists for. The
+new one is the reunion itself: a brown Aspin leaning into its owner's hands on a
+Philippine residential street in late-afternoon light, the owner crouched with
+their face outside the frame so the animal is what you look at. Placed on the
+homepage at `object-[52%_42%]`, which centres the crop on the dog's head.
+
+**IMG-028 — Help & safety.** A semi-flat illustration in the logo family:
+shield and check, clipboard, map pin, phone, a handover handshake, a dog. Used
+as the full-bleed ground of the Help hero rather than as an inset picture —
+Explore's header is a rounded panel with its illustration on the right, and
+Help had been copying that shape exactly. The left 45% of the artwork is clear
+cream, which is where the heading sits. Below `lg` it is hidden and the band
+keeps the cream on its own.
+
+**Asked for as deep teal with cream text; delivered light.** The composition
+carries the difference from Explore instead — full bleed, no card edge, and a
+search field stepping off the lower edge. Keying the cream out to put the
+artwork on teal was tried and abandoned: the route ribbon and the hills are
+drawn in near-white and came away with the background, leaving a pale wedge
+through the middle. A teal version would have to be generated as one.
 
 **IMG-019 — footer horizon.** Dark teal band: hills, trees, a dog and a cat in
 silhouette, a warm low sun. The top edge should be a gentle wave rather than a

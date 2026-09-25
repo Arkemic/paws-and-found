@@ -19,7 +19,7 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from 'lucide-react'
-import heroImage from '@/assets/img-006-homepage-hero.jpg'
+import heroImage from '@/assets/img-027-homepage-reunion.webp'
 import heroEnvironment from '@/assets/img-018-hero-environment.webp'
 import reunionImage from '@/assets/img-015-reunion-home.jpg'
 import emptyReportsImage from '@/assets/empty-no-reports.png'
@@ -222,13 +222,19 @@ function Hero() {
           </div>
         </div>
 
-        {/* Right: IMG-006, large and unboxed. The subjects are centred in the
-            source, so the crop keeps both animals in view at every width. */}
+        {/* Right: IMG-027, large and unboxed.
+        
+            IMG-006 was a fine photograph of a person with two pets, which is
+            not what this site is about — it showed ownership, not the moment
+            the site exists for. This one is the reunion: the dog is arriving,
+            the owner is crouched and reaching, and their face is out of frame
+            so the animal is what you look at. The crop is centred on the dog's
+            head, which sits just right of centre in the source. */}
         <div className="relative order-first lg:order-none">
           <img
             src={heroImage}
-            alt="A tan Aspin sitting beside its owner, who is holding a tabby cat, on the tiled porch of a Philippine home"
-            className="h-64 w-full rounded-[1.5rem] object-cover object-[38%_45%] shadow-raised ring-1 ring-black/5 sm:h-80 lg:h-[30rem]"
+            alt="A brown Aspin leaning into the hands of its owner, who is crouched beside it on a Philippine residential street in late-afternoon light"
+            className="h-64 w-full rounded-[1.5rem] object-cover object-[52%_42%] shadow-raised ring-1 ring-black/5 sm:h-80 lg:h-[30rem]"
             fetchPriority="high"
           />
         </div>

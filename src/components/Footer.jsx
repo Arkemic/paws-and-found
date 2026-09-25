@@ -58,7 +58,7 @@ export function Footer() {
       {/* Phones: the four link groups sit two by two, tablets four across, with
           the brand block and the call-to-action card spanning the row. Stacked
           one above another they made the footer longer than a phone screen. */}
-      <Container className="grid grid-cols-2 gap-x-8 gap-y-8 py-12 sm:grid-cols-4 lg:grid-cols-[1.7fr_repeat(4,1fr)_1.5fr]">
+      <Container className="relative grid grid-cols-2 gap-x-8 gap-y-7 py-9 sm:grid-cols-4 lg:grid-cols-[1.7fr_repeat(4,1fr)_1.5fr]">
         <div className="col-span-2 flex flex-col gap-2.5 sm:col-span-4 lg:col-span-1">
           <Link to="/" className="flex w-fit items-center">
             <img src={logoLockup} alt="Paws&Found" className="h-10 w-auto" />
@@ -109,15 +109,22 @@ export function Footer() {
       </Container>
 
       {/* The horizon, and the copyright line sitting on it.
-          
+
           One block rather than an image with text under it: the band carries
           its own dark ground, so the line reads as part of the scene instead
           of a caption beneath a picture. `aria-hidden` because it says
           nothing — the words are the words below it.
-          
-          Hidden below `sm`: at 390px a 3:1 band is a 130px sliver of mud, and
-          the phone footer is long enough already. */}
-      <div className="relative isolate mt-6 hidden sm:block">
+
+          The footer used to run to most of a viewport, and the height was not
+          the artwork: IMG-019's top 23% was fully transparent, so it rendered
+          as a field of empty cream as tall as the navigation above it. That is
+          trimmed out of the file now, and the band is pulled up under the
+          links so the wave begins where the navigation ends. What is left is
+          the picture.
+
+          Hidden below `sm`: at 390px a 4:1 band is a sliver of mud, and the
+          phone footer is long enough already. */}
+      <div className="relative isolate -mt-4 hidden sm:block lg:-mt-10">
         <img
           src={footerHorizon}
           alt=""

@@ -1,7 +1,17 @@
-import { ArrowDown, ArrowRight, MapPin, Scale, ShieldCheck, Sparkles } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowRight,
+  MapPin,
+  PawPrint,
+  Scale,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+} from 'lucide-react'
 import aboutIntro from '@/assets/img-007-about-intro.jpg'
 import { Container } from '@/components/ui'
 import { PatternVeil } from '@/components/PatternVeil'
+import { RouteOrnament } from '@/components/Ornament'
 import { PageHeader } from '@/components/PageHeader'
 import { SectionHeading } from '@/components/SectionHeading'
 
@@ -13,6 +23,7 @@ export function AboutPage() {
       <WhyItExists />
       <ProblemAndChange />
       <BuiltForHere />
+      <WhoUsesIt />
       <StudentProject />
     </div>
   )
@@ -93,7 +104,7 @@ const CHANGES = [
 
 function ProblemAndChange() {
   return (
-    <section className="relative isolate border-y border-border/60 bg-surface-alt py-16 sm:py-24">
+    <section className="relative isolate border-y border-border/60 bg-surface-alt py-12 sm:py-16">
       <PatternVeil />
       <Container className="flex flex-col gap-10">
         <SectionHeading
@@ -102,14 +113,21 @@ function ProblemAndChange() {
           centered
         />
 
-        <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-center lg:gap-8">
-          <div className="flex flex-1 flex-col gap-4">
-            <h3 className="text-lg font-semibold text-fg">Today</h3>
+        <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-stretch lg:gap-6">
+          {/* Centred against the taller column opposite: there are three
+              problems and four answers, and top-aligning both left a column of
+              nothing under the last problem. */}
+          <div className="flex flex-1 flex-col gap-4 lg:justify-center">
+            <h3 className="text-lg font-semibold text-fg-muted">Today</h3>
             <ul className="flex flex-col gap-3">
               {PROBLEMS.map((item) => (
                 <li
                   key={item.title}
-                  className="rounded-card border border-border bg-surface-muted p-5"
+                  // Dashed and unlifted, against the solid, shadowed cards
+                  // opposite. The two stacks were the same weight before, so
+                  // nothing said which one was the problem and which was the
+                  // answer.
+                  className="rounded-card border border-dashed border-border-strong bg-surface-muted p-5"
                 >
                   <p className="font-medium text-fg">{item.title}</p>
                   {/* `fg` rather than `fg-muted`: on `surface-muted` the muted
@@ -121,15 +139,21 @@ function ProblemAndChange() {
             </ul>
           </div>
 
-          {/* Decorative — the two headings above already say which way this
-              reads. Turns to point down once the columns stack. */}
-          <span
+          {/* One route running the height of both stacks, with the arrow on
+              it, rather than a lone badge floating in the gap. Everything on
+              the left crosses this line and becomes everything on the right —
+              which is what the section is called. Turns horizontal, pointing
+              down, once the columns stack. */}
+          <div
             aria-hidden="true"
-            className="flex size-11 shrink-0 items-center justify-center self-center rounded-full border border-border bg-panel text-brand shadow-card"
+            className="relative flex shrink-0 items-center justify-center lg:w-14"
           >
-            <ArrowDown size={20} className="lg:hidden" />
-            <ArrowRight size={20} className="hidden lg:block" />
-          </span>
+            <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-dashed border-border-strong lg:inset-x-auto lg:inset-y-4 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-0 lg:border-t-0 lg:border-l lg:border-dashed" />
+            <span className="relative flex size-11 items-center justify-center rounded-full border border-border bg-panel text-brand shadow-card">
+              <ArrowDown size={20} className="lg:hidden" />
+              <ArrowRight size={20} className="hidden lg:block" />
+            </span>
+          </div>
 
           <div className="flex flex-1 flex-col gap-4">
             <h3 className="text-lg font-semibold text-fg">With Paws&amp;Found</h3>
@@ -160,6 +184,32 @@ function ProblemAndChange() {
   )
 }
 
+/**
+ * What "built for the Philippine community" actually means, as three things
+ * the system does rather than one paragraph claiming it does them.
+ *
+ * The copy is the copy that was already in the section — it had been written
+ * as two paragraphs beside a list of user roles, which is why the heading and
+ * what sat under it were describing different subjects.
+ */
+const LOCAL_DESIGN = [
+  {
+    icon: MapPin,
+    title: 'Barangay-level areas',
+    body: 'A location is a city and an approximate area, never an address — which is how people describe where a pet was last seen, and it keeps a home off a public page.',
+  },
+  {
+    icon: PawPrint,
+    title: 'Local pet terminology',
+    body: 'Breed is an open field, not a fixed list, so Aspin and Puspin are as reportable as any pedigree. Nobody has to pick the nearest foreign breed.',
+  },
+  {
+    icon: Smartphone,
+    title: 'Mobile-first reporting',
+    body: 'Every page is built for a phone first, because that is where a report gets filed — usually outdoors, usually in a hurry, usually one-handed.',
+  },
+]
+
 const ROLES = [
   {
     title: 'Owners and finders',
@@ -177,36 +227,56 @@ const ROLES = [
 
 function BuiltForHere() {
   return (
-    <section className="py-16 sm:py-24">
+    // The heading promised Philippine-specific design and the section under it
+    // explained user roles — two different subjects sharing one title. The
+    // three principles now answer the heading, and the roles have a section of
+    // their own below.
+    <section className="relative isolate overflow-hidden py-12 sm:py-16">
+      <RouteOrnament tone="teal" size={620} className="-top-24 -right-40 rotate-6" />
       <Container className="flex flex-col gap-10">
         <SectionHeading
           title="Built for the Philippine community"
-          description="Barangay-level areas, local breeds, and the phone most people will actually open it on."
+          description="Three decisions that are specific to where this is used, rather than a theme applied over a generic system."
+          centered
         />
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div className="flex flex-col gap-4 text-lg leading-relaxed text-fg-muted">
-            <p>
-              Locations are recorded as a city and an approximate area rather than an address,
-              which is how people describe where a pet was last seen — and it keeps a home
-              address off a public page.
-            </p>
-            <p>
-              Breed is an open field, not a fixed list, so <em>Aspin</em> and <em>Puspin</em>{' '}
-              are as reportable as any pedigree. Every page is built to work on a phone first,
-              because that is where a report gets filed — usually outdoors, usually in a hurry.
-            </p>
-          </div>
+        <ul className="grid gap-8 sm:grid-cols-3 sm:gap-6">
+          {LOCAL_DESIGN.map((item) => {
+            const Icon = item.icon
 
-          <ul className="flex flex-col gap-3">
-            {ROLES.map((role) => (
-              <li key={role.title} className="rounded-card border border-border bg-panel p-5 shadow-card">
-                <p className="font-medium text-fg">{role.title}</p>
-                <p className="mt-1 text-fg-muted">{role.body}</p>
+            return (
+              <li key={item.title} className="flex flex-col items-center gap-3 text-center">
+                <span className="flex size-14 items-center justify-center rounded-full bg-brand-soft text-brand">
+                  <Icon size={26} aria-hidden="true" strokeWidth={1.75} />
+                </span>
+                <h3 className="text-lg font-semibold text-fg">{item.title}</h3>
+                <p className="max-w-xs leading-relaxed text-fg-muted">{item.body}</p>
               </li>
-            ))}
-          </ul>
-        </div>
+            )
+          })}
+        </ul>
+      </Container>
+    </section>
+  )
+}
+
+function WhoUsesIt() {
+  return (
+    <section className="border-t border-border/60 bg-surface-alt py-10 sm:py-12">
+      <Container className="flex flex-col gap-6">
+        <SectionHeading
+          title="Who uses Paws&Found"
+          description="Three roles, with different things to do and different things they are allowed to see."
+        />
+
+        <ul className="grid gap-3 sm:grid-cols-3">
+          {ROLES.map((role) => (
+            <li key={role.title} className="rounded-card border border-border bg-panel p-5 shadow-card">
+              <p className="font-medium text-fg">{role.title}</p>
+              <p className="mt-1 text-fg-muted">{role.body}</p>
+            </li>
+          ))}
+        </ul>
       </Container>
     </section>
   )

@@ -39,3 +39,4 @@ api/uploads/*
 
 # Python bytecode from the audit scripts
 __pycache__/
+scripts/.local/
