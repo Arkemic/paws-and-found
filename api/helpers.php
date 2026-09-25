@@ -112,10 +112,38 @@ function start_session(): void
         'httponly' => true,   // JavaScript cannot read it, so XSS cannot steal it
         'samesite' => 'Lax',
         'path' => '/',
-        // 'secure' => true — switch on when the site is served over HTTPS.
+        // Set from how the request actually arrived rather than from a
+        // constant, so one codebase is correct in both places: a Secure cookie
+        // is never sent back over plain HTTP, so hard-coding it true would
+        // silently break every sign-in on a laptop, and hard-coding it false
+        // would ship the session cookie unprotected on the deployed site.
+        'secure' => request_is_https(),
     ]);
 
     session_start();
+}
+
+/**
+ * Whether this request arrived over HTTPS.
+ *
+ * Shared hosts commonly terminate TLS at a proxy and forward plain HTTP to
+ * PHP, so `$_SERVER['HTTPS']` alone reports "no" on a site that is plainly
+ * padlocked in the browser. X-Forwarded-Proto is set by that proxy and is
+ * trusted here for one narrow purpose — deciding whether to mark our own
+ * cookie Secure — where the worst a forged header can do is make a cookie
+ * stricter than it needed to be.
+ */
+function request_is_https(): bool
+{
+    if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
+        return true;
+    }
+
+    if (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') {
+        return true;
+    }
+
+    return ((int) ($_SERVER['SERVER_PORT'] ?? 0)) === 443;
 }
 
 /**

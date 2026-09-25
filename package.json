@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:deploy": "node scripts/build-deploy.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "a11y": "node scripts/a11y.mjs",

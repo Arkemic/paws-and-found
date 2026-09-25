@@ -54,12 +54,32 @@ take now.
 
 ### Paid or free
 
-**Pay.** A month of entry-level shared hosting is roughly ₱100–300. Free tiers
-(InfinityFree, AwardSpace and similar) exist and would technically work, but
-they share IPs with everything else on them, throttle without warning, and
-some restrict PHP functions or uploads. For one graded presentation across
-three devices, the failure mode of a free host is "the demonstration does not
-load" in front of the person grading it.
+**Pay, and keep a free account as the rehearsal and the fallback.**
+
+A month of entry-level shared hosting is roughly ₱100–300. The free hosts
+(InfinityFree, AwardSpace and similar) do genuinely run PHP, MySQL and free
+SSL, and Paws&Found is small enough for any of them — 32 reports, 10 accounts,
+modest images.
+
+The specific risk is not size, it is what free hosts do to *automated*
+requests. Several of them answer a request that does not look like a browser
+with an HTML interstitial — a JavaScript challenge or a "checking your
+browser" page — instead of the response. For an ordinary page view that is
+invisible. For a REST API it means `fetch` receives HTML where it expected
+JSON, and our own `audit_cases.py` suite cannot run against the deployed site
+at all. That is exactly the evidence we need on presentation day.
+
+So: register the free account now and deploy to it first, because getting the
+process right is worth doing on something that costs nothing. Then verify on
+it, specifically:
+
+* `https://<subdomain>/api/reports` returns **JSON**, not HTML, from `curl`;
+* signing in works and survives a reload;
+* the same account works on three devices at once.
+
+If all three hold after a few days of use, keep it. If any of them wobbles,
+move to the paid host — and find that out a week early rather than in front of
+the person grading us.
 
 Whoever we pick must be confirmed to have: **PHP 8.1+**, **MySQL 5.7+ or
 MariaDB 10.4+**, **phpMyAdmin**, **`.htaccess` with `mod_rewrite`**, **free
@@ -72,66 +92,67 @@ unused.
 
 ## 2. What the code needs before it can go anywhere
 
-Six changes. None is large; all of them are currently hard-coded for XAMPP.
+**Done, 25 September 2026.** All six are in and verified; the list below now
+describes what exists rather than what is wanted. Deploying is a file copy plus
+one config file.
 
-### 2.1 `vite.config.js` — the base path is hard-coded
+### 2.1 `vite.config.js` — the base path  ·  **done**
 
-    base: command === 'build' ? '/pawsandfound/' : '/',
+    npm run build           ->  /pawsandfound/   (local Apache, and the a11y run)
+    npm run build:deploy    ->  /               (a deployed host)
 
-At a domain root this must be `/`. Make it an environment variable so both
-layouts work from the same source:
+`build:deploy` is a four-line Node script rather than
+`VITE_BASE=/ npm run build`, because in Git Bash on Windows that does not work:
+MSYS rewrites the bare `/` into the Git installation path and the build comes
+out asking for `/Program Files/Git/assets/…`. Verified both ways — the symptom
+is a blank page with four 404s, which is a miserable thing to meet on
+deployment day.
 
-    base: command === 'build' ? (process.env.VITE_BASE ?? '/') : '/',
+`src/services/api.js` already derives the API path from
+`import.meta.env.BASE_URL`, so nothing else changes.
 
-`src/services/api.js` already derives the API path from `import.meta.env.BASE_URL`,
-so nothing else changes.
+### 2.2 `public/.htaccess` — `RewriteBase`  ·  **documented, one line to change**
 
-### 2.2 `public/.htaccess` — `RewriteBase` is hard-coded
+    RewriteBase /pawsandfound/      ->      RewriteBase /
 
-    RewriteBase /pawsandfound/
+It must match the base the site was built with. **These two disagreeing is the
+most likely way a first deploy fails**, so the file now says so directly above
+the line, with both settings written out.
 
-Becomes `RewriteBase /` at a domain root. Same file, one line, and it must
-match whatever `VITE_BASE` was built with. **These two disagreeing is the most
-likely way the first deploy fails**, and the symptom is a blank page with 404s
-on the assets.
+### 2.3 `api/config.php` — credentials  ·  **done**
 
-### 2.3 `api/config.php` — credentials are in git
+`config.php` now reads `api/config.local.php` first when one exists, and every
+default below it steps aside for whatever that file defined. Nothing else in
+the API changed — the constants have the same names and the same meanings.
 
-Today it holds `root`, an empty password, and port 3307, committed to the
-repository. That is right for XAMPP and wrong for anything public.
-
-Plan: `config.php` reads from an untracked `config.local.php` when one exists,
-and falls back to the XAMPP defaults so nobody's laptop breaks. Commit a
-`config.example.php` with the shape and no values. `.gitignore` already
-excludes `.env*`; add `api/config.local.php` to it.
+`api/config.example.php` is the tracked template; `api/config.local.php` is in
+`.gitignore` and must stay there. Verified both ways: the API works with no
+local file, and picks the file up when there is one.
 
 The hosted database gets **its own user**, not `root`, with rights on the
 `pawsandfound` schema only.
 
-### 2.4 Session cookies need `Secure` over HTTPS
+### 2.4 Session cookies and `Secure`  ·  **done**
 
-`api/helpers.php:start_session()` has the flag commented out:
+Set from how the request actually arrived, not from a constant — a Secure
+cookie is never sent back over plain HTTP, so hard-coding it true breaks every
+sign-in on a laptop, and hard-coding it false ships the session cookie
+unprotected on the deployed site.
 
-    // 'secure' => true — switch on when the site is served over HTTPS.
+`request_is_https()` also accepts `X-Forwarded-Proto`, because shared hosts
+routinely terminate TLS at a proxy and hand plain HTTP to PHP — without it the
+cookie would be left insecure on a site that is plainly padlocked in the
+browser.
 
-It should be set from whether the request actually arrived over HTTPS, so one
-codebase is correct in both places:
+### 2.5 Errors must not be displayed in production  ·  **done**
 
-    'secure' => !empty($_SERVER['HTTPS']),
+`config.php` switches on `APP_ENV`: production turns `display_errors` off and
+`log_errors` on; development turns them the other way. A warning printed into
+a JSON response breaks the JSON *and* puts our file paths on somebody's
+screen, and many shared hosts leave `display_errors` on by default.
 
-### 2.5 Errors must not be displayed in production
-
-`display_errors` is never set, so it follows the host's `php.ini`. Many shared
-hosts leave it **on**. A PHP warning printed into a JSON response both breaks
-the response and leaks file paths.
-
-The API bootstrap should set, when not in development:
-
-    ini_set('display_errors', '0');
-    ini_set('log_errors', '1');
-
-`api/index.php` already catches `PDOException` and answers a generic message;
-this closes the gap for everything that is not a PDO exception.
+`api/index.php` already caught `PDOException`; this closes the gap for
+everything that is not one.
 
 ### 2.6 The uploads folder
 
@@ -168,7 +189,7 @@ Roughly 45 minutes the first time, 5 minutes for every redeploy after.
 6. Verify: `https://<domain>/api/reports` returns JSON.
 
 **Frontend**
-7. `VITE_BASE=/ npm run build`
+7. `npm run build:deploy`
 8. Upload the contents of `dist/` — not the folder — into `public_html/`,
    including `.htaccess` with `RewriteBase /`.
 9. Verify: the homepage loads, Explore lists reports, a report detail opens.
