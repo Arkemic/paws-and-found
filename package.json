@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "a11y": "node scripts/a11y.mjs",
-    "audit": "python scripts/audit_cases.py"
+    "audit": "python scripts/audit_cases.py",
+    "multi-device": "python scripts/multi_device.py"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

@@ -3,10 +3,17 @@
 -- ITS122P – AM5 · Group 3 · Final Project (Database + Backend)
 --
 -- Target: MariaDB 10.4+ (what XAMPP ships) or MySQL 8, via phpMyAdmin.
--- Verified imported on MariaDB 10.4.32 (XAMPP) on 2026-08-19:
---   11 tables, 20 foreign keys, 2 CHECK constraints, all enforced.
--- Re-verified on 2026-09-23 after the lockout, audit and consent tables were
--- added: 14 domain tables plus schema_migrations, 23 foreign keys.
+-- Counted from information_schema on the running database, 25 September 2026:
+--
+--   15 tables      the 14 on the ERD, plus schema_migrations
+--   23 foreign keys    all 23 on the 14; schema_migrations has none
+--   15 primary keys    one per table
+--    7 unique constraints
+--    2 CHECK constraints
+--
+-- First imported on MariaDB 10.4.32 (XAMPP) on 2026-08-19 at 11 tables and 20
+-- foreign keys; the lockout, audit and consent tables arrived with the
+-- hardening pass as migrations 001 to 004.
 --
 -- NOTE: this XAMPP installation runs MySQL on PORT 3307, not the default 3306,
 -- because a separate MySQL 8.0 Windows service holds 3306. phpMyAdmin is already

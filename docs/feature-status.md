@@ -76,11 +76,21 @@ it can be run again at any time.
 | F. File upload | 7 | 7 |
 | G. Functional | 31 | 31 |
 | H. Error handling | 10 | 10 |
-| **Total** | **150** | **150** |
+| **Total** | **151** | **151** |
 
 Last run 2026-09-25 against the deployed build. Authentication grew with the
 three-attempt lockout and CSRF; error handling grew when a routing fault was
-found — see below.
+found — see below; SQL-14 was added so the ERD's "23 foreign keys" is asserted
+by the suite rather than only by a document.
+
+    npm run multi-device
+
+A second suite: **40 checks across three independent sessions** — three cookie
+jars, three CSRF tokens, as three browsers on three machines have. It proves
+the shared database is the authority for a report change, a read-state change,
+a role downgrade, a suspension, a three-attempt lock, an administrator unlock,
+and five forbidden addresses. All 40 passing. It takes `PAWS_API` so it can be
+pointed at the LAN address or at the hosted site.
 
 ## Cross-cutting
 

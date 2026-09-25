@@ -282,6 +282,7 @@ export function HelpPage() {
               <PageHeader
                 title="Help & community safety"
                 description="How to file a report that helps, how a match is checked, and how to stay safe arranging a handover."
+                onArtwork
               />
             </div>
           </Container>

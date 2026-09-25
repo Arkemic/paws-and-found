@@ -308,20 +308,41 @@ no real credentials in git; `display_errors=0` and `log_errors=1` in production;
 `secure` cookies over HTTPS; a host; and the three devices pointed at one
 database.
 
-### G9 — No migrations
+### G9 — No migrations  ·  **closed 23 September 2026**
 
-`database/schema.sql` drops and recreates all eleven tables. Adding one column
+`database/schema.sql` drops and recreates every table. Adding one column
 during a live demonstration means rebuilding the database and losing the data on
 screen.
 
 **Needs:** `database/migrations/` with numbered, additive files.
 
-### G10 — The defence documents do not exist
+**Done.** `database/migrations/` holds `001` to `004`, each additive, each
+recording itself in `schema_migrations`. The baseline is kept in step: a fresh
+import of `schema.sql` was diffed against the migrated database table by table
+on 25 September and came back identical, 15 tables each.
+
+### G10 — The defence documents do not exist  ·  **closed 25 September 2026**
 
 None of `erd-defense.md`, `role-permissions.md`, `presentation-defense.md`,
 `database-defense-cheatsheet.md`, `live-database-change-playbook.md` or
 `matching-explanation.md` is written. Since every member may be asked about any
 part of the system, these are deliverables, not decoration.
+
+**All six written**, each read out of the code or the running database rather
+than out of memory, each carrying `file:line` or a runnable query:
+
+| | |
+| --- | --- |
+| `erd-defense.md` | The database, table by table, from `information_schema` |
+| `database-defense-cheatsheet.md` | One page: the counts, the delete rules, three refusals to run live |
+| `role-permissions.md` | What the **server** allows per role, with the guard for each |
+| `matching-explanation.md` | The seven weights, the two gates, a worked example that adds to 85 |
+| `live-database-change-playbook.md` | Adding a column during the demonstration without losing the data |
+| `presentation-defense.md` | The page everyone reads: the request traced end to end, eleven likely questions, what is honestly missing |
+
+A seventh, `report-corrections.md`, lists what to change in the written Phase 4
+report — the two persistence limitations that are no longer true, and the test
+and table counts that moved.
 
 ### G11 — Smaller items
 
@@ -344,9 +365,24 @@ part of the system, these are deliverables, not decoration.
 
 ## 3. ERD truth check
 
-The eleven tables in `database/schema.sql` and the eleven boxes in
-`docs/diagrams/fig2-erd.svg` are the same eleven, with the same column names.
-No conceptual table, no undrawn table.
+**Superseded, 25 September 2026.** This section was written when the schema had
+eleven tables and it was true then. Three tables arrived with the hardening pass
+— `login_attempts`, `privacy_consents`, `audit_logs` — and the diagram was not
+redrawn, so for two days the ERD showed eleven boxes against fourteen tables.
+That is exactly the fault this section exists to catch, and it was caught by
+counting `information_schema` rather than by reading the diagram.
+
+The figure now shows 14 tables and 23 foreign keys, and the count is asserted
+by case SQL-12. The table-by-table defence is `docs/erd-defense.md`.
+
+**The number to say out loud:** the database has **15** tables. Fourteen are on
+the ERD. The fifteenth is `schema_migrations`, which records which files in
+`database/migrations/` have been applied — it is infrastructure, it holds no
+domain data, it has no foreign keys, and a filing cabinet does not belong on a
+family tree.
+
+The relationships below are the eleven-table list as it stood; the full,
+current list of all 23 is in `docs/erd-defense.md`.
 
     users              1 ─── N  pet_reports            (user_id, RESTRICT)
     users              1 ─── N  pet_reports            (assigned_staff_id, SET NULL)

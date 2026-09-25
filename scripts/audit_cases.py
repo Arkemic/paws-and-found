@@ -109,6 +109,11 @@ def sql_injection():
     check(C, 'SQL-12', 'Schema intact afterwards', '15 tables',
           sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='pawsandfound';") + ' tables',
           sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='pawsandfound';") == '15')
+    # The ERD claims 23. A diagram cannot be wrong quietly if the suite counts
+    # the same thing the diagram is drawing.
+    fks = sql("SELECT COUNT(*) FROM information_schema.table_constraints "
+              "WHERE table_schema='pawsandfound' AND constraint_type='FOREIGN KEY';")
+    check(C, 'SQL-14', 'Foreign keys match the ERD', '23 keys', fks + ' keys', fks == '23')
     roles = sql('SELECT GROUP_CONCAT(role ORDER BY user_id) FROM users WHERE user_id<=3;')
     check(C, 'SQL-13', 'No account was promoted', 'user,user,user', roles, roles == 'user,user,user')
 

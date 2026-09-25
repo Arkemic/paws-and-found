@@ -97,24 +97,53 @@ at all. That is the same property the hosted version will rely on.
 
 ## 5. The tests this makes possible today
 
-All eight of the scenarios the instructor is expected to try. Devices A, B and
-C are any three of: the host laptop, a classmate's laptop, a phone.
+### 5.1 The part that is automated
 
-| | Test | Expected |
-| --- | --- | --- |
-| A | Same account signed in on all three | All three work independently |
-| B | A files a report | B and C see it on refresh, and within ~10s on focus |
-| C | Admin changes A's role from another account | A, B and C lose the old workspace; direct API calls answer 403 |
-| D | Admin suspends the account | All three lose protected access |
-| E | Three failed sign-ins on A | Account locks; the correct password on **B** is still refused |
-| F | B edits a report URL to somebody else's id | 403 |
-| G | A customer types `/admin` | Refused |
-| H | A customer calls an administrator endpoint directly | 403 |
+    npm run multi-device
 
-**E and F are the ones worth doing on real devices rather than tabs.** Tabs in
-one browser share a cookie jar, so "three devices" made of three tabs is one
-session wearing a disguise — and the lock test specifically needs the counter
-to be proven to live in the database rather than in one browser.
+`scripts/multi_device.py` opens **three independent sessions** — three cookie
+jars, three CSRF tokens, exactly as three browsers on three machines have — and
+runs the whole sequence against one Apache, one PHP and one MySQL. **40 checks,
+all passing as of 25 September 2026.** It restores the demonstration data at
+the end, so it can be run as often as the code changes.
+
+| | What it proves |
+| --- | --- |
+| A | One account signs in on three devices without logging the others out |
+| B | A report filed and then closed on one device is what the other two see, and the database agrees |
+| C | Marking notifications read on one device reads them on the others — the state is in MySQL, not in a device |
+| D | An administrator downgrading the role mid-session takes effect on the other two devices' **very next request**, without them refreshing; a coordinator endpoint then answers 403; the audit log names who did it |
+| E | Suspension drops all three sessions to signed-out, and a protected call from each returns 401 |
+| F | Three wrong passwords on device A lock the account; **the correct password on device B is still refused**; `login_attempts.failed_count` is 3 in the database |
+| G | The administrator unlock clears the counter as well as the status, device B can sign in again, and the unlock is in the audit log |
+| H | A customer typing `/users`, `/moderation`, `/categories`, somebody else's report, or an invented endpoint gets 403, 403, 403, 403, 404 — and nothing is created |
+
+Run it against the LAN address on the day too, which tests the same things
+across the network rather than through the loopback:
+
+```bash
+PAWS_API=http://192.168.254.108/pawsandfound/api python scripts/multi_device.py
+```
+
+### 5.2 The part only real hardware can show
+
+The script proves the **server** is the authority. It cannot prove anything
+about the browser, and three of these matter:
+
+1. **The 10-second refetch.** `useSession` re-reads `/auth/me` on load, on
+   window focus, on tab visibility, on route change and on a timer. The script
+   calls the endpoint directly, so it shows the server answering correctly —
+   not the second laptop's screen changing on its own while nobody touches it.
+   That is the thing worth watching happen.
+2. **The cookie.** Three tabs in one browser share a cookie jar, so "three
+   devices" made of three tabs is one session wearing a disguise. Three
+   machines is the only way to show three cookies.
+3. **The phone.** Layout, the drawer, the chip row, and whether a report can
+   actually be filed one-handed outdoors.
+
+So: run `npm run multi-device` for the evidence, and run the sequence by hand
+on three devices at least once before the presentation for the demonstration.
+They answer different questions.
 
 ---
 
