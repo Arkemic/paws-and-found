@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "a11y": "node scripts/a11y.mjs",
     "audit": "python scripts/audit_cases.py",
-    "multi-device": "python scripts/multi_device.py"
+    "multi-device": "python scripts/multi_device.py",
+    "verify:deploy": "python scripts/verify_deployment.py"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

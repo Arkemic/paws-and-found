@@ -167,47 +167,190 @@ not in git and not in the backup unless we take one.
 
 ---
 
-## 3. The deployment itself
+## 3. The deployment, as eighteen steps
 
-Roughly 45 minutes the first time, 5 minutes for every redeploy after.
+Treated as a controlled migration rather than "upload the folder and hope".
+Each step has something to check before the next one, because a failure found
+at step 4 is a five-minute fix and the same failure found at step 14 looks like
+the application being broken.
 
-**Database**
-1. In cPanel, create the database, create a user, grant it all privileges on
-   that database. Note all three values.
-2. phpMyAdmin → import `database/schema.sql`, then `database/seed.sql`.
-   `schema.sql` opens with `CREATE DATABASE IF NOT EXISTS pawsandfound` and
-   `USE pawsandfound` — on a host where the database is named
-   `username_pawsandfound`, both lines have to be removed or edited first, and
-   the import run against the already-selected database.
-3. Verify: 15 tables, and `SELECT COUNT(*) FROM pet_reports` returns **32**.
+Roughly an hour the first time. Five minutes for every redeploy after.
 
-**API**
-4. Upload `api/` to `public_html/api/`.
-5. Create `api/config.local.php` with the host's database name, user, password,
-   `localhost` as the host and `3306` as the port. Never 3307 — that is a
-   quirk of one laptop.
-6. Verify: `https://<domain>/api/reports` returns JSON.
+### The account and the URL
 
-**Frontend**
-7. `npm run build:deploy`
-8. Upload the contents of `dist/` — not the folder — into `public_html/`,
-   including `.htaccess` with `RewriteBase /`.
-9. Verify: the homepage loads, Explore lists reports, a report detail opens.
+**1. Register the account and note the public URL.**
+Confirm it has PHP 8.1+, MySQL 5.7+ or MariaDB 10.4+, phpMyAdmin, `.htaccess`
+with `mod_rewrite`, free SSL and at least ~1 GB.
 
-**HTTPS**
-10. cPanel → SSL/TLS Status → run AutoSSL, or install the free Let's Encrypt
-    certificate. Then force HTTPS (cPanel has a toggle, or add the redirect to
-    `.htaccess`).
-11. Verify: `http://` redirects to `https://`, and signing in then reloading
-    keeps you signed in — that proves the `Secure` cookie is being set and
-    returned.
+**2. Confirm PHP actually runs**, before uploading anything that matters.
+Upload one file, `public_html/ping.php`:
 
-**Then the eight tests**
-12. Run the multi-device tests (A–H) from the hardening brief against the live
-    URL, on three real devices. Not on one laptop with three tabs — tabs share
-    a cookie jar, which is the one thing the test is not about.
+```php
+<?php header('Content-Type: application/json');
+echo json_encode(['php' => PHP_VERSION, 'pdo_mysql' => extension_loaded('pdo_mysql')]);
+```
+
+Then, **from a terminal, not a browser** — this is the check a browser cannot
+make for you:
+
+```bash
+curl -i https://<domain>/ping.php
+```
+
+You want `Content-Type: application/json` and a body starting `{`. **If HTML
+comes back, stop here.** Some free hosts answer non-browser requests with a
+JavaScript challenge page. For a page view that is invisible; for a REST API it
+means `fetch` receives HTML where it expected JSON, and neither the application
+nor the test suites can run at all. That is a reason to change host, and it is
+much better to learn it now.
+
+**Delete `ping.php` immediately afterwards.** It reports the PHP version to
+anyone who asks.
+
+### The database
+
+**3. Create the database and a user.** Its **own** user, never `root`, with
+rights on this schema only. Note the database name, user, password and host —
+shared hosts usually prefix the name with the account, e.g.
+`username_pawsandfound`.
+
+**4. Import the schema.** phpMyAdmin → Import → `database/schema.sql`.
+
+It opens with `CREATE DATABASE IF NOT EXISTS pawsandfound` and `USE
+pawsandfound`. On a host where the database is named `username_pawsandfound`,
+**both lines have to be removed** and the import run against the
+already-selected database. Migrations 001–004 are already folded into
+`schema.sql`, so there is nothing else to apply to a fresh database — that is
+what the fresh-import/migrated parity check is for.
+
+> Verify: **15 tables**, **23 foreign keys**.
+> ```sql
+> SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();
+> SELECT COUNT(*) FROM information_schema.table_constraints
+>  WHERE table_schema = DATABASE() AND constraint_type = 'FOREIGN KEY';
+> ```
+
+**5. Import the seed.** `database/seed.sql`, the same way.
+
+> Verify: `SELECT COUNT(*) FROM pet_reports` returns **32**, and `users`
+> returns **10**.
+
+### The API
+
+**6. Create the credentials file, outside the repository.**
+`api/config.local.php` is in `.gitignore` and must stay there. Copy
+`api/config.example.php`, fill in the four values:
+
+```php
+define('DB_NAME', 'username_pawsandfound');
+define('DB_USER', 'username_paws');
+define('DB_PASS', '...');
+define('DB_HOST', 'localhost');   // not 3307 — that is one laptop's quirk
+define('APP_ENV', 'production');  // display_errors off, log_errors on
+```
+
+`APP_ENV` is the one people forget. A PHP warning printed into a JSON response
+breaks the JSON *and* puts the server's file paths on somebody's screen.
+
+**7. Upload `api/` to `public_html/api/`.**
+Check the FTP client did not skip the dotfiles: `api/.htaccess` and
+`api/uploads/.htaccess` must both be there. The second is what stops an
+uploaded file being executed. `api/uploads/` must exist and be writable — 755,
+or 775 if the host needs it.
+
+**8. Verify one endpoint from a terminal.**
+
+```bash
+curl -i https://<domain>/api/reports
+```
+
+JSON, `Content-Type: application/json`, and a non-empty `data` array.
+
+### The frontend
+
+**9. Build for the root and upload it.**
+
+```bash
+npm run build:deploy
+```
+
+Not `npm run build` — that one builds for `/pawsandfound/`. Upload the
+**contents** of `dist/`, not the folder, into `public_html/`.
+
+**10. Set `RewriteBase`.** `public_html/.htaccess` must say `RewriteBase /`,
+matching the base the site was built with. **These two disagreeing is the most
+likely way a first deploy fails**, and the symptom is a blank page with four
+404s on `/assets/…`.
+
+> Verify: the homepage loads; `/explore` **refreshed directly in the address
+> bar** loads (that is the SPA routing check, not clicking a link); a report
+> detail page opens.
+
+### Proving it
+
+**11–13 are all one command:**
+
+```bash
+npm run verify:deploy https://<domain>
+```
+
+28 checks. It uploads one small PNG to a report the demo account already owns
+and fetches it back **as a signed-out visitor**, which is the only honest way
+to test the upload path — the seeded photographs are bundled with the frontend
+and never touch the server. It also checks the session cookie's `Secure`,
+`HttpOnly` and `SameSite` flags on the real domain, that errors leak no SQL or
+paths, that CSRF is enforced, that no wildcard CORS header is sent, that the
+uploads directory is not browsable, that `config.local.php` is not readable,
+and that no demo password or development host is in the bundle.
+
+Everything it finds is something that only goes wrong on a host. Fix all of it
+before step 14.
+
+**14. Run the 151-case suite against production.**
+
+```bash
+PAWS_API=https://<domain>/api \
+PAWS_MYSQL_ARGS="-u <dbuser> -p<password> -h <dbhost>" \
+python scripts/audit_cases.py
+```
+
+Forty-nine of its assertions read the database directly, which is the point —
+a response saying a row was written proves nothing on its own. That needs the
+host control panel's **Remote MySQL** turned on for your address. Without it
+the suite **refuses to run** rather than quietly executing two thirds of itself
+and printing a smaller total as though it were the whole thing.
+
+It reseeds at the start and restores at the end, so run it **before** the
+database is final.
+
+**15. Run the multi-device suite against production.**
+
+```bash
+PAWS_API=https://<domain>/api python scripts/multi_device.py
+```
+
+40 checks, three independent sessions. This one needs only the API.
+
+**16. The physical three-device test.** See `docs/lan-testing.md` §5.2 for what
+only hardware can show: the ten-second refetch changing a screen nobody is
+touching, three real cookies rather than three tabs sharing one, and the phone
+layout. Do the sequence by hand at least once.
+
+**17. Export the final backup.** phpMyAdmin → Export → structure **and** data.
+Keep the `.sql` on two machines. Download `api/uploads/` if anything was
+uploaded during testing.
+
+**18. Freeze it.** Tag the commit that was deployed:
+
+```bash
+git tag -a presentation -m "The build deployed to <domain>"
+```
+
+After this, nothing goes to the host that has not been through steps 11–15
+again.
 
 ---
+
 
 ## 4. Presentation-day runbook
 
@@ -241,6 +384,10 @@ Decide which of us owns the hotspot before the day, not during it.
 
 ## 5. What is likely to go wrong, and what it looks like
 
+`npm run verify:deploy https://<domain>` catches every row in this table
+except the last one. The table is here for reading the symptom backwards when
+something turns up that it does not cover.
+
 | Symptom | Cause |
 | --- | --- |
 | Blank page, 404s on `/assets/…` | `VITE_BASE` and `RewriteBase` disagree. |
@@ -250,6 +397,8 @@ Decide which of us owns the hotspot before the day, not during it.
 | Signed in, then signed out on reload | Cookie not coming back: mixed HTTP/HTTPS, or `Secure` set while serving over HTTP. |
 | Photographs upload but do not display | `api/uploads/` not writable, or its `.htaccess` blocked the file type. |
 | Everything works alone, breaks on a second device | Two databases, or two deployments. There must be exactly one of each. |
+| `curl` gets HTML from `/api/…` but the browser is fine | The host is answering non-browser requests with a challenge page. `fetch` and both test suites are broken; the browser hides it. Change host. |
+| The suite refuses to start: "Cannot reach the database" | Remote MySQL is not enabled for your address, or `PAWS_MYSQL_ARGS` is wrong. It refuses on purpose rather than running two thirds of itself. |
 
 ---
 
@@ -272,7 +421,9 @@ in front of an examiner.
 ## 7. Open questions
 
 1. **Which host, and who pays?** Needs deciding first; everything else waits on
-   the credentials.
+   the credentials. Nothing else in this document is blocked — the code is
+   host-agnostic, the runbook is written, and the three verification commands
+   (`verify:deploy`, `audit`, `multi-device`) all take the URL as an argument.
 2. **Domain name.** A free subdomain from the host is fine and free. A `.com`
    is roughly ₱600/year and looks better on the title slide. Not a technical
    decision.

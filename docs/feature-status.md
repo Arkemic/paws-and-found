@@ -85,6 +85,19 @@ by the suite rather than only by a document.
 
     npm run multi-device
 
+    npm run verify:deploy https://<domain>
+
+**28 checks that only fail on a host**: whether the API answers JSON rather
+than a challenge page, whether a deep link refreshes, whether an uploaded
+photograph comes back to a signed-out visitor, the session cookie's `Secure`,
+`HttpOnly` and `SameSite` flags on the real domain, whether errors leak SQL or
+paths, whether CSRF survived the production build, whether `config.local.php`
+is readable over the web, and whether any demo password reached the bundle.
+27/28 against the local deployment — the one failure is HTTPS, correctly,
+because localhost is plain HTTP.
+
+    npm run multi-device
+
 A second suite: **40 checks across three independent sessions** — three cookie
 jars, three CSRF tokens, as three browsers on three machines have. It proves
 the shared database is the authority for a report change, a read-state change,

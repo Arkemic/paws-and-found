@@ -6,6 +6,7 @@ import sys
 import urllib.parse
 import zlib
 
+import audit
 from audit import (PROJECT, check, file_report, multipart, reseed, results,
                    session, sql, status)
 
@@ -665,6 +666,30 @@ def report():
 
 if __name__ == '__main__':
     print('Paws&Found — system audit')
+    print(f'  API: {audit.API}')
+
+    # Forty-nine of these assertions read the database directly, and that is
+    # the point of them: a response that says a row was written proves nothing
+    # on its own. Without the database this suite would run about two thirds of
+    # itself and print a smaller total as though it were the whole thing, which
+    # is a worse outcome than not running.
+    if not audit.db_reachable():
+        print()
+        print('  Cannot reach the database, so this suite will not run.')
+        print()
+        print('  It needs BOTH the API and the MySQL server that API is using.')
+        print('  Against a hosted site that usually means turning on the host')
+        print('  control panel\'s "Remote MySQL" for this machine, then:')
+        print()
+        print('    PAWS_API=https://<domain>/api \\')
+        print('    PAWS_MYSQL_ARGS="-u <dbuser> -p<password> -h <dbhost>" \\')
+        print('    python scripts/audit_cases.py')
+        print()
+        print('  Or run it on the host itself. `npm run multi-device` needs only')
+        print('  the API and is the one to reach for when the database is not')
+        print('  reachable from here.')
+        sys.exit(2)
+
     reseed()
     input_validation()
     sql_injection()
