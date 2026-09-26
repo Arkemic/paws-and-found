@@ -54,8 +54,22 @@ try {
         case '':
             json_response([
                 'name' => 'Paws&Found API',
-                'endpoints' => ['/auth', '/reports', '/matches', '/notifications', '/users', '/categories', '/moderation'],
+                'endpoints' => ['/health', '/auth', '/reports', '/matches', '/notifications', '/users', '/categories', '/moderation'],
             ]);
+
+        // A platform health check, and the first thing to curl after a deploy.
+        // Deliberately says almost nothing: whether the database answers, and
+        // nothing about versions, hosts or paths. A health endpoint that
+        // reports the PHP version is a reconnaissance endpoint.
+        case 'health':
+            try {
+                db()->query('SELECT 1');
+                json_response(['status' => 'ok', 'database' => 'ok']);
+            } catch (Throwable) {
+                json_response(['status' => 'degraded', 'database' => 'unreachable'], 503);
+            }
+
+            // no break — json_response() exits.
 
         case 'auth':
             require __DIR__ . '/auth.php';

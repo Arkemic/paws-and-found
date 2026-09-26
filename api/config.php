@@ -35,13 +35,39 @@ if (is_file($localConfig)) {
  * deployed copy: it is what switches PHP's error display off and the session
  * cookie's Secure flag on.
  */
-defined('APP_ENV') || define('APP_ENV', 'development');
+defined('APP_ENV') || define('APP_ENV', getenv('APP_ENV') ?: 'development');
 
-defined('DB_HOST') || define('DB_HOST', '127.0.0.1');
-defined('DB_PORT') || define('DB_PORT', 3307);
-defined('DB_NAME') || define('DB_NAME', 'pawsandfound');
-defined('DB_USER') || define('DB_USER', 'root');
-defined('DB_PASS') || define('DB_PASS', '');   // XAMPP's default. Never a deployed one.
+/**
+ * Read a setting from the environment, falling back to a default.
+ *
+ * A hosted container has no config.local.php — credentials arrive as
+ * environment variables, which is what keeps them out of the image and out of
+ * git. Railway's MySQL service publishes MYSQLHOST, MYSQLPORT and the rest, so
+ * both spellings are accepted and the deployment needs no variable mapping.
+ *
+ * Order: config.local.php (already loaded above) wins, then the environment,
+ * then the local default. So a developer's machine behaves exactly as it did
+ * before — nothing is set, so nothing changes.
+ */
+function env_setting(string $name, string $alias, string|int $fallback): string|int
+{
+    foreach ([$name, $alias] as $key) {
+        $value = getenv($key);
+        if ($value !== false && $value !== '') {
+            return $value;
+        }
+    }
+
+    return $fallback;
+}
+
+defined('DB_HOST') || define('DB_HOST', env_setting('DB_HOST', 'MYSQLHOST', '127.0.0.1'));
+defined('DB_PORT') || define('DB_PORT', (int) env_setting('DB_PORT', 'MYSQLPORT', 3307));
+defined('DB_NAME') || define('DB_NAME', env_setting('DB_NAME', 'MYSQLDATABASE', 'pawsandfound'));
+defined('DB_USER') || define('DB_USER', env_setting('DB_USER', 'MYSQLUSER', 'root'));
+// XAMPP's default is an empty password. A deployed one never is, and never
+// lives in this file — it arrives as MYSQL_ROOT_PASSWORD or MYSQLPASSWORD.
+defined('DB_PASS') || define('DB_PASS', env_setting('DB_PASS', 'MYSQLPASSWORD', ''));
 
 /**
  * Where the React development server runs. The browser will not send or accept
