@@ -11,6 +11,49 @@ needs.
 
 ---
 
+## 0. The architecture is settled — 26 September 2026
+
+**React/Vite → PHP REST API → MySQL/MariaDB. This does not change.**
+
+The reason is one line of the instructor's guide, transcribed at
+`docs/final-project-guide-requirements.md:16`:
+
+```
+| 4 | MySQL database |
+```
+
+Not "a relational database". **MySQL**, as mandatory requirement four, with
+`CLAUDE.md:193` recording it as "(instructor-specified)".
+
+**Supabase is therefore not adopted.** Supabase is PostgreSQL; choosing it would
+answer requirement 4 with something that is not MySQL. That is not a trade any
+of us can make without the instructor saying the engine is open — and the full
+cost, counted rather than guessed, is in
+`docs/deployment-architecture-audit.md`.
+
+**Vercel is not the submission host either.** A React build on Vercel calling a
+PHP API elsewhere means two deployments, two domains, CORS, `SameSite=None`
+cookies and third-party-cookie blocking on whichever device the examiner
+happens to open it on. It buys nothing academically. If Vercel is used later
+for a portfolio front end, that is a separate thing.
+
+**One public PHP + MySQL host, serving the site and the API from one origin.**
+That preserves, with no migration:
+
+    same-origin requests          the PHP API as written
+    the current session model     the MySQL schema and every query
+    upload handling               the regression harness (151 + 40 + 28)
+    the ERD                       the defence documents
+
+There is to be exactly one authoritative backend. No React → Supabase beside
+React → PHP, and no PHP → MySQL beside PHP → Supabase.
+
+This decision is revisited only if the instructor states that the database
+engine is open, and then as its own project with its own regression run — not
+as part of a deployment.
+
+---
+
 ## 1. The decision
 
 **Shared cPanel hosting — Apache, PHP 8.2, MySQL, phpMyAdmin — with the built
