@@ -43,7 +43,20 @@ RUN docker-php-ext-install -j"$(nproc)" pdo_mysql
 
 # mod_rewrite serves the SPA fallback and the API's front controller.
 # mod_headers sets the cache policy in public/.htaccess.
-RUN a2enmod rewrite headers
+#
+# The MPM lines look redundant — the base image enables mpm_prefork and nothing
+# here adds another. They are here because a deploy failed with
+#
+#     AH00534: apache2: Configuration error: More than one MPM loaded.
+#
+# and Apache will not start at all in that state, so the container crash-loops
+# and the platform answers 502. Whatever put a second one there, saying plainly
+# which one this image wants costs nothing and removes a whole class of
+# "it works on my machine".
+RUN a2dismod -f mpm_event mpm_worker 2>/dev/null || true     && a2enmod mpm_prefork rewrite headers     && test "$(ls /etc/apache2/mods-enabled/ | grep -c 'mpm_.*\.load')" = "1"
+
+# Fail the BUILD, not the deploy, if the configuration is ever wrong again.
+RUN apache2ctl configtest 2>&1 | tail -2
 
 # .htaccess is ignored unless Apache is told to read it, and both of this
 # application's rewrite rules live in .htaccess files. Without this the site
