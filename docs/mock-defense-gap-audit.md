@@ -1,5 +1,11 @@
 # What the mock defence tells us, and what it means here
 
+> **Update, 26 September 2026.** The pre-hosting pass is done. Group A (A1, A2,
+> A3) and four of Group B (B2, B3, B4, and the reasons half of B6) are
+> implemented and tested; see `feature-status.md`. **B1, public hosting, is now
+> the only thing left before the presentation.** Everything below is the audit
+> as written, so the reasoning stays readable next to what was done about it.
+
 **ITS122P–AM5 · Group 3** · 26 September 2026 · **audit only, no code changed**
 
 Previous students sat the instructor's mock presentation with a dental
