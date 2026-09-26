@@ -1,0 +1,44 @@
+# What must never reach the build context.
+#
+# Two reasons, and the second one matters more than the size: a smaller context
+# uploads faster, and anything listed here cannot accidentally end up inside a
+# published image.
+
+# Rebuilt inside the image by `npm ci`. Copying a Windows node_modules into a
+# Linux container also ships the wrong native binaries.
+node_modules/
+
+# The local build, for /pawsandfound/. The image builds its own for the domain
+# root, and a stale dist/ copied in would be served instead.
+dist/
+
+.git/
+.github/
+
+# ---------------------------------------------------------------- secrets
+# Already gitignored, so it should not be here at all — listed anyway, because
+# "it is not in git" and "it is not in the image" are two different facts, and
+# this file holds the production database password.
+api/config.local.php
+.env
+.env.*
+
+# Photographs people uploaded. They belong on the volume, not baked into an
+# image that anyone who can pull it can read.
+api/uploads/*
+!api/uploads/.htaccess
+
+# ---------------------------------------------- local tooling and evidence
+# Screenshots, contrast measurements, the throwaway browser scripts.
+scripts/.local/
+
+# Database dumps. A backup inside the image is a copy of every account.
+*.sql.bak
+*-backup-*.sql
+
+# Editor and OS noise
+.vscode/
+.idea/
+.claude/
+Thumbs.db
+.DS_Store

@@ -19,6 +19,16 @@ require_once __DIR__ . '/db.php';
 /** Send data as JSON and stop. Every endpoint ends here. */
 function json_response(mixed $data, int $status = 200): never
 {
+    // An error can now be raised from inside a transaction — a stale-state 409
+    // is discovered by the UPDATE itself, several statements in. PDO would roll
+    // back anyway when the connection closes, but relying on a destructor for
+    // correctness is the kind of thing that is true until somebody adds a
+    // persistent connection. Only on an error: an open transaction at a
+    // success response would be a missing commit, and hiding it helps nobody.
+    if ($status >= 400 && db_has_open_transaction()) {
+        db()->rollBack();
+    }
+
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
 
@@ -97,6 +107,26 @@ function require_one_of(?string $value, array $allowed, string $field): ?string
     return $value;
 }
 
+/**
+ * Trim a value, and treat "nothing but whitespace" as nothing.
+ *
+ * Lived in both matches.php and reports.php as identical copies; users.php now
+ * needs it too, for the suspension reason. Three callers of the same eight
+ * lines is where a shared helper stops being premature.
+ *
+ * This is what makes a required note of spaces fail validation rather than be
+ * stored as '   '.
+ */
+function blank_to_null(mixed $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    $text = trim((string) $value);
+    return $text === '' ? null : $text;
+}
+
 // -----------------------------------------------------------------------------
 // Sessions and authentication
 // -----------------------------------------------------------------------------
@@ -112,10 +142,38 @@ function start_session(): void
         'httponly' => true,   // JavaScript cannot read it, so XSS cannot steal it
         'samesite' => 'Lax',
         'path' => '/',
-        // 'secure' => true — switch on when the site is served over HTTPS.
+        // Set from how the request actually arrived rather than from a
+        // constant, so one codebase is correct in both places: a Secure cookie
+        // is never sent back over plain HTTP, so hard-coding it true would
+        // silently break every sign-in on a laptop, and hard-coding it false
+        // would ship the session cookie unprotected on the deployed site.
+        'secure' => request_is_https(),
     ]);
 
     session_start();
+}
+
+/**
+ * Whether this request arrived over HTTPS.
+ *
+ * Shared hosts commonly terminate TLS at a proxy and forward plain HTTP to
+ * PHP, so `$_SERVER['HTTPS']` alone reports "no" on a site that is plainly
+ * padlocked in the browser. X-Forwarded-Proto is set by that proxy and is
+ * trusted here for one narrow purpose — deciding whether to mark our own
+ * cookie Secure — where the worst a forged header can do is make a cookie
+ * stricter than it needed to be.
+ */
+function request_is_https(): bool
+{
+    if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
+        return true;
+    }
+
+    if (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') {
+        return true;
+    }
+
+    return ((int) ($_SERVER['SERVER_PORT'] ?? 0)) === 443;
 }
 
 /**
@@ -145,6 +203,44 @@ function wants_notification(int $userId, string $type): bool
     return (bool) $statement->fetchColumn();
 }
 
+/**
+ * Mark the session as freshly signed in.
+ *
+ * Called at the two points that establish an identity, after
+ * session_regenerate_id(), so the clocks start on the new session id rather
+ * than on the anonymous one it replaced.
+ */
+function session_started_now(): void
+{
+    $_SESSION['issued_at'] = time();
+    $_SESSION['last_activity'] = time();
+}
+
+/**
+ * Has this session run out of time?
+ *
+ * Two clocks, both checked on the server:
+ *
+ *   idle       time since the last authenticated request
+ *   absolute   time since sign-in, refreshed by nothing
+ *
+ * A session that predates this check has no timestamps. It is adopted rather
+ * than thrown away — signing everybody out to deploy a timeout is a worse
+ * first impression than the timeout itself.
+ */
+function session_has_expired(): bool
+{
+    $now = time();
+
+    if (!isset($_SESSION['issued_at'], $_SESSION['last_activity'])) {
+        session_started_now();
+        return false;
+    }
+
+    return ($now - (int) $_SESSION['last_activity']) > SESSION_IDLE_TIMEOUT
+        || ($now - (int) $_SESSION['issued_at']) > SESSION_ABSOLUTE_TIMEOUT;
+}
+
 /** The signed-in user as a row from `users`, or null. */
 function current_user(): ?array
 {
@@ -153,6 +249,18 @@ function current_user(): ?array
     if (empty($_SESSION['user_id'])) {
         return null;
     }
+
+    // Before the database is asked anything. An expired session is not a
+    // suspended account or a deleted one — it is simply nobody, and it is
+    // reported the same way a signed-out visitor is, so /auth/me keeps
+    // answering "nobody" rather than growing a special case.
+    if (session_has_expired()) {
+        $_SESSION = [];
+        session_destroy();
+        return null;
+    }
+
+    $_SESSION['last_activity'] = time();
 
     $statement = db()->prepare(
         'SELECT user_id, full_name, email, contact_number, role, account_status,
@@ -170,12 +278,166 @@ function current_user(): ?array
         return null;
     }
 
-    // A suspended account keeps its session cookie but loses its access.
-    if ($user['account_status'] === 'suspended') {
+    // A suspended or locked account keeps its session cookie but loses its
+    // access — on every device at once, because this runs on every request and
+    // reads the account as it is now rather than as it was at sign-in.
+    //
+    // Written as "not active" rather than as a list of the two bad states, so
+    // that a future state added to the ENUM is refused by default instead of
+    // quietly allowed.
+    if ($user['account_status'] !== 'active') {
         return null;
     }
 
     return $user;
+}
+
+// -----------------------------------------------------------------------------
+// Cross-site request forgery
+// -----------------------------------------------------------------------------
+
+/**
+ * This session's CSRF token, created on first use.
+ *
+ * The problem this solves: the session cookie is sent by the browser on every
+ * request to this origin, including one triggered by a form on somebody else's
+ * website. The cookie alone therefore proves the request came from a browser
+ * that is signed in — not that the person meant to make it.
+ *
+ * `SameSite=Lax` on the cookie already blocks the common version of that
+ * attack, and is a real defence. It is the browser's promise rather than ours,
+ * though, and it stops applying the moment the cookie has to become
+ * `SameSite=None`. So the token is the one we enforce ourselves: it is handed
+ * out in a response body, which another origin cannot read, and required back
+ * in a header, which a plain HTML form cannot set.
+ */
+function csrf_token(): string
+{
+    start_session();
+
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    return $_SESSION['csrf_token'];
+}
+
+/** A fresh token. Called when the session id changes, so the two stay paired. */
+function rotate_csrf_token(): string
+{
+    start_session();
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Refuse a state-changing request that does not carry this session's token.
+ *
+ * Called once, in index.php, for every method that is not a read — so a new
+ * endpoint is protected by existing, rather than by somebody remembering to
+ * protect it.
+ *
+ * `hash_equals` rather than `===`: comparing secrets with a function that
+ * returns early on the first different byte leaks, over many attempts, how much
+ * of a guess was right.
+ */
+function verify_csrf(): void
+{
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+    // Reads change nothing, so there is nothing to forge.
+    if (in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) {
+        return;
+    }
+
+    start_session();
+
+    $expected = $_SESSION['csrf_token'] ?? '';
+    $given = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+
+    if ($expected === '' || !is_string($given) || !hash_equals($expected, $given)) {
+        // `csrf` in the body so the browser can tell this apart from an
+        // ordinary refusal, fetch a fresh token and try once more — a token
+        // that rotated under a tab left open all afternoon is a nuisance, not
+        // an attack.
+        json_error('That request could not be verified. Please try again.', 403, ['csrf' => true]);
+    }
+}
+
+/**
+ * Forget the failed sign-in attempts recorded against an address.
+ *
+ * Two callers, which is why it lives here rather than beside the rest of the
+ * lock: signing in successfully clears your own counter (`api/auth.php`), and
+ * an administrator unlocking an account clears theirs (`api/users.php`).
+ */
+function clear_login_attempts(string $email): void
+{
+    $statement = db()->prepare('DELETE FROM login_attempts WHERE email = :email');
+    $statement->execute([':email' => $email]);
+}
+
+// -----------------------------------------------------------------------------
+// Audit logging
+// -----------------------------------------------------------------------------
+
+/**
+ * Record something that happened to an account.
+ *
+ * Append-only: this writes rows and nothing anywhere updates or deletes them.
+ * The `detail` is a short sentence meant to be read by a person — never a
+ * password, a token or a session id.
+ *
+ * Failing to write the log must never fail the action it was describing. A
+ * suspension that worked but could not be logged is still a suspension, and
+ * throwing here would roll it back and confuse everybody.
+ */
+function audit_log(
+    string $action,
+    ?int $actorUserId = null,
+    ?string $actorEmail = null,
+    ?string $targetType = null,
+    ?int $targetId = null,
+    string $outcome = 'success',
+    ?string $detail = null,
+): void {
+    try {
+        $statement = db()->prepare(
+            'INSERT INTO audit_logs
+                    (actor_user_id, actor_email, action, target_type, target_id,
+                     outcome, detail, ip_address)
+             VALUES (:actor, :email, :action, :target_type, :target_id,
+                     :outcome, :detail, :ip)'
+        );
+
+        $statement->execute([
+            ':actor' => $actorUserId,
+            ':email' => $actorEmail,
+            ':action' => $action,
+            ':target_type' => $targetType,
+            ':target_id' => $targetId,
+            ':outcome' => $outcome,
+            ':detail' => $detail,
+            ':ip' => client_ip(),
+        ]);
+    } catch (PDOException $exception) {
+        error_log('[pawsandfound] audit log failed: ' . $exception->getMessage());
+    }
+}
+
+/**
+ * The caller's address, for the audit log.
+ *
+ * REMOTE_ADDR only. A proxy header such as X-Forwarded-For is set by whoever
+ * sent the request, so trusting it would let an attacker write any address
+ * they liked into our own audit trail.
+ */
+function client_ip(): ?string
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+
+    return is_string($ip) && $ip !== '' ? substr($ip, 0, 45) : null;
 }
 
 /** Stop unless somebody is signed in. Returns the user so callers can use it. */
@@ -225,7 +487,9 @@ function send_cors_headers(): void
     if (in_array($origin, ALLOWED_ORIGINS, true)) {
         header("Access-Control-Allow-Origin: {$origin}");
         header('Access-Control-Allow-Credentials: true');
-        header('Access-Control-Allow-Headers: Content-Type');
+        // X-CSRF-Token is named here or the browser's preflight refuses to let
+        // the real request send it, and every write from `npm run dev` fails.
+        header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
         header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
         header('Vary: Origin');
     }

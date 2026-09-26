@@ -100,18 +100,12 @@ export function valuesFromReport(report) {
     lat: report.location.lat,
     lng: report.location.lng,
     condition: report.condition,
-    hasCollar: collarToValue(report.hasCollar),
+    hasCollar: report.hasCollar ?? 'unknown',
     photos: report.photos.map((photo) => ({ ...photo })),
     allowPlatformContact: report.contactPreferences.allowPlatformContact,
     showPhone: report.contactPreferences.showPhone,
     showEmail: report.contactPreferences.showEmail,
   }
-}
-
-function collarToValue(hasCollar) {
-  if (hasCollar === true) return 'yes'
-  if (hasCollar === false) return 'no'
-  return 'unknown'
 }
 
 const required = (value) => !String(value ?? '').trim()
@@ -215,7 +209,14 @@ export function toReportInput(values, reporterId) {
       precision: 'approximate',
     },
     condition: isFound ? values.condition.trim() : '',
-    hasCollar: isFound ? parseCollar(values.hasCollar) : null,
+    // The select already holds 'yes' | 'no' | 'unknown', which is exactly what
+    // the API validates and the column stores. It is passed through untouched:
+    // this field used to be translated into a boolean for the mock data layer,
+    // which meant 'yes' arrived as true and was refused with a 422, and 'no'
+    // arrived as false, became null, and was stored as 'unknown' without any
+    // error at all. A lost report is never asked the question, so it sends the
+    // column's own default rather than null.
+    hasCollar: isFound ? values.hasCollar : 'unknown',
     photos: values.photos.map((photo) => ({
       id: photo.id,
       url: photo.url,
@@ -229,12 +230,6 @@ export function toReportInput(values, reporterId) {
       showEmail: values.showEmail,
     },
   }
-}
-
-function parseCollar(value) {
-  if (value === 'yes') return true
-  if (value === 'no') return false
-  return null
 }
 
 /** Fallback alt text when the reporter did not describe a photo. */

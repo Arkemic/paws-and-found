@@ -64,31 +64,62 @@ _Last updated: accessibility audited with axe-core; failure states swept — 202
 prints a table per category. It restores the demonstration data afterwards, so
 it can be run again at any time.
 
-`npm run a11y` runs axe-core over all 25 pages in every role.
+`npm run a11y` runs axe-core over all 26 pages in every role.
 
 | Category | Cases | Passing |
 | --- | --- | --- |
 | A. Input validation | 19 | 19 |
 | B. SQL injection | 13 | 13 |
-| C. Authentication | 13 | 13 |
+| C. Authentication | 35 | 35 |
 | D. Authorization | 31 | 31 |
 | E. Cross-site scripting | 4 | 4 |
 | F. File upload | 7 | 7 |
-| G. Functional | 24 | 24 |
-| H. Error handling | 6 | 6 |
-| **Total** | **117** | **117** |
+| G. Functional | 44 | 44 |
+| H. Error handling | 10 | 10 |
+| **Total** | **164** | **164** |
 
-Last run 2026-09-10 against the deployed build.
+Last run 2026-09-25 against the deployed build. Authentication grew with the
+three-attempt lockout and CSRF; error handling grew when a routing fault was
+found — see below; SQL-14 was added so the ERD's "23 foreign keys" is asserted
+by the suite rather than only by a document.
+
+    npm run multi-device
+
+    npm run verify:deploy https://<domain>
+
+**28 checks that only fail on a host**: whether the API answers JSON rather
+than a challenge page, whether a deep link refreshes, whether an uploaded
+photograph comes back to a signed-out visitor, the session cookie's `Secure`,
+`HttpOnly` and `SameSite` flags on the real domain, whether errors leak SQL or
+paths, whether CSRF survived the production build, whether `config.local.php`
+is readable over the web, and whether any demo password reached the bundle.
+27/28 against the local deployment — the one failure is HTTPS, correctly,
+because localhost is plain HTTP.
+
+    npm run multi-device
+
+A second suite: **55 checks across three independent sessions** — three cookie
+jars, three CSRF tokens, as three browsers on three machines have. It proves
+the shared database is the authority for a report change, a read-state change,
+a role downgrade, a suspension, a three-attempt lock, an administrator unlock,
+and five forbidden addresses. All 40 passing. It takes `PAWS_API` so it can be
+pointed at the LAN address or at the hosted site.
 
 ## Cross-cutting
 
 | Item | Status | Notes |
 | --- | --- | --- |
 | Responsive (390 / 768 / 1366 / 1920) | `[x]` | Eight representative pages measured at all four widths against the deployed build — homepage, Explore, report detail, report form, customer dashboard, coordinator comparison, admin dashboard and admin table. No horizontal overflow anywhere. Explore overflowed by 16px at 390px until the results controls were allowed to wrap. |
-| Accessibility | `[x]` | Focus ring, skip link, labels, `aria-describedby`, breadcrumb `aria-current`, reduced motion — and now **audited with axe-core** across all 25 pages in every role: zero violations. Run `npm run a11y`. Four rules had been failing: colour contrast in five places, an invalid `dl`, and headings skipping a level. |
+| Accessibility | `[x]` | Focus ring, skip link, labels, `aria-describedby`, breadcrumb `aria-current`, reduced motion — and now **audited with axe-core** across all 26 pages in every role: zero violations. Run `npm run a11y`. Four rules had been failing: colour contrast in five places, an invalid `dl`, and headings skipping a level. |
 | Empty / loading / error states | `[x]` | Swept by forcing each state: a new account for empty lists, a search matching nothing, aborted and 500 responses for errors, delayed responses for loading. Two faults found and fixed — a slow first load showed a blank page, and the report page called every failure "this report does not exist". |
-| Real database | `[x]` | MySQL, 11 tables, verified on MariaDB 10.4.32 via XAMPP. `database/schema.sql`. |
+| Real database | `[x]` | MySQL, **14 tables** and 23 foreign keys, verified against `information_schema` on MariaDB 10.4.32 via XAMPP — not against the file. `database/schema.sql`, defended table by table in `docs/erd-defense.md`. A fifteenth table, `schema_migrations`, is infrastructure and deliberately not on the ERD. |
 | Prepared statements everywhere | `[x]` | PDO with `ATTR_EMULATE_PREPARES => false`. Injection tested with three payloads. |
+| Session lifetime | `[x]` | Enforced on the server in `current_user()`, not by a browser timer. Idle **1 hour**, absolute **8 hours**, both in `api/config.php` so they can be changed in one place. An expired session is reported the way a signed-out visitor is, so `/auth/me` keeps answering "nobody" rather than growing a special case. Sessions that predate the check are adopted rather than thrown away. Proved by turning the timeouts down to a second in a gitignored local config — `npm run multi-device` section K. |
+| Atomic state transitions | `[x]` | Every state-machine `UPDATE` carries the status it expects and checks the row count: `match_claims` (`matches.php:164`), `pet_reports` on a status change (`reports.php:371`) and on a confirmation closing both reports (`matches.php:284`). Zero rows means somebody else moved first, and the answer is **409** with `code: "stale_state"`. `json_response()` rolls back an open transaction on any error, so a losing request writes nothing, logs nothing and notifies nobody. Proved in `npm run multi-device` sections I and J. |
+| Reasons on consequential actions | `[x]` | Required server-side, not only in React: ruling a pairing out, requesting more information, closing a report, suspending an account. Whitespace is trimmed first, so a note of spaces is refused. They land in the columns that already existed — `status_logs.note`, `match_claims.staff_notes`, `audit_logs.detail` — and no new table was created. Reinstating and unlocking take an optional note instead. |
+| Contact preference round trip | `[x]` | `show_phone` / `show_email` are returned to whoever may edit a report (`reports.php`), and read directly by the frontend. Previously inferred from whether a phone number came back, which was wrong for any account without one: a stored `1` looked like `false` and an untouched edit saved it that way. The public payload is unchanged and carries no preferences. |
+| Audit trail | `[x]` | `audit_logs`, append-only, thirteen actions. Account events (sign-in, failed sign-in, lock, unlock, role change, suspend, reinstate, register, sign-out) from migration `002`; case events (`report_status_changed`, `match_decided`, `moderation_resolved`, `category_changed`) from `004`. The specific action is written into `detail` as a readable sentence. Verified by performing each action and reading the table back. Deliberately excluded: report creation and the automatic move to "possible match", which are in `status_logs` and are the system rather than a person. |
+| Uploads and category changes persist | `[x]` | Both were open limitations in the Phase 4 report, from before the backend existed; both are closed and were **re-proved against the running system on 25 September 2026**, not assumed. A photograph posted to `POST /api/reports/{id}/photos` lands in `report_images`, on disk under a generated name in `api/uploads/`, is returned to a signed-out visitor on the report, and serves as `image/png` over HTTP. A category created, renamed, retired and deleted by an administrator is in `pet_categories` at each step and visible to a fresh visitor. Those two lines can come out of the report. |
 | Category management | `[x]` | `GET/POST /api/categories`, `PATCH/DELETE /api/categories/{code}`. Administrator only. Report counts come from SQL; deleting is refused while any report uses the category, and retiring it is offered instead. Verified to survive a reload. |
 | Pagination | `[x]` | Explore pages through the database with `LIMIT`/`OFFSET`, nine to a page — one request per page, not a full list sliced in the browser. Numbered links, a "Showing 10–18 of 32" status, and the page resets when a filter or the sort changes. **The map view is deliberately not paged**: it asks for one large page so every pin is drawn, capped at the API's 50-row maximum. |
 | Charts on dashboards | `[x]` | `GET /api/reports/stats` — three SQL `GROUP BY` queries behind a staff/admin-only endpoint. The administrator overview shows reports filed per month (lost vs found, six months), where reports stand, and most-reported animals; the coordinator overview shares the same breakdown component. No charting library. **The seed clusters 28 of 32 reports in August**, so the monthly chart is honest but lopsided until the dates are spread. |

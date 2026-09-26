@@ -22,6 +22,12 @@ require_once __DIR__ . '/helpers.php';
 
 send_cors_headers();
 
+// Every request that changes something must carry this session's CSRF token.
+// Checked here, once, rather than inside each handler — so an endpoint added
+// later is protected by existing rather than by somebody remembering to add a
+// line to it. Reads pass straight through.
+verify_csrf();
+
 // Work out the path relative to this API, whatever folder it is installed in.
 // .htaccess passes it as ?_route=..., and the query string fallback keeps the
 // API usable if mod_rewrite is ever unavailable.
@@ -34,13 +40,36 @@ $identifier = $segments[1] ?? null;
 $sub = $segments[2] ?? null;
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+// That is the *only* route with a third segment. Every other handler takes
+// just the resource and the identifier, so without this check a third segment
+// was silently dropped and the request answered as though it had not been
+// typed: GET /matches/1/claims returned the match, and GET /users/1/password
+// returned the user. A URL that does not exist has to say so.
+if (count($segments) > 3 || ($sub !== null && $resource !== 'reports')) {
+    json_error('No such endpoint.', 404);
+}
+
 try {
     switch ($resource) {
         case '':
             json_response([
                 'name' => 'Paws&Found API',
-                'endpoints' => ['/auth', '/reports', '/matches', '/notifications', '/users', '/categories', '/moderation'],
+                'endpoints' => ['/health', '/auth', '/reports', '/matches', '/notifications', '/users', '/categories', '/moderation'],
             ]);
+
+        // A platform health check, and the first thing to curl after a deploy.
+        // Deliberately says almost nothing: whether the database answers, and
+        // nothing about versions, hosts or paths. A health endpoint that
+        // reports the PHP version is a reconnaissance endpoint.
+        case 'health':
+            try {
+                db()->query('SELECT 1');
+                json_response(['status' => 'ok', 'database' => 'ok']);
+            } catch (Throwable) {
+                json_response(['status' => 'degraded', 'database' => 'unreachable'], 503);
+            }
+
+            // no break — json_response() exits.
 
         case 'auth':
             require __DIR__ . '/auth.php';
