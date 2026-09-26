@@ -47,10 +47,22 @@ function fromApi(row) {
     },
     reporterId: row.reporter?.user_id ?? row.reporter_id ?? null,
     reporter: row.reporter ?? null,
+    // The authoritative preference when the API gives it to us, which it does
+    // for whoever may edit the report. Never inferred from whether a phone
+    // number happened to come back: the number is optional, so an account
+    // without one made `show_phone = 1` look like `false`, and an untouched
+    // edit then saved that. Masked value and stored preference are two
+    // different things.
+    //
+    // The fallback is for the public payload, which deliberately carries no
+    // preferences. Nothing reads it in an edit context.
     contactPreferences: {
-      allowPlatformContact: row.reporter?.accepts_messages ?? true,
-      showPhone: Boolean(row.reporter?.phone),
-      showEmail: Boolean(row.reporter?.email),
+      allowPlatformContact:
+        row.contact_preferences?.allow_platform_contact ??
+        row.reporter?.accepts_messages ??
+        true,
+      showPhone: row.contact_preferences?.show_phone ?? Boolean(row.reporter?.phone),
+      showEmail: row.contact_preferences?.show_email ?? Boolean(row.reporter?.email),
     },
     photos: row.photos
       ? row.photos.map((photo) => ({

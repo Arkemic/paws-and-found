@@ -100,9 +100,23 @@ function match_decide(int $id): never
         json_error('That pairing has already been decided.', 409);
     }
 
-    // Requesting more information needs the note: it is what gets sent.
+    // Two of the five need a reason, and both for the same purpose: they are
+    // what the reporters are told, and what the case history has to say months
+    // later when somebody asks why.
+    //
+    // Checked here rather than only in React, because a request built by hand
+    // is not limited to what the interface offers. blank_to_null() has already
+    // trimmed, so a note of spaces arrives as null and is refused.
     if ($action === 'request_information' && $note === null) {
-        json_error('Write what you need from the reporters before asking.', 422);
+        json_error('Write what you need from the reporters before asking.', 422, [
+            'fields' => ['note' => 'Say what you need from them.'],
+        ]);
+    }
+
+    if ($action === 'reject' && $note === null) {
+        json_error('Say why these are not the same pet.', 422, [
+            'fields' => ['note' => 'Both reporters are told this, so it has to say something.'],
+        ]);
     }
 
     // Confirming moves both reports to 'returned', which is the one place a
@@ -132,7 +146,7 @@ function match_decide(int $id): never
 
     try {
         match ($action) {
-            'request_verification' => match_set_status($id, 'verification_requested', $user, $note),
+            'request_verification' => match_set_status($id, 'verification_requested', $user, $note, $match['match_status']),
             'dismiss'              => match_dismiss($id, $match, $user, $note),
             'reject'               => match_reject($id, $match, $user, $note),
             'request_information'  => match_request_information($id, $match, $user, $note),
@@ -160,8 +174,21 @@ function match_decide(int $id): never
     match_detail($id);
 }
 
-/** Move a pairing to a new status, recording who decided it. */
-function match_set_status(int $id, string $status, array $user, ?string $note): void
+/**
+ * Move a pairing to a new status, recording who decided it.
+ *
+ * The WHERE carries the status we believe the pairing is in, and the row count
+ * is checked. The guard in match_decide() reads the pairing at the top of the
+ * request and the transaction opens fifty lines later, so between those two
+ * moments another coordinator can decide the same case: both requests read
+ * 'suggested', both pass the check, and the second one quietly overwrites the
+ * first. Two coordinators, two notifications to the reporters, and a case
+ * history that contradicts itself.
+ *
+ * Asking the database to make the change only if nothing moved closes that,
+ * because the check and the write become one statement.
+ */
+function match_set_status(int $id, string $status, array $user, ?string $note, string $expected): void
 {
     $staffId = in_array($user['role'], ['staff', 'admin'], true) ? (int) $user['user_id'] : null;
 
@@ -170,20 +197,32 @@ function match_set_status(int $id, string $status, array $user, ?string $note): 
             SET match_status = :status,
                 reviewed_by_user_id = COALESCE(:staff_id, reviewed_by_user_id),
                 staff_notes = COALESCE(:note, staff_notes)
-          WHERE match_id = :id'
+          WHERE match_id = :id
+            AND match_status = :expected'
     );
     $statement->execute([
         ':status' => $status,
         ':staff_id' => $staffId,
         ':note' => $staffId === null ? null : $note,
         ':id' => $id,
+        ':expected' => $expected,
     ]);
+
+    if ($statement->rowCount() === 0) {
+        // Nothing written, nothing logged, nobody notified. The transaction in
+        // match_decide() rolls back everything this decision had started.
+        json_error('That pairing was decided by somebody else while this page was open.', 409, [
+            'code' => 'stale_state',
+            'resource' => 'match',
+            'id' => $id,
+        ]);
+    }
 }
 
 /** Ruled out. Both reports go back to being searched for. */
 function match_reject(int $id, array $match, array $user, ?string $note): void
 {
-    match_set_status($id, 'rejected', $user, $note);
+    match_set_status($id, 'rejected', $user, $note, $match['match_status']);
     release_reports_without_open_matches($match, $user);
 
     notify_both(
@@ -197,7 +236,7 @@ function match_reject(int $id, array $match, array $user, ?string $note): void
 /** The reporter says it is not their pet. */
 function match_dismiss(int $id, array $match, array $user, ?string $note): void
 {
-    match_set_status($id, 'dismissed', $user, $note);
+    match_set_status($id, 'dismissed', $user, $note, $match['match_status']);
     release_reports_without_open_matches($match, $user);
 }
 
@@ -259,7 +298,7 @@ function release_reports_without_open_matches(array $match, array $user): void
 /** The coordinator needs something more before deciding. */
 function match_request_information(int $id, array $match, array $user, ?string $note): void
 {
-    match_set_status($id, 'under_review', $user, $note);
+    match_set_status($id, 'under_review', $user, $note, $match['match_status']);
 
     notify_both($match, 'staff_reviewed', 'A Pet Coordinator needs more information', $note);
 }
@@ -272,7 +311,7 @@ function match_request_information(int $id, array $match, array $user, ?string $
  */
 function match_confirm(int $id, array $match, array $user, ?string $note): void
 {
-    match_set_status($id, 'confirmed', $user, $note);
+    match_set_status($id, 'confirmed', $user, $note, $match['match_status']);
 
     foreach (['lost_report_id', 'found_report_id'] as $key) {
         $reportId = (int) $match[$key];
@@ -281,8 +320,23 @@ function match_confirm(int $id, array $match, array $user, ?string $note): void
         $current->execute([':id' => $reportId]);
         $previous = $current->fetchColumn() ?: null;
 
-        $update = db()->prepare("UPDATE pet_reports SET status = 'returned' WHERE report_id = :id");
-        $update->execute([':id' => $reportId]);
+        // Same rule as the pairing: only if the report is still where the
+        // pre-flight check at match_decide() found it. A report that was
+        // closed by moderation in the meantime must not be reopened as a
+        // reunion by a confirmation that started before.
+        $update = db()->prepare(
+            "UPDATE pet_reports SET status = 'returned'
+              WHERE report_id = :id AND status = :expected"
+        );
+        $update->execute([':id' => $reportId, ':expected' => $previous]);
+
+        if ($update->rowCount() === 0) {
+            json_error('One of these reports changed while this page was open.', 409, [
+                'code' => 'stale_state',
+                'resource' => 'report',
+                'id' => $reportId,
+            ]);
+        }
 
         log_match_status_change(
             $reportId,
@@ -372,16 +426,6 @@ function notify_both(array $match, string $type, string $title, ?string $body): 
             ':match_id' => (int) $match['match_id'],
         ]);
     }
-}
-
-function blank_to_null(mixed $value): ?string
-{
-    if ($value === null) {
-        return null;
-    }
-
-    $text = trim((string) $value);
-    return $text === '' ? null : $text;
 }
 
 function matches_list(): never

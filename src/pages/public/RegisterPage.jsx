@@ -176,9 +176,17 @@ export function RegisterPage({ onSignedIn }) {
 
             {/* Disabled until the box is ticked, so the requirement is visible
                 before it is discovered. The API refuses either way. */}
-            <Button type="submit" isLoading={isSubmitting} disabled={!form.privacyConsent}>
-              {isSubmitting ? 'Creating account…' : 'Create account'}
-            </Button>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="submit" isLoading={isSubmitting} disabled={!form.privacyConsent}>
+                {isSubmitting ? 'Creating account…' : 'Create account'}
+              </Button>
+              {/* A marked way out. Somebody who arrived here and changed
+                  their mind had only the browser's Back button, which is the
+                  first thing a cautious person looks for and does not find. */}
+              <Button as={Link} to="/" variant="ghost" disabled={isSubmitting}>
+                Cancel
+              </Button>
+            </div>
 
             <p className="text-sm text-fg-muted">
               Already have an account?{' '}

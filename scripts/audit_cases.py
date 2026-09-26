@@ -531,7 +531,7 @@ def functional():
     status(C, 'FN-14', 'The owner edits their own report', 'customer', 'PUT', f'/reports/{r2}',
            {'pet_name': 'Audit Dog', 'description': 'Updated during the audit.'}, 200)
     status(C, 'FN-15', 'The owner closes their own report', 'customer', 'PATCH', f'/reports/{r2}',
-           {'status': 'closed'}, 200)
+           {'status': 'closed', 'note': 'Found on our own.'}, 200)
 
     code, payload = session('customer').call('POST', '/moderation',
                                              {'report_id': 5, 'reason': 'spam',
@@ -584,8 +584,24 @@ def functional():
 
     # Closed is the end of the line, and the refusal says so rather than
     # listing alternatives there are none of.
-    status(C, 'FN-31', 'The reporter closes an open report',
-           'customer', 'PATCH', '/reports/18', {'status': 'closed'}, 200)
+    # Closing ends a case, so it has to say why. Refused first, then accepted
+    # with a reason, so the rule is proved in both directions rather than only
+    # being stepped around.
+    status(C, 'FN-31a', 'Closing a report with no reason is refused',
+           'customer', 'PATCH', '/reports/18', {'status': 'closed'}, 422)
+    check(C, 'FN-31b', 'And the report did not move', 'active',
+          sql('SELECT status FROM pet_reports WHERE report_id=18;'),
+          sql('SELECT status FROM pet_reports WHERE report_id=18;') == 'active')
+    status(C, 'FN-31c', 'A reason of spaces is still no reason',
+           'customer', 'PATCH', '/reports/18', {'status': 'closed', 'note': '   '}, 422)
+    status(C, 'FN-31', 'The reporter closes an open report, with a reason',
+           'customer', 'PATCH', '/reports/18',
+           {'status': 'closed', 'note': 'The pet came home on its own.'}, 200)
+    check(C, 'FN-31d', 'The reason is on the case history', True,
+          sql("SELECT note FROM status_logs WHERE report_id=18 "
+              "ORDER BY log_id DESC LIMIT 1;") == 'The pet came home on its own.',
+          sql("SELECT note FROM status_logs WHERE report_id=18 "
+              "ORDER BY log_id DESC LIMIT 1;") == 'The pet came home on its own.')
     code, body = session('customer').call('PATCH', '/reports/18', {'status': 'active'})
     check(C, 'FN-32', 'A closed report does not reopen', '409 with no moves left',
           f'{code} with {len(body.get("allowed", ["?"]))} moves left',
@@ -599,6 +615,57 @@ def functional():
 
 
 # ============================================================ H. ERROR HANDLING
+    # ---- reasons on consequential actions, and the contact preference ----
+    #
+    # All three are things the interface asks for. These prove the SERVER asks
+    # too, because a request built by hand is not limited to the interface.
+    mid = sql("SELECT match_id FROM match_claims WHERE match_status NOT IN "
+              "('confirmed','rejected','dismissed') LIMIT 1;")
+    if mid:
+        status(C, 'FN-34', 'Ruling a pairing out with no reason is refused',
+               'staff', 'PATCH', f'/matches/{mid}', {'action': 'reject'}, 422)
+        check(C, 'FN-35', 'And the pairing did not move', True,
+              sql(f"SELECT match_status FROM match_claims WHERE match_id={mid};")
+              not in ('rejected',),
+              sql(f"SELECT match_status FROM match_claims WHERE match_id={mid};") != 'rejected')
+        status(C, 'FN-36', 'With a reason it is ruled out',
+               'staff', 'PATCH', f'/matches/{mid}',
+               {'action': 'reject', 'note': 'Different chest markings.'}, 200)
+
+    uid = sql("SELECT user_id FROM users WHERE role='user' AND account_status='active' "
+              "ORDER BY user_id DESC LIMIT 1;")
+    status(C, 'FN-37', 'Suspending an account with no reason is refused',
+           'admin', 'PATCH', f'/users/{uid}', {'account_status': 'suspended'}, 422)
+    check(C, 'FN-38', 'And the account is untouched', 'active',
+          sql(f"SELECT account_status FROM users WHERE user_id={uid};"),
+          sql(f"SELECT account_status FROM users WHERE user_id={uid};") == 'active')
+    status(C, 'FN-39', 'With a reason it is suspended',
+           'admin', 'PATCH', f'/users/{uid}',
+           {'account_status': 'suspended', 'reason': 'Repeated false reports.'}, 200)
+    check(C, 'FN-40', 'The reason is in the audit log', True,
+          'Repeated false reports.' in (sql(
+              f"SELECT detail FROM audit_logs WHERE target_id={uid} "
+              "AND action='account_suspended' ORDER BY audit_id DESC LIMIT 1;") or ''),
+          'Repeated false reports.' in (sql(
+              f"SELECT detail FROM audit_logs WHERE target_id={uid} "
+              "AND action='account_suspended' ORDER BY audit_id DESC LIMIT 1;") or ''))
+    session('admin').call('PATCH', f'/users/{uid}', {'account_status': 'active'})
+
+    # The contact preference is a stored value, not something to be guessed
+    # from whether a phone number came back. Report 1 belongs to the customer.
+    sql("UPDATE users SET contact_number = NULL WHERE user_id = 1;")
+    sql("UPDATE pet_reports SET show_phone = 1 WHERE report_id = 1;")
+    _, owner_view = session('customer').call('GET', '/reports/1')
+    prefs = (owner_view.get('data') or {}).get('contact_preferences')
+    check(C, 'FN-41', 'The owner is told the stored preference, not the masked value',
+          True, prefs.get('show_phone') if prefs else '(absent)',
+          bool(prefs) and prefs.get('show_phone') is True)
+    _, public_view = session('guest').call('GET', '/reports/1')
+    check(C, 'FN-42', 'A visitor is told nothing about preferences', True,
+          'contact_preferences' not in (public_view.get('data') or {}),
+          'contact_preferences' not in (public_view.get('data') or {}))
+
+
 def error_handling():
     C = 'H. Error handling'
     status(C, 'EH-01', 'A report that does not exist', 'guest', 'GET', '/reports/99999', None, 404)

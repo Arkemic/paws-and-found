@@ -19,6 +19,16 @@ require_once __DIR__ . '/db.php';
 /** Send data as JSON and stop. Every endpoint ends here. */
 function json_response(mixed $data, int $status = 200): never
 {
+    // An error can now be raised from inside a transaction — a stale-state 409
+    // is discovered by the UPDATE itself, several statements in. PDO would roll
+    // back anyway when the connection closes, but relying on a destructor for
+    // correctness is the kind of thing that is true until somebody adds a
+    // persistent connection. Only on an error: an open transaction at a
+    // success response would be a missing commit, and hiding it helps nobody.
+    if ($status >= 400 && db_has_open_transaction()) {
+        db()->rollBack();
+    }
+
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
 
@@ -97,6 +107,26 @@ function require_one_of(?string $value, array $allowed, string $field): ?string
     return $value;
 }
 
+/**
+ * Trim a value, and treat "nothing but whitespace" as nothing.
+ *
+ * Lived in both matches.php and reports.php as identical copies; users.php now
+ * needs it too, for the suspension reason. Three callers of the same eight
+ * lines is where a shared helper stops being premature.
+ *
+ * This is what makes a required note of spaces fail validation rather than be
+ * stored as '   '.
+ */
+function blank_to_null(mixed $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    $text = trim((string) $value);
+    return $text === '' ? null : $text;
+}
+
 // -----------------------------------------------------------------------------
 // Sessions and authentication
 // -----------------------------------------------------------------------------
@@ -173,6 +203,44 @@ function wants_notification(int $userId, string $type): bool
     return (bool) $statement->fetchColumn();
 }
 
+/**
+ * Mark the session as freshly signed in.
+ *
+ * Called at the two points that establish an identity, after
+ * session_regenerate_id(), so the clocks start on the new session id rather
+ * than on the anonymous one it replaced.
+ */
+function session_started_now(): void
+{
+    $_SESSION['issued_at'] = time();
+    $_SESSION['last_activity'] = time();
+}
+
+/**
+ * Has this session run out of time?
+ *
+ * Two clocks, both checked on the server:
+ *
+ *   idle       time since the last authenticated request
+ *   absolute   time since sign-in, refreshed by nothing
+ *
+ * A session that predates this check has no timestamps. It is adopted rather
+ * than thrown away — signing everybody out to deploy a timeout is a worse
+ * first impression than the timeout itself.
+ */
+function session_has_expired(): bool
+{
+    $now = time();
+
+    if (!isset($_SESSION['issued_at'], $_SESSION['last_activity'])) {
+        session_started_now();
+        return false;
+    }
+
+    return ($now - (int) $_SESSION['last_activity']) > SESSION_IDLE_TIMEOUT
+        || ($now - (int) $_SESSION['issued_at']) > SESSION_ABSOLUTE_TIMEOUT;
+}
+
 /** The signed-in user as a row from `users`, or null. */
 function current_user(): ?array
 {
@@ -181,6 +249,18 @@ function current_user(): ?array
     if (empty($_SESSION['user_id'])) {
         return null;
     }
+
+    // Before the database is asked anything. An expired session is not a
+    // suspended account or a deleted one — it is simply nobody, and it is
+    // reported the same way a signed-out visitor is, so /auth/me keeps
+    // answering "nobody" rather than growing a special case.
+    if (session_has_expired()) {
+        $_SESSION = [];
+        session_destroy();
+        return null;
+    }
+
+    $_SESSION['last_activity'] = time();
 
     $statement = db()->prepare(
         'SELECT user_id, full_name, email, contact_number, role, account_status,

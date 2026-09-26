@@ -21,6 +21,7 @@ Stdlib only. Nothing to install.
 """
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import audit
@@ -124,7 +125,9 @@ check('D5', 'The audit log says who did it', 'role_changed',
 # ======================================================= E — suspension mid-session
 banner('E. The account is suspended while all three are signed in')
 check('E1', 'Administrator suspends the account', 200,
-      admin.call('PATCH', f'/users/{staff_id}', {'account_status': 'suspended'})[0])
+      admin.call('PATCH', f'/users/{staff_id}',
+                 {'account_status': 'suspended',
+                  'reason': 'Suspended by the multi-device rehearsal.'})[0])
 # `/auth/me` answers 200 with `user: null` rather than 401 — it is the "who am
 # I" endpoint, which a signed-out visitor calls too, and it has to be able to
 # say "nobody" without that being an error. So the test that matters is not
@@ -180,6 +183,81 @@ check('H4', "PATCH somebody else's report", 403,
 check('H5', 'An endpoint that does not exist', 404, cust.call('GET', '/users/1/password')[0])
 check('H6', 'Nothing was created by H3', '0',
       sql("SELECT COUNT(*) FROM pet_categories WHERE category_name = 'Should Not Exist'"))
+
+# ============================== I — two coordinators, one case
+banner('I. Two coordinators decide the same pairing at the same moment')
+# The real shape of the race: both devices loaded the page while the pairing
+# was open, so both believe it is undecided. One of them is wrong by the time
+# they click, and the database is the only thing that knows which.
+sql("UPDATE match_claims SET match_status='suggested', reviewed_by_user_id=NULL "
+    "WHERE match_id=1")
+sql("DELETE FROM status_logs WHERE note LIKE 'Ownership verified%'")
+
+staff_a, _, _ = device(audit.ACCOUNTS['staff'])
+staff_b, _, _ = device(audit.ACCOUNTS['admin'])
+before_logs = int(sql("SELECT COUNT(*) FROM status_logs") or 0)
+before_notes = int(sql("SELECT COUNT(*) FROM notifications") or 0)
+
+check('I1', 'Both coordinators see an undecided pairing', 'suggested/suggested',
+      '/'.join(d.call('GET', '/matches/1')[1]['data']['status'] for d in (staff_a, staff_b)))
+check('I2', 'A confirms', 200,
+      staff_a.call('PATCH', '/matches/1', {'action': 'confirm'})[0])
+check('I3', 'B rules it out from a page that is now stale', 409,
+      staff_b.call('PATCH', '/matches/1', {'action': 'reject', 'note': 'Different dog.'})[0])
+check('I4', "The database keeps A's result", 'confirmed',
+      sql("SELECT match_status FROM match_claims WHERE match_id=1"))
+check('I5', 'B wrote no contradicting case history', before_logs + 2,
+      int(sql("SELECT COUNT(*) FROM status_logs") or 0))
+check('I6', 'B notified nobody', before_notes + 2,
+      int(sql("SELECT COUNT(*) FROM notifications") or 0))
+
+# ============================== J — two people move the same report
+banner('J. Two people move the same report at the same moment')
+owner_one, _, _ = device(audit.ACCOUNTS['customer'])
+owner_two, _, _ = device(audit.ACCOUNTS['customer'])
+rid, _ = audit.file_report('customer', pet_name='Race Dog')
+reason = {'status': 'closed', 'note': 'Came home on its own.'}
+check('J1', 'The first close succeeds', 200,
+      owner_one.call('PATCH', f'/reports/{rid}', reason)[0])
+check('J2', 'The second, from a stale page, is refused', 409,
+      owner_two.call('PATCH', f'/reports/{rid}', reason)[0])
+check('J3', 'The report closed exactly once', 1,
+      int(sql(f"SELECT COUNT(*) FROM status_logs WHERE report_id={rid} "
+              "AND new_status='closed'") or 0))
+
+# ============================== K — the session runs out
+banner('K. Sessions expire on the server, not in the browser')
+# Rather than waiting an hour, the timeouts are turned down to a second in a
+# gitignored local config, then removed again. The point is that the SERVER
+# enforces it: nothing in the browser is asked.
+local_config = os.path.join(audit.PROJECT, 'api', 'config.local.php')
+existing = open(local_config, encoding='utf-8').read() if os.path.exists(local_config) else None
+try:
+    with open(local_config, 'w', encoding='utf-8') as handle:
+        # Written line by line: an escaped newline in a literal does not
+        # survive being copied between tools, and a config file that is
+        # half-written is a confusing way to fail.
+        print("<?php", file=handle)
+        print("define('SESSION_IDLE_TIMEOUT', 1);", file=handle)
+        print("define('SESSION_ABSOLUTE_TIMEOUT', 1);", file=handle)
+
+    expiring, code, _ = device(audit.ACCOUNTS['customer'])
+    check('K1', 'Signs in normally', 200, code)
+    check('K2', 'And is signed in', 'user', role_of(expiring))
+    time.sleep(2.5)
+    check('K3', 'After the timeout, /auth/me says nobody', 'signed out', role_of(expiring))
+    check('K4', 'And a protected call is refused', 401,
+          expiring.call('GET', '/notifications')[0])
+finally:
+    if existing is None:
+        os.remove(local_config)
+    else:
+        with open(local_config, 'w', encoding='utf-8') as handle:
+            handle.write(existing)
+
+fresh_again, code, _ = device(audit.ACCOUNTS['customer'])
+check('K5', 'With the normal policy restored, signing in works', 200, code)
+check('K6', 'And the session holds', 'user', role_of(fresh_again))
 
 # ======================================================= summary
 passed = sum(1 for row in results if row[4])

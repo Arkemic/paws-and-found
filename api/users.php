@@ -233,6 +233,18 @@ function user_update(int $id): never
         // here would make it look like a punishment an administrator hands out,
         // which is what 'suspended' is for.
         $newStatus = require_one_of(trim((string) $body['account_status']), ['active', 'suspended'], 'account_status');
+
+        // Suspending somebody needs a reason. It is the one administrator
+        // action that takes a person's access away, and "suspended" with no
+        // note leaves the next administrator — or the account holder asking
+        // why — with nothing. Reinstating and unlocking take an optional note
+        // instead: giving access back does not need defending, and forcing
+        // prose every time is how note fields fill up with "ok".
+        if ($newStatus === 'suspended' && blank_to_null($body['reason'] ?? null) === null) {
+            json_error('Say why this account is being suspended.', 422, [
+                'fields' => ['reason' => 'It goes in the audit log, next to your name.'],
+            ]);
+        }
         $sets[] = 'account_status = :status';
         $params[':status'] = $newStatus;
     }
@@ -276,8 +288,9 @@ function user_update(int $id): never
             default => 'account_reinstated',
         };
 
+        $reason = blank_to_null($body['reason'] ?? null);
         audit_log($action, (int) $admin['user_id'], $admin['email'], 'user', $id, 'success',
-            "{$before['account_status']} -> {$newStatus}");
+            "{$before['account_status']} -> {$newStatus}" . ($reason === null ? '' : ": {$reason}"));
     }
 
     user_detail($id);

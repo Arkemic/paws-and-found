@@ -70,6 +70,69 @@ function reportFromApi(hasCollar) {
   }
 }
 
+/**
+ * A raw API row, as `report_detail` sends it to somebody who may edit.
+ *
+ * Deliberately built at the API's shape, not the model's, so the test runs
+ * through fromApi() — which is where both defects so far have lived.
+ */
+function apiRow({ showPhone, phoneOnAccount }) {
+  return {
+    report_id: 1,
+    report_type: 'found',
+    status: 'active',
+    species: 'dog',
+    breed: 'Aspin (Philippine Native Dog)',
+    sex: 'male',
+    size: 'medium',
+    primary_color: 'Brown',
+    has_collar: 'yes',
+    incident_date: '2026-09-20',
+    incident_time: '14:30:00',
+    location: { label: 'Near the covered court', city: 'Pasay City', province: 'Metro Manila' },
+    reporter: {
+      user_id: 1,
+      full_name: 'Maria Santos',
+      accepts_messages: true,
+      // The API masks the value with the preference. An account with no number
+      // has nothing to return EVEN WHEN the preference is on — which is the
+      // whole defect.
+      phone: showPhone && phoneOnAccount ? '+63 917 000 0000' : null,
+      email: null,
+    },
+    contact_preferences: {
+      allow_platform_contact: true,
+      show_phone: showPhone,
+      show_email: false,
+    },
+  }
+}
+
+/**
+ * What petService.fromApi() does with the preferences, restated.
+ *
+ * petService itself cannot be imported here: it pulls in `import.meta.glob`,
+ * which is Vite syntax that plain Node cannot parse, and bending production
+ * code so a test runner can load it is the wrong way round.
+ *
+ * So this mirrors the rule rather than importing it, and the rule is checked
+ * against the real thing in two other places: FN-41/FN-42 in `npm run audit`
+ * prove the API sends the preference, and the browser proof in
+ * `scripts/.local/` opens a real edit form and reads the real toggle. If this
+ * mirror ever drifts from petService, those two catch it.
+ */
+function modelShape(row) {
+  return {
+    ...reportFromApi(row.has_collar),
+    contactPreferences: {
+      allowPlatformContact:
+        row.contact_preferences?.allow_platform_contact ?? row.reporter?.accepts_messages ?? true,
+      showPhone: row.contact_preferences?.show_phone ?? Boolean(row.reporter?.phone),
+      showEmail: row.contact_preferences?.show_email ?? Boolean(row.reporter?.email),
+    },
+  }
+}
+
 // ============================================================ create
 test('the collar answer reaches the service exactly as the select holds it', () => {
   for (const answer of COLLAR) {
@@ -159,4 +222,39 @@ test('the report type decides the pet name, and says so consistently', () => {
 
   const lost = toReportInput({ ...createEmptyValues('lost'), petName: '  Milo  ' }, '1')
   assert.equal(lost.petName, 'Milo', 'a lost report keeps its name, trimmed')
+})
+
+
+// ============================ the contact preference, which is not the value
+test('the phone preference survives an edit when the account has no number', () => {
+  // The defect this replaces: showPhone used to be inferred from whether a
+  // phone came back. The number is optional, so an account without one made a
+  // stored 1 look like false, and an untouched edit saved it that way.
+  for (const showPhone of [true, false]) {
+    for (const phoneOnAccount of [true, false]) {
+      const reopened = valuesFromReport(modelShape(apiRow({ showPhone, phoneOnAccount })))
+      assert.equal(
+        reopened.showPhone,
+        showPhone,
+        `stored ${showPhone} with ${phoneOnAccount ? 'a' : 'no'} number opened as ${reopened.showPhone}`,
+      )
+
+      const resaved = toReportInput(reopened, '1')
+      assert.equal(
+        resaved.contactPreferences.showPhone,
+        showPhone,
+        `an untouched edit changed it to ${resaved.contactPreferences.showPhone}`,
+      )
+    }
+  }
+})
+
+test('the email preference is read the same way, not inferred either', () => {
+  for (const showEmail of [true, false]) {
+    const row = apiRow({ showPhone: false, phoneOnAccount: false })
+    row.contact_preferences.show_email = showEmail
+    const reopened = valuesFromReport(modelShape(row))
+    assert.equal(reopened.showEmail, showEmail)
+    assert.equal(toReportInput(reopened, '1').contactPreferences.showEmail, showEmail)
+  }
 })

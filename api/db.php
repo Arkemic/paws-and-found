@@ -14,6 +14,31 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 
+/**
+ * Is there an open transaction on the connection, if one was ever made?
+ *
+ * Deliberately does NOT open a connection to find out — json_response() asks
+ * this on every error, including errors raised before the database was ever
+ * touched, and connecting just to answer "no" would turn a validation failure
+ * into a database round trip.
+ */
+function db_has_open_transaction(): bool
+{
+    return db_connected() && db()->inTransaction();
+}
+
+/** Records, and reports, whether db() has actually opened a connection yet. */
+function db_connected(?bool $value = null): bool
+{
+    static $connected = false;
+
+    if ($value !== null) {
+        $connected = $value;
+    }
+
+    return $connected;
+}
+
 function db(): PDO
 {
     // Held between calls within the same request; PHP throws the whole thing
@@ -44,6 +69,8 @@ function db(): PDO
         // touches the SQL text.
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
+
+    db_connected(true);
 
     return $pdo;
 }

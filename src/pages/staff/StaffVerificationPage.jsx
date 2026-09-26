@@ -299,6 +299,19 @@ function DecisionPanel({ match, staff, lost, found, owner, finder, onDecided, on
           </Button>
         </div>
       </div>
+      {/* Primary, secondary, destructive — the variants already said which is
+          which, but only to somebody who knows the design system. These lines
+          say what actually happens, because the difference between the three is
+          consequence, not colour, and Confirm closes two cases for good. */}
+      <dl className="-mt-1 grid gap-x-6 gap-y-1.5 text-sm text-fg-muted sm:grid-cols-[auto_1fr]">
+        <dt className="font-medium text-fg">Confirm match</dt>
+        <dd>Closes both reports as returned and tells both reporters. It cannot be undone.</dd>
+        <dt className="font-medium text-fg">Request more information</dt>
+        <dd>Keeps the case open and sends your note to both reporters.</dd>
+        <dt className="font-medium text-fg">Not the same pet</dt>
+        <dd>Rules the pairing out. Each report goes back to Active and the search continues.</dd>
+      </dl>
+
       {!note.trim() && (
         <p className="-mt-2 text-sm text-fg-muted">
           Write a case note to request more information — it is what the reporters receive.

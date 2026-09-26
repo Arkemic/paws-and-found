@@ -109,6 +109,7 @@ function auth_login(): never
     // A new session id on sign-in, so a session cookie captured beforehand
     // cannot be reused afterwards (session fixation).
     session_regenerate_id(true);
+    session_started_now();
     $_SESSION['user_id'] = (int) $user['user_id'];
 
     audit_log('login', (int) $user['user_id'], $user['email'], 'user', (int) $user['user_id']);
@@ -334,6 +335,7 @@ function auth_register(): never
     // chose. Same fresh session id as auth_login(), for the same reason.
     start_session();
     session_regenerate_id(true);
+    session_started_now();
     $_SESSION['user_id'] = $userId;
 
     audit_log('register', $userId, $email, 'user', $userId);

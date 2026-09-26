@@ -364,12 +364,40 @@ function report_set_status(int $id): never
         );
     }
 
+    $note = blank_to_null($body['note'] ?? null);
+
+    // Closing a report ends a case, and "closed" on its own explains nothing to
+    // the reporter reading their own history later. Returned does not need one:
+    // the reason is in the word.
+    if ($status === 'closed' && $note === null) {
+        json_error('Say why this report is being closed.', 422, [
+            'fields' => ["note" => "It goes on the report's history, where the reporter can read it."],
+        ]);
+    }
+
     $pdo = db();
     $pdo->beginTransaction();
 
     try {
-        $update = $pdo->prepare('UPDATE pet_reports SET status = :status WHERE report_id = :id');
-        $update->execute([':status' => $status, ':id' => $id]);
+        // Conditional on the status REPORT_TRANSITIONS was checked against a
+        // moment ago. The check and the write are otherwise separate steps,
+        // and anything that lands between them — a coordinator confirming a
+        // match, an administrator removing the report — would be silently
+        // overwritten by a transition that was legal when it started and is
+        // not any more.
+        $update = $pdo->prepare(
+            'UPDATE pet_reports SET status = :status
+              WHERE report_id = :id AND status = :expected'
+        );
+        $update->execute([':status' => $status, ':id' => $id, ':expected' => $report['status']]);
+
+        if ($update->rowCount() === 0) {
+            json_error('This report changed while the page was open.', 409, [
+                'code' => 'stale_state',
+                'resource' => 'report',
+                'id' => $id,
+            ]);
+        }
 
         // History is appended, never overwritten (CLAUDE.md §6.7).
         log_status_change(
@@ -377,7 +405,7 @@ function report_set_status(int $id): never
             (int) $user['user_id'],
             $report['status'],
             $status,
-            blank_to_null($body['note'] ?? null)
+            $note
         );
 
         $pdo->commit();
@@ -799,16 +827,6 @@ function breed_id_for(int $categoryId, ?string $name): ?int
     return (int) db()->lastInsertId();
 }
 
-function blank_to_null(mixed $value): ?string
-{
-    if ($value === null) {
-        return null;
-    }
-
-    $text = trim((string) $value);
-    return $text === '' ? null : $text;
-}
-
 function numeric_or_null(mixed $value): ?float
 {
     return is_numeric($value) ? (float) $value : null;
@@ -1033,6 +1051,31 @@ function report_detail(int $id): never
         'phone' => $row['show_phone'] ? $row['reporter_phone'] : null,
         'email' => $row['show_email'] ? $row['reporter_email'] : null,
     ];
+
+    // The PREFERENCE, which is a different thing from the masked value above.
+    //
+    // The browser used to work the preference out from whether a phone came
+    // back, and that is wrong whenever there is no phone to return: a reporter
+    // with show_phone = 1 and no number on their account looked like
+    // show_phone = 0, and an edit that never touched the field saved it that
+    // way. Masked data and preference state are two different concepts and the
+    // server is the one that knows both.
+    //
+    // Only for somebody entitled to edit the report. To everybody else the
+    // payload is byte-for-byte what it was.
+    $viewer = current_user();
+    $mayEdit = $viewer !== null && (
+        (int) $viewer['user_id'] === (int) $row['reporter_id']
+        || in_array($viewer['role'], ['staff', 'admin'], true)
+    );
+
+    if ($mayEdit) {
+        $report['contact_preferences'] = [
+            'allow_platform_contact' => (bool) $row['allow_platform_contact'],
+            'show_phone' => (bool) $row['show_phone'],
+            'show_email' => (bool) $row['show_email'],
+        ];
+    }
 
     json_response(['data' => $report]);
 }

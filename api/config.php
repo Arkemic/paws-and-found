@@ -81,6 +81,21 @@ defined('MAX_LOGIN_ATTEMPTS') || define('MAX_LOGIN_ATTEMPTS', 3);
  * Change this whenever src/pages/public/PrivacyPage.jsx changes in a way that
  * alters what people are agreeing to.
  */
+// -----------------------------------------------------------------------------
+// Session lifetime
+//
+// The browser is not the security control, so both of these are enforced on the
+// server, in current_user(), on every authenticated request.
+//
+// Idle is deliberately generous. Somebody composing a lost-pet description with
+// a distressed household around them must not lose it, and a short idle timeout
+// on a public form is a usability failure dressed as security. The absolute
+// lifetime is the one that actually bounds a forgotten administrator session on
+// a shared laptop.
+// -----------------------------------------------------------------------------
+defined('SESSION_IDLE_TIMEOUT') || define('SESSION_IDLE_TIMEOUT', 3600);        // 1 hour
+defined('SESSION_ABSOLUTE_TIMEOUT') || define('SESSION_ABSOLUTE_TIMEOUT', 28800); // 8 hours
+
 defined('PRIVACY_NOTICE_VERSION') || define('PRIVACY_NOTICE_VERSION', '2026-09-25');
 
 /**

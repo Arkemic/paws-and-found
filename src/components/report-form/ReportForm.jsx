@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Check, CircleCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, CircleCheck, X } from 'lucide-react'
 import { Button, Card, CardBody, CardFooter, RequiredNote } from '@/components/ui'
 import { REPORT_TYPES } from '@/constants'
 import { categoryService, userService, petService } from '@/services'
@@ -58,6 +58,9 @@ export function ReportForm({ reportType, report, guidance }) {
   const [values, setValues] = useState(() =>
     report ? valuesFromReport(report) : createEmptyValues(reportType),
   )
+  // What the form looked like when it opened, so Cancel can tell "changed my
+  // mind before typing anything" from "about to lose ten minutes of work".
+  const startingValues = useRef(values)
   const [errors, setErrors] = useState({})
   const [stepIndex, setStepIndex] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -128,6 +131,22 @@ export function ReportForm({ reportType, report, guidance }) {
     setErrors(stepErrors)
     if (Object.keys(stepErrors).length > 0) return
     setStepIndex((index) => Math.min(index + 1, STEPS.length - 1))
+  }
+
+  /**
+   * Leave without filing anything.
+   *
+   * Confirms only when something has actually been typed — an empty form has
+   * nothing to lose and a dialog over it is just a second click. `window.confirm`
+   * rather than ConfirmDialog: this is the one case where the answer has to
+   * arrive before the navigation does, and a real report wizard is not the
+   * place to invent a modal state machine for it.
+   */
+  const handleCancel = () => {
+    const untouched = JSON.stringify(values) === JSON.stringify(startingValues.current)
+    if (untouched || window.confirm('Discard this report? Nothing will be saved.')) {
+      navigate(isEditing ? `/pet/${report.id}` : '/')
+    }
   }
 
   const handleSubmit = async () => {
@@ -247,14 +266,26 @@ export function ReportForm({ reportType, report, guidance }) {
         </CardBody>
 
         <CardFooter className="flex flex-wrap items-center justify-between gap-3 px-6">
-          <Button
-            variant="ghost"
-            onClick={() => setStepIndex((index) => Math.max(index - 1, 0))}
-            disabled={stepIndex === 0 || isSubmitting}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back
-          </Button>
+          {/* Back steps through the wizard and was disabled at step one, which
+              left the first step with no way out but the browser's own Back
+              button. Somebody who opened this by mistake, or changed their
+              mind, needs a marked door — so Cancel takes the place Back cannot
+              fill, and asks first if anything has been typed. */}
+          {stepIndex === 0 ? (
+            <Button variant="ghost" onClick={handleCancel} disabled={isSubmitting}>
+              <X size={16} aria-hidden="true" />
+              Cancel
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => setStepIndex((index) => Math.max(index - 1, 0))}
+              disabled={isSubmitting}
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back
+            </Button>
+          )}
 
           {isLastStep ? (
             <Button
