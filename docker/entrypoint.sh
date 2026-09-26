@@ -1,94 +1,104 @@
 #!/bin/sh
 #
-# Three things the image cannot know until it starts.
+# What the image cannot know until it starts: the port, and what is inside the
+# persistent volume.
 #
 set -eu
 
-# ------------------------------------------------------------------ 0. apache
-#
-# The image is built with exactly one MPM and `apache2ctl configtest` passes
-# during the build. Apache still refused to start on the platform with
-#
-#     AH00534: apache2: Configuration error: More than one MPM loaded.
-#
-# so something adds a second one between the image being built and the
-# container being started. Guessing at what, from a log that only repeats the
-# symptom, was going nowhere — so this says out loud what Apache is actually
-# reading, and then makes sure it reads only one.
-#
-# The listing goes to the deploy log on every start. It is four lines and it
-# turns "more than one" into "these ones".
-echo "[entrypoint] MPM modules Apache can see:"
-ls -1 /etc/apache2/mods-enabled/ 2>/dev/null | grep -i mpm | sed 's/^/[entrypoint]   /' ||     echo "[entrypoint]   (none)"
+PERSIST_ROOT="${PERSIST_ROOT:-/var/lib/pawsandfound}"
+UPLOADS="$PERSIST_ROOT/uploads"
+SESSIONS="${SESSION_SAVE_PATH:-$PERSIST_ROOT/sessions}"
+WEB_UPLOADS=/var/www/html/api/uploads
+PORT="${PORT:-80}"
 
-# Anything that is not prefork goes, at run time as well as at build time.
-# a2dismod is quiet about modules that were not enabled, so this is safe when
-# there is nothing to remove — which is the case on a correctly built image.
+# ------------------------------------------------------------ 1. the volume
+#
+# One volume mounts at PERSIST_ROOT and holds both. A fresh volume arrives
+# empty and owned by root, so both directories are made and handed to www-data
+# — without that, move_uploaded_file() fails while the request still returns
+# 201 and the database row is still written, which is the worst shape a bug
+# can take.
+mkdir -p "$UPLOADS" "$SESSIONS"
+chown www-data:www-data "$PERSIST_ROOT" "$UPLOADS" "$SESSIONS"
+chmod 755 "$UPLOADS"
+# Session files are bearer tokens sitting in a directory.
+chmod 700 "$SESSIONS"
+
+# The .htaccess that stops an uploaded file being executed lives in the volume
+# now, so an empty volume has no protection until this puts it back. Restored
+# only when absent: never overwrite what is already there.
+if [ ! -f "$UPLOADS/.htaccess" ] && [ -f /var/www/html/api/uploads.htaccess.bak ]; then
+    cp /var/www/html/api/uploads.htaccess.bak "$UPLOADS/.htaccess"
+    chown www-data:www-data "$UPLOADS/.htaccess"
+fi
+
+# api/uploads is a symlink into the volume, made at build time. Checked rather
+# than assumed, and repaired only if something replaced it — a plain `ln -sf`
+# over an existing REAL directory would leave uploaded files stranded where
+# nothing serves them.
+if [ ! -L "$WEB_UPLOADS" ]; then
+    if [ -d "$WEB_UPLOADS" ] && [ -n "$(ls -A "$WEB_UPLOADS" 2>/dev/null)" ]; then
+        echo "[paws] api/uploads is a real directory with files in it; moving them onto the volume"
+        cp -a "$WEB_UPLOADS/." "$UPLOADS/"
+    fi
+    rm -rf "$WEB_UPLOADS"
+    ln -s "$UPLOADS" "$WEB_UPLOADS"
+fi
+
+# --------------------------------------------------------------- 2. sessions
+#
+# Outside the document root, on the volume, so signing in survives a redeploy.
+#
+# NOT a shared session store. Correct only because railway.json pins one
+# replica. Scaled to two, half the requests would not find their session and
+# people would be signed out at random — at which point sessions move into
+# MySQL, not onto a bigger disk.
+printf 'session.save_path = "%s"\n' "$SESSIONS" > "$PHP_INI_DIR/conf.d/sessions.ini"
+
+# ------------------------------------------------------------------ 3. apache
+#
+# The platform chooses the port. Apache's is compiled into ports.conf and the
+# default vhost, so both are rewritten.
+sed -i "s/^Listen .*/Listen ${PORT}/" /etc/apache2/ports.conf
+sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
+
+# The image is built with exactly one MPM and configtest passes during the
+# build, yet the platform reported "More than one MPM loaded" at run time. So
+# anything that is not prefork goes here too, and — more useful — the startup
+# log says what Apache actually sees rather than leaving us to guess.
 for mpm in mpm_event mpm_worker; do
     if [ -e "/etc/apache2/mods-enabled/${mpm}.load" ]; then
-        echo "[entrypoint] disabling ${mpm}, which was not in the image"
-        a2dismod -f "$mpm" >/dev/null 2>&1 || true
+        echo "[paws] disabling ${mpm}, which was not in the image"
+        a2dismod -f "$mpm" >/dev/null 2>&1
     fi
 done
 
 if [ ! -e /etc/apache2/mods-enabled/mpm_prefork.load ]; then
-    echo "[entrypoint] re-enabling mpm_prefork"
-    a2enmod mpm_prefork >/dev/null 2>&1 || true
+    echo "[paws] re-enabling mpm_prefork"
+    a2enmod mpm_prefork >/dev/null 2>&1
 fi
 
-# ---------------------------------------------------------------- 1. the port
+# ---------------------------------------------------------------- 4. say so
 #
-# The platform chooses it and passes it in. Apache's port is compiled into
-# ports.conf and the default vhost, so both are rewritten. Falls back to 80 so
-# the image still runs under a plain `docker run`.
-PORT="${PORT:-80}"
-sed -i "s/^Listen .*/Listen ${PORT}/" /etc/apache2/ports.conf
-sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
+# Six facts, every one read out of the running container rather than restated
+# from the Dockerfile. No credentials, no environment dump, no session ids.
+echo "[paws] persistent root : $PERSIST_ROOT"
+echo "[paws] upload path     : $WEB_UPLOADS -> $(readlink -f "$WEB_UPLOADS")"
+echo "[paws] session path    : $(php -r 'echo ini_get("session.save_path");')"
+echo "[paws] apache port     : $(grep -m1 '^Listen' /etc/apache2/ports.conf | awk '{print $2}')"
 
-# ------------------------------------------------------------- 2. the uploads
-#
-# A mounted volume arrives owned by root, and PHP runs as www-data. Without
-# this, move_uploaded_file() fails and every photograph silently does not
-# appear — the request succeeds, the row is written, the file is not there.
-#
-# .htaccess is what stops an uploaded file being executed. The volume is empty
-# on a first deploy and mounts OVER the copy baked into the image, so it is
-# restored here. This is a security control, not a nicety.
-UPLOADS=/var/www/html/api/uploads
-mkdir -p "$UPLOADS"
-if [ ! -f "$UPLOADS/.htaccess" ] && [ -f /var/www/html/api/uploads.htaccess.bak ]; then
-    cp /var/www/html/api/uploads.htaccess.bak "$UPLOADS/.htaccess"
+# `apache2ctl -M` is the real question: not which files are enabled, but which
+# modules Apache loaded. If it fails because the configuration is broken, that
+# failure is printed here, before Apache is exec'd and the message disappears
+# into a restart loop.
+if mpm_loaded="$(apache2ctl -M 2>/dev/null | grep 'mpm_.*_module')"; then
+    echo "[paws] apache mpm      :$(echo "$mpm_loaded" | tr -d '\n')"
+else
+    echo "[paws] apache mpm      : COULD NOT BE DETERMINED — apache2ctl -M failed"
+    apache2ctl -M 2>&1 | sed 's/^/[paws]   /' || true
 fi
-chown -R www-data:www-data "$UPLOADS"
 
-# ------------------------------------------------------------- 3. the sessions
-#
-# PHP's default session directory is inside the container and disappears on
-# every redeploy, signing everybody out.
-#
-# This used to derive the path from the uploads directory, which put it at
-# /var/www/html/api/sessions — a SIBLING of the mount, not inside it. So it was
-# ephemeral after all, and the documentation claiming otherwise was wrong. It
-# also sat under the document root, which is the wrong place for session files
-# whatever their durability.
-#
-# Now: its own path, outside the web root, and its own Railway volume.
-#
-# NOT a shared session store. Filesystem sessions are correct here only because
-# the service runs ONE replica. Scaled to two, half the requests would not find
-# their session and people would be signed out at random — at that point the
-# sessions have to move into MySQL, not onto a bigger disk.
-SESSIONS="${SESSION_SAVE_PATH:-/var/lib/pawsandfound-sessions}"
-mkdir -p "$SESSIONS"
-chown www-data:www-data "$SESSIONS"
-# Only the web server. Session files are bearer tokens in a directory.
-chmod 700 "$SESSIONS"
-printf 'session.save_path = "%s"
-' "$SESSIONS" > "$PHP_INI_DIR/conf.d/sessions.ini"
-
-# One last look before handing over. If the configuration is still wrong, the
-# reason is in the deploy log instead of only the symptom.
-echo "[entrypoint] apache2ctl configtest:"
-apache2ctl configtest 2>&1 | sed 's/^/[entrypoint]   /' || true
+echo "[paws] apache config   :"
+apache2ctl configtest 2>&1 | sed 's/^/[paws]   /'
 
 exec "$@"

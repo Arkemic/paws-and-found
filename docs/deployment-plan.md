@@ -80,8 +80,8 @@ DB_PASS=${{MySQL.MYSQLPASSWORD}}
 APP_ENV=production
 ```
 
-`SESSION_SAVE_PATH` needs no variable — the image already defaults it to the
-path the second volume mounts at. Set it only if that path changes.
+`PERSIST_ROOT` and `SESSION_SAVE_PATH` need no variables — the image defaults
+them to the volume's path. Set them only if the mount path changes.
 
 `api/config.php` reads `DB_*` first and falls back to Railway's own `MYSQL*`
 spellings, so either naming works. `PORT` is injected by Railway and read by
@@ -90,50 +90,68 @@ the entrypoint; nothing else is needed.
 **No credential is in the repository.** `api/config.local.php` is gitignored
 and also excluded from the Docker build context.
 
-### The two volumes
+### One volume
 
-| Holds | Mount path |
+| | |
 | --- | --- |
-| Uploaded photographs | **`/var/www/html/api/uploads`** |
-| PHP session files | **`/var/lib/pawsandfound-sessions`** |
+| Mount path | **`/var/lib/pawsandfound`** |
 
-**Not `/app/api/uploads`.** This image is built on `php:8.3-apache`, whose
-document root is `/var/www/html` — the `/app` convention belongs to Railway's
-Nixpacks builder, which a Dockerfile replaces. Confirmed by reading the running
-container, not assumed.
+It holds both:
 
-The volume mounts *over* the directory baked into the image, so the entrypoint
-restores `api/uploads/.htaccess` (which is what stops an uploaded file being
-executed) and fixes ownership to `www-data` — a mounted volume arrives owned by
-root, and without that `move_uploaded_file()` fails while the request still
-returns 201 and the row is still written.
+    /var/lib/pawsandfound/
+    |-- uploads/     served through a symlink at api/uploads
+    `-- sessions/    outside the document root, 0700
+
+**Not `/app/...`.** This image is `php:8.3-apache`, whose document root is
+`/var/www/html`; `/app` is Railway's Nixpacks convention, which a Dockerfile
+replaces.
+
+Nothing persistent is mounted over `/var/www/html`, `/var/www/html/api` or
+`/etc/apache2`. `api/uploads` is a **symlink** into the volume, made at build
+time, so the application still writes to `__DIR__ . '/uploads'` and knows
+nothing about any of this — no report or photograph logic changed in order to
+deploy it. Apache serves through it because the `<Directory>` block carries
+`Options FollowSymLinks`; without that it answers 403 for everything.
+
+The entrypoint restores `uploads/.htaccess` from a copy kept outside the mount
+when the volume is empty, since that file is what stops an uploaded file being
+executed and a first deploy would otherwise have no protection at all. It is
+restored only when absent, never overwritten.
 
 ### Sessions
 
-Their own volume, outside the document root, set by `SESSION_SAVE_PATH` with
-`/var/lib/pawsandfound-sessions` as the container default.
+`/var/lib/pawsandfound/sessions`, on the same volume, outside the document
+root, `chmod 700` and owned by `www-data`.
 
-An earlier version of this packaging derived the path from the uploads
-directory and landed on `/var/www/html/api/sessions` — a **sibling** of the
-mount, not inside it. Uploads would have persisted and sessions would not, and
-this document said otherwise. It also put session files under the document
-root, which is the wrong place for them whatever their durability: they are
-bearer tokens, and the directory is `chmod 700`, owned by `www-data`.
+**Correct only for a single replica**, which `railway.json` pins. This is not a
+shared session store: scaled to two instances, half the requests would not find
+their session and people would be signed out at random. At that point sessions
+move into MySQL, not onto a bigger disk.
 
-Proved rather than asserted, by signing in and then destroying and recreating
-the container:
+### Proved, with a control
+
+Fresh `docker build --pull --no-cache`, run with one volume:
 
 ```
-with the session volume      still signed in as maria.santos@example.com
-without the session volume   signed out, as expected
+[paws] persistent root : /var/lib/pawsandfound
+[paws] upload path     : /var/www/html/api/uploads -> /var/lib/pawsandfound/uploads
+[paws] session path    : /var/lib/pawsandfound/sessions
+[paws] apache port     : 8091
+[paws] apache mpm      : mpm_prefork_module (shared)
+[paws] apache config   : Syntax OK
 ```
 
-The second line is the control. It is what shows the volume is doing the work.
+Those six lines print on every start, read out of the running container rather
+than restated from the Dockerfile, and carry no credentials.
 
-**Correct only for a single replica.** This is not a shared session store.
-Scaled to two instances, half the requests would not find their session and
-people would be signed out at random — at which point sessions have to move
-into MySQL, not onto a bigger disk.
+| | With the volume | Without it |
+| --- | --- | --- |
+| Container boots | yes | yes |
+| Signed in, container destroyed and recreated | **still signed in** | signed out |
+| Uploaded photograph after recreate | **200 `image/png`** | gone |
+
+The right-hand column is the control. It is what makes the left-hand one mean
+something.
 
 ### Putting the schema into an empty Railway MySQL
 
@@ -168,8 +186,7 @@ SELECT version FROM schema_migrations ORDER BY version;                         
 
 1. Push this branch so Railway sees the `Dockerfile` (it stops guessing Node).
 2. Set the six variables above.
-3. Add **both** volumes: `/var/www/html/api/uploads` and
-   `/var/lib/pawsandfound-sessions`.
+3. Add **one** volume, mounted at `/var/lib/pawsandfound`.
 4. Deploy. Watch the build log for `apache2-foreground`.
 5. `curl https://<domain>/api/health` → `{"status":"ok","database":"ok"}`.
    A **503** here means the app is up but cannot reach MySQL: check the

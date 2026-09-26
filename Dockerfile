@@ -56,14 +56,19 @@ RUN docker-php-ext-install -j"$(nproc)" pdo_mysql
 RUN a2dismod -f mpm_event mpm_worker 2>/dev/null || true     && a2enmod mpm_prefork rewrite headers     && test "$(ls /etc/apache2/mods-enabled/ | grep -c 'mpm_.*\.load')" = "1"
 
 # Fail the BUILD, not the deploy, if the configuration is ever wrong again.
-RUN apache2ctl configtest 2>&1 | tail -2
+RUN apache2ctl configtest 2>&1 | tail -2 \
+    && test "$(apache2ctl -M 2>/dev/null | grep -c 'mpm_.*_module')" = "1" \
+    && apache2ctl -M 2>/dev/null | grep 'mpm_.*_module'
 
 # .htaccess is ignored unless Apache is told to read it, and both of this
 # application's rewrite rules live in .htaccess files. Without this the site
 # returns 404 on every deep link and every API call — which looks like a
 # broken application rather than a missing directive.
+# FollowSymLinks matters: api/uploads becomes a symlink into the persistent
+# volume, and without it Apache answers 403 for everything served through it.
 RUN printf '%s\n' \
     '<Directory /var/www/html>' \
+    '    Options FollowSymLinks' \
     '    AllowOverride All' \
     '    Require all granted' \
     '</Directory>' \
@@ -93,24 +98,28 @@ COPY api/ ./api/
 RUN sed -i 's#RewriteBase /pawsandfound/#RewriteBase /#' .htaccess \
     && grep -q 'RewriteBase /$' .htaccess
 
-# The volume mounts OVER api/uploads at run time. The directory exists here so
-# the image is still correct without one, and a copy of its .htaccess is kept
-# outside the mount point so the entrypoint can restore it on a first deploy.
-# That file is what stops an uploaded file being executed: an empty volume
-# must not mean an unprotected one.
-RUN mkdir -p api/uploads && \
-    cp api/uploads/.htaccess api/uploads.htaccess.bak && \
-    chown -R www-data:www-data /var/www/html
+# ONE persistent volume, mounted at /var/lib/pawsandfound, holding both:
+#
+#     /var/lib/pawsandfound/
+#     |-- uploads/    served through a symlink at api/uploads
+#     `-- sessions/   outside the document root, 0700
+#
+# api/uploads becomes a SYMLINK rather than a mount point. The application
+# still writes to __DIR__ . '/uploads' and knows nothing about any of this,
+# which is the point: no report or photo logic changes in order to deploy it.
+#
+# The .htaccess that stops an uploaded file being executed is copied out first,
+# because the directory holding it is about to become a link into a volume that
+# is empty on a first deploy. The entrypoint puts it back.
+RUN cp api/uploads/.htaccess api/uploads.htaccess.bak \
+    && rm -rf api/uploads \
+    && ln -s /var/lib/pawsandfound/uploads api/uploads \
+    && mkdir -p /var/lib/pawsandfound/uploads /var/lib/pawsandfound/sessions \
+    && chown -R www-data:www-data /var/www/html /var/lib/pawsandfound \
+    && chmod 700 /var/lib/pawsandfound/sessions
 
-# Session storage, outside the document root. Created here so the image runs
-# correctly with no volume mounted; a Railway volume mounts over it in
-# production and the entrypoint re-applies the ownership and mode, because a
-# mounted volume arrives owned by root.
-RUN mkdir -p /var/lib/pawsandfound-sessions \
-    && chown www-data:www-data /var/lib/pawsandfound-sessions \
-    && chmod 700 /var/lib/pawsandfound-sessions
-
-ENV SESSION_SAVE_PATH=/var/lib/pawsandfound-sessions
+ENV PERSIST_ROOT=/var/lib/pawsandfound
+ENV SESSION_SAVE_PATH=/var/lib/pawsandfound/sessions
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
