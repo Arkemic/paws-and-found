@@ -32,18 +32,26 @@ chown -R www-data:www-data "$UPLOADS"
 # ------------------------------------------------------------- 3. the sessions
 #
 # PHP's default session directory is inside the container and disappears on
-# every redeploy, signing everybody out. Put it on the volume when there is one.
+# every redeploy, signing everybody out.
 #
-# This is not the same as making sessions safe across several instances — that
-# would need a shared store, and it is only correct here because the service
-# runs a single replica. Said plainly rather than implied: if this is ever
-# scaled to two, sessions have to move to the database first.
-if [ -d "$UPLOADS" ]; then
-    SESSIONS="$(dirname "$UPLOADS")/sessions"
-    mkdir -p "$SESSIONS"
-    chown www-data:www-data "$SESSIONS"
-    chmod 700 "$SESSIONS"
-    printf 'session.save_path = "%s"\n' "$SESSIONS" > "$PHP_INI_DIR/conf.d/sessions.ini"
-fi
+# This used to derive the path from the uploads directory, which put it at
+# /var/www/html/api/sessions — a SIBLING of the mount, not inside it. So it was
+# ephemeral after all, and the documentation claiming otherwise was wrong. It
+# also sat under the document root, which is the wrong place for session files
+# whatever their durability.
+#
+# Now: its own path, outside the web root, and its own Railway volume.
+#
+# NOT a shared session store. Filesystem sessions are correct here only because
+# the service runs ONE replica. Scaled to two, half the requests would not find
+# their session and people would be signed out at random — at that point the
+# sessions have to move into MySQL, not onto a bigger disk.
+SESSIONS="${SESSION_SAVE_PATH:-/var/lib/pawsandfound-sessions}"
+mkdir -p "$SESSIONS"
+chown www-data:www-data "$SESSIONS"
+# Only the web server. Session files are bearer tokens in a directory.
+chmod 700 "$SESSIONS"
+printf 'session.save_path = "%s"
+' "$SESSIONS" > "$PHP_INI_DIR/conf.d/sessions.ini"
 
 exec "$@"

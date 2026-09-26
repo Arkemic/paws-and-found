@@ -80,6 +80,9 @@ DB_PASS=${{MySQL.MYSQLPASSWORD}}
 APP_ENV=production
 ```
 
+`SESSION_SAVE_PATH` needs no variable — the image already defaults it to the
+path the second volume mounts at. Set it only if that path changes.
+
 `api/config.php` reads `DB_*` first and falls back to Railway's own `MYSQL*`
 spellings, so either naming works. `PORT` is injected by Railway and read by
 the entrypoint; nothing else is needed.
@@ -87,11 +90,12 @@ the entrypoint; nothing else is needed.
 **No credential is in the repository.** `api/config.local.php` is gitignored
 and also excluded from the Docker build context.
 
-### The volume
+### The two volumes
 
-| | |
+| Holds | Mount path |
 | --- | --- |
-| Mount path | **`/var/www/html/api/uploads`** |
+| Uploaded photographs | **`/var/www/html/api/uploads`** |
+| PHP session files | **`/var/lib/pawsandfound-sessions`** |
 
 **Not `/app/api/uploads`.** This image is built on `php:8.3-apache`, whose
 document root is `/var/www/html` — the `/app` convention belongs to Railway's
@@ -106,17 +110,30 @@ returns 201 and the row is still written.
 
 ### Sessions
 
-The entrypoint points `session.save_path` at `/var/www/html/api/sessions`, on
-the same volume, so signing in survives a redeploy. Verified in the container:
+Their own volume, outside the document root, set by `SESSION_SAVE_PATH` with
+`/var/lib/pawsandfound-sessions` as the container default.
+
+An earlier version of this packaging derived the path from the uploads
+directory and landed on `/var/www/html/api/sessions` — a **sibling** of the
+mount, not inside it. Uploads would have persisted and sessions would not, and
+this document said otherwise. It also put session files under the document
+root, which is the wrong place for them whatever their durability: they are
+bearer tokens, and the directory is `chmod 700`, owned by `www-data`.
+
+Proved rather than asserted, by signing in and then destroying and recreating
+the container:
 
 ```
-session.save_path => /var/www/html/api/sessions
+with the session volume      still signed in as maria.santos@example.com
+without the session volume   signed out, as expected
 ```
 
-**This is correct only for a single replica.** It is not a shared session
-store. If the service is ever scaled to two instances, sessions must move into
-MySQL first, or half the requests will not find the session and people will be
-signed out at random.
+The second line is the control. It is what shows the volume is doing the work.
+
+**Correct only for a single replica.** This is not a shared session store.
+Scaled to two instances, half the requests would not find their session and
+people would be signed out at random — at which point sessions have to move
+into MySQL, not onto a bigger disk.
 
 ### Putting the schema into an empty Railway MySQL
 
@@ -151,7 +168,8 @@ SELECT version FROM schema_migrations ORDER BY version;                         
 
 1. Push this branch so Railway sees the `Dockerfile` (it stops guessing Node).
 2. Set the six variables above.
-3. Add the volume at `/var/www/html/api/uploads`.
+3. Add **both** volumes: `/var/www/html/api/uploads` and
+   `/var/lib/pawsandfound-sessions`.
 4. Deploy. Watch the build log for `apache2-foreground`.
 5. `curl https://<domain>/api/health` → `{"status":"ok","database":"ok"}`.
    A **503** here means the app is up but cannot reach MySQL: check the

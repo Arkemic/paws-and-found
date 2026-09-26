@@ -89,6 +89,16 @@ RUN mkdir -p api/uploads && \
     cp api/uploads/.htaccess api/uploads.htaccess.bak && \
     chown -R www-data:www-data /var/www/html
 
+# Session storage, outside the document root. Created here so the image runs
+# correctly with no volume mounted; a Railway volume mounts over it in
+# production and the entrypoint re-applies the ownership and mode, because a
+# mounted volume arrives owned by root.
+RUN mkdir -p /var/lib/pawsandfound-sessions \
+    && chown www-data:www-data /var/lib/pawsandfound-sessions \
+    && chmod 700 /var/lib/pawsandfound-sessions
+
+ENV SESSION_SAVE_PATH=/var/lib/pawsandfound-sessions
+
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
