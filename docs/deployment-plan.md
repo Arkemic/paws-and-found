@@ -54,6 +54,147 @@ as part of a deployment.
 
 ---
 
+## 0.5 Railway — the chosen host, 26 September 2026
+
+Railway runs **actual MySQL**, which is the whole point: requirement 4 names
+MySQL, and it would be strange to rule out Supabase over that and then lose it
+to a host. It also gives a persistent volume for uploads and a TCP proxy so the
+164-case suite can reach the database from a laptop.
+
+Two services in one project:
+
+    Paws-Found  ──private network──▶  MySQL
+    (this Dockerfile)                 (Railway's MySQL image)
+
+### The six variables on the Paws-Found service
+
+Set as **references**, not pasted values, so they follow the database if it is
+ever recreated:
+
+```
+DB_HOST=${{MySQL.MYSQLHOST}}
+DB_PORT=${{MySQL.MYSQLPORT}}
+DB_NAME=${{MySQL.MYSQLDATABASE}}
+DB_USER=${{MySQL.MYSQLUSER}}
+DB_PASS=${{MySQL.MYSQLPASSWORD}}
+APP_ENV=production
+```
+
+`api/config.php` reads `DB_*` first and falls back to Railway's own `MYSQL*`
+spellings, so either naming works. `PORT` is injected by Railway and read by
+the entrypoint; nothing else is needed.
+
+**No credential is in the repository.** `api/config.local.php` is gitignored
+and also excluded from the Docker build context.
+
+### The volume
+
+| | |
+| --- | --- |
+| Mount path | **`/var/www/html/api/uploads`** |
+
+**Not `/app/api/uploads`.** This image is built on `php:8.3-apache`, whose
+document root is `/var/www/html` — the `/app` convention belongs to Railway's
+Nixpacks builder, which a Dockerfile replaces. Confirmed by reading the running
+container, not assumed.
+
+The volume mounts *over* the directory baked into the image, so the entrypoint
+restores `api/uploads/.htaccess` (which is what stops an uploaded file being
+executed) and fixes ownership to `www-data` — a mounted volume arrives owned by
+root, and without that `move_uploaded_file()` fails while the request still
+returns 201 and the row is still written.
+
+### Sessions
+
+The entrypoint points `session.save_path` at `/var/www/html/api/sessions`, on
+the same volume, so signing in survives a redeploy. Verified in the container:
+
+```
+session.save_path => /var/www/html/api/sessions
+```
+
+**This is correct only for a single replica.** It is not a shared session
+store. If the service is ever scaled to two instances, sessions must move into
+MySQL first, or half the requests will not find the session and people will be
+signed out at random.
+
+### Putting the schema into an empty Railway MySQL
+
+Deliberate and manual, **once**. Nothing in the image touches the database on
+startup — a container that seeds itself is a container that erases production
+on its next restart.
+
+Enable the MySQL service's public TCP proxy, then from a laptop:
+
+```bash
+mysql -h <proxy-host> -P <proxy-port> -u root -p railway < database/schema.sql
+mysql -h <proxy-host> -P <proxy-port> -u root -p railway < database/seed.sql
+```
+
+`schema.sql` opens with `CREATE DATABASE IF NOT EXISTS pawsandfound` and `USE
+pawsandfound`. Railway's database is called `railway`, so **both lines have to
+be removed** and the import run against the already-selected database — or
+create `pawsandfound` on that server and point `DB_NAME` at it instead.
+
+Verify, and expect exactly this:
+
+```sql
+SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();  -- 15
+SELECT COUNT(*) FROM information_schema.table_constraints
+ WHERE table_schema = DATABASE() AND constraint_type = 'FOREIGN KEY';            -- 23
+SELECT COUNT(*) FROM pet_reports;                                                -- 32
+SELECT COUNT(*) FROM users;                                                      -- 10
+SELECT version FROM schema_migrations ORDER BY version;                          -- 001..004
+```
+
+### The order to do it in
+
+1. Push this branch so Railway sees the `Dockerfile` (it stops guessing Node).
+2. Set the six variables above.
+3. Add the volume at `/var/www/html/api/uploads`.
+4. Deploy. Watch the build log for `apache2-foreground`.
+5. `curl https://<domain>/api/health` → `{"status":"ok","database":"ok"}`.
+   A **503** here means the app is up but cannot reach MySQL: check the
+   variables. HTML instead of JSON means the Dockerfile was not used.
+6. Generate the public domain, then `npm run verify:deploy https://<domain>`.
+   **Target 28/28** — item 7.1 can finally pass, because Railway terminates TLS
+   and forwards `X-Forwarded-Proto`, which `request_is_https()` already reads.
+7. Enable the MySQL public proxy and run the full suites:
+
+```bash
+PAWS_API=https://<domain>/api PAWS_MYSQL_ARGS="-u root -p<password> -h <proxy-host> -P <proxy-port>" python scripts/audit_cases.py
+
+PAWS_API=https://<domain>/api python scripts/multi_device.py
+```
+
+8. Open it on a phone **on mobile data, not the same Wi-Fi**. That is the thing
+   actually being asked for: it is no longer localhost.
+9. Disable the public proxy again once the suites have run.
+
+### Proved locally before any of this
+
+The image was built and run on 26 September 2026 and answered:
+
+```
+/api/health     200  application/json
+/api/reports    200  application/json
+/               200  text/html
+/explore        200  text/html      (deep link, no 404)
+/pet/1          200  text/html
+/api/uploads/   403                 (not browsable)
+```
+
+`npm run verify:deploy http://localhost:8088` against the container: **27/28**,
+the one failure being HTTPS, which localhost cannot do.
+
+**One real defect the smoke test found:** the image installed gd and then
+purged its runtime libraries, so it failed to load on every request with a
+startup warning. Nothing in `api/` uses gd at all — the upload check is
+`getimagesize()`, which is PHP core. Removed. The Dockerfile had looked
+perfectly reasonable; only running it showed otherwise.
+
+---
+
 ## 1. The decision
 
 **Shared cPanel hosting — Apache, PHP 8.2, MySQL, phpMyAdmin — with the built

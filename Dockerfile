@@ -28,14 +28,18 @@ RUN npm run build:deploy
 # ------------------------------------------------------------- runtime stage
 FROM php:8.3-apache
 
-# pdo_mysql is how the application talks to the database; gd backs the
-# getimagesize() check that decides whether an upload is really an image.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpng-dev libjpeg62-turbo-dev \
-    && docker-php-ext-configure gd --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" pdo_mysql gd \
-    && apt-get purge -y --auto-remove libpng-dev libjpeg62-turbo-dev \
-    && rm -rf /var/lib/apt/lists/*
+# pdo_mysql is the only extension the application needs.
+#
+# gd was here, and it was a mistake twice over. Nothing in api/ calls a single
+# gd function — the upload check uses getimagesize(), which lives in PHP's
+# core `standard` extension, not in gd. And installing it with --auto-remove
+# stripped libpng16 and libjpeg62-turbo back out again, so the extension was
+# built, shipped, and then failed to load on every single request with a
+# startup warning. It validated nothing and warned constantly.
+#
+# Found by running the container and reading php -i, not by reading the
+# Dockerfile, which looked entirely reasonable.
+RUN docker-php-ext-install -j"$(nproc)" pdo_mysql
 
 # mod_rewrite serves the SPA fallback and the API's front controller.
 # mod_headers sets the cache policy in public/.htaccess.
