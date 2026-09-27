@@ -108,6 +108,101 @@ defined('MAX_LOGIN_ATTEMPTS') || define('MAX_LOGIN_ATTEMPTS', 3);
  * alters what people are agreeing to.
  */
 // -----------------------------------------------------------------------------
+// Where this application answers
+//
+// Every link in an email is built from this. Never a hard-coded localhost or
+// Railway hostname: a verification link that points at the wrong host is a
+// verification link nobody can use.
+// -----------------------------------------------------------------------------
+defined('APP_URL') || define('APP_URL', rtrim(
+    (string) env_setting('APP_URL', 'RAILWAY_PUBLIC_DOMAIN_URL', 'http://localhost/pawsandfound'),
+    '/'
+));
+
+// -----------------------------------------------------------------------------
+// Mail
+//
+// 'smtp'    a real server. What production uses.
+// 'log'     development: the subject goes to the PHP error log and nothing is
+//           sent. Honest, because nothing claims otherwise.
+// 'capture' tests: the whole message is written to a file the test harness
+//           reads, so a verification link can be followed without an SMTP
+//           server and without any endpoint that hands out tokens.
+//
+// The default is 'log' rather than 'smtp' so a developer with no mail server
+// is not met with an error on their first registration. APP_ENV=production
+// overrides it below: a deployed site that silently logs instead of sending is
+// exactly the fake-delivery behaviour this must not have.
+// -----------------------------------------------------------------------------
+defined('MAIL_TRANSPORT') || define('MAIL_TRANSPORT', env_setting(
+    'MAIL_TRANSPORT',
+    'MAIL_TRANSPORT',
+    APP_ENV === 'production' ? 'smtp' : 'log'
+));
+
+defined('MAIL_HOST') || define('MAIL_HOST', (string) env_setting('MAIL_HOST', 'MAIL_HOST', ''));
+defined('MAIL_PORT') || define('MAIL_PORT', (int) env_setting('MAIL_PORT', 'MAIL_PORT', 587));
+defined('MAIL_USERNAME') || define('MAIL_USERNAME', (string) env_setting('MAIL_USERNAME', 'MAIL_USERNAME', ''));
+defined('MAIL_PASSWORD') || define('MAIL_PASSWORD', (string) env_setting('MAIL_PASSWORD', 'MAIL_PASSWORD', ''));
+defined('MAIL_FROM_ADDRESS') || define('MAIL_FROM_ADDRESS', (string) env_setting('MAIL_FROM_ADDRESS', 'MAIL_FROM_ADDRESS', ''));
+defined('MAIL_FROM_NAME') || define('MAIL_FROM_NAME', (string) env_setting('MAIL_FROM_NAME', 'MAIL_FROM_NAME', 'Paws&Found'));
+// 'starttls' (port 587) or 'tls' (implicit, port 465).
+defined('MAIL_ENCRYPTION') || define('MAIL_ENCRYPTION', (string) env_setting('MAIL_ENCRYPTION', 'MAIL_ENCRYPTION', 'starttls'));
+defined('MAIL_TIMEOUT') || define('MAIL_TIMEOUT', 15);
+defined('MAIL_CAPTURE_DIR') || define('MAIL_CAPTURE_DIR', sys_get_temp_dir() . '/pawsandfound-mail');
+
+// -----------------------------------------------------------------------------
+// One-time links
+//
+// Long enough to be useful, short enough that a forwarded or logged link stops
+// working. A verification link is a day because people read email the next
+// morning; a reset link is an hour because it replaces a password.
+// -----------------------------------------------------------------------------
+defined('TOKEN_TTL_EMAIL_VERIFICATION') || define('TOKEN_TTL_EMAIL_VERIFICATION', 86400);
+defined('TOKEN_TTL_PASSWORD_RESET') || define('TOKEN_TTL_PASSWORD_RESET', 3600);
+defined('TOKEN_TTL_EMAIL_CHANGE') || define('TOKEN_TTL_EMAIL_CHANGE', 86400);
+
+// -----------------------------------------------------------------------------
+// Rate limits
+//
+// Different from the three-attempt account lock, which protects one account
+// from guessing. These protect the system from somebody registering a thousand
+// accounts, or using the reset form as a mailing service.
+//
+// Each is [attempts, seconds].
+// -----------------------------------------------------------------------------
+defined('RATE_LIMITS') || define('RATE_LIMITS', [
+    'register' => [5, 3600],
+    'resend_verification' => [3, 900],
+    'forgot_password' => [3, 3600],
+]);
+
+// The key that turns an address or an IP into the subject_hash stored in
+// auth_rate_limits. The table counts; it does not need to know who.
+defined('RATE_LIMIT_SECRET') || define('RATE_LIMIT_SECRET', (string) env_setting(
+    'RATE_LIMIT_SECRET',
+    'RATE_LIMIT_SECRET',
+    'pawsandfound-local-only'
+));
+
+// -----------------------------------------------------------------------------
+// Cloudflare Turnstile
+//
+// Bot protection on registration, which is a different problem from rate
+// limiting: one asks "is this a person", the other asks "how often".
+//
+// TURNSTILE_ENABLED defaults to whether a secret exists, EXCEPT in production,
+// where it must be switched off deliberately. A deployed site that quietly
+// stops checking because a variable went missing is worse than one that fails.
+// -----------------------------------------------------------------------------
+defined('TURNSTILE_SITE_KEY') || define('TURNSTILE_SITE_KEY', (string) env_setting('TURNSTILE_SITE_KEY', 'TURNSTILE_SITE_KEY', ''));
+defined('TURNSTILE_SECRET_KEY') || define('TURNSTILE_SECRET_KEY', (string) env_setting('TURNSTILE_SECRET_KEY', 'TURNSTILE_SECRET_KEY', ''));
+defined('TURNSTILE_ENABLED') || define('TURNSTILE_ENABLED', filter_var(
+    env_setting('TURNSTILE_ENABLED', 'TURNSTILE_ENABLED', TURNSTILE_SECRET_KEY !== '' ? 'true' : 'false'),
+    FILTER_VALIDATE_BOOLEAN
+));
+
+// -----------------------------------------------------------------------------
 // Session lifetime
 //
 // The browser is not the security control, so both of these are enforced on the

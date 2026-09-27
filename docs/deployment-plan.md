@@ -42,7 +42,7 @@ That preserves, with no migration:
 
     same-origin requests          the PHP API as written
     the current session model     the MySQL schema and every query
-    upload handling               the regression harness (151 + 40 + 28)
+    upload handling               the regression harness (167 + 55 + 53)
     the ERD                       the defence documents
 
 There is to be exactly one authoritative backend. No React → Supabase beside
@@ -442,7 +442,7 @@ already-selected database. Migrations 001–004 are already folded into
 `schema.sql`, so there is nothing else to apply to a fresh database — that is
 what the fresh-import/migrated parity check is for.
 
-> Verify: **15 tables**, **23 foreign keys**.
+> Verify: **17 tables**, **24 foreign keys**. (15 of the 17 are on the ERD.)
 > ```sql
 > SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();
 > SELECT COUNT(*) FROM information_schema.table_constraints
@@ -525,7 +525,7 @@ and that no demo password or development host is in the bundle.
 Everything it finds is something that only goes wrong on a host. Fix all of it
 before step 14.
 
-**14. Run the 151-case suite against production.**
+**14. Run the 167-case suite against production.**
 
 ```bash
 PAWS_API=https://<domain>/api \
@@ -548,7 +548,7 @@ database is final.
 PAWS_API=https://<domain>/api python scripts/multi_device.py
 ```
 
-40 checks, three independent sessions. This one needs only the API.
+55 checks, three independent sessions. This one needs only the API.
 
 **16. The physical three-device test.** See `docs/lan-testing.md` §5.2 for what
 only hardware can show: the ten-second refetch changing a screen nobody is

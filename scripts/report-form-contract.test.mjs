@@ -258,3 +258,39 @@ test('the email preference is read the same way, not inferred either', () => {
     assert.equal(toReportInput(reopened, '1').contactPreferences.showEmail, showEmail)
   }
 })
+
+// ============================================ the password rule, at its edges
+test('the checklist states the rule the server actually enforces', async () => {
+  const { passwordChecks, PASSWORD_RULES } = await import('@/utils/passwordRules')
+
+  assert.equal(PASSWORD_RULES.min, 8, 'api/auth.php refuses under 8')
+  assert.equal(PASSWORD_RULES.max, 72, "72 is bcrypt's limit, not a preference")
+
+  const met = (password, id) =>
+    passwordChecks(password, password).find((check) => check.id === id).met
+
+  // The boundaries, from both sides. Seven characters is the case that used to
+  // be discovered by being refused after submitting.
+  assert.equal(met('a'.repeat(7), 'min'), false, '7 characters must not pass')
+  assert.equal(met('a'.repeat(8), 'min'), true, '8 characters must pass')
+  assert.equal(met('a'.repeat(72), 'max'), true, '72 characters must pass')
+  assert.equal(met('a'.repeat(73), 'max'), false, '73 characters must not pass')
+
+  // An empty box is not "within the maximum" — it is nothing typed yet.
+  assert.equal(met('', 'max'), false)
+})
+
+test('the confirmation has to match, and an empty pair does not count as matching', async () => {
+  const { passwordChecks } = await import('@/utils/passwordRules')
+  const match = (a, b) => passwordChecks(a, b).find((check) => check.id === 'match').met
+
+  assert.equal(match('correct-horse', 'correct-horse'), true)
+  assert.equal(match('correct-horse', 'correct-horse '), false, 'a trailing space is a different password')
+  assert.equal(match('', ''), false, 'two empty boxes are not a match')
+})
+
+test('the confirmation check can be left out where there is only one box', async () => {
+  const { passwordChecks } = await import('@/utils/passwordRules')
+  const ids = passwordChecks('a'.repeat(10), '', { confirm: false }).map((check) => check.id)
+  assert.deepEqual(ids, ['min', 'max'])
+})

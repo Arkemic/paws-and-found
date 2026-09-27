@@ -23,7 +23,7 @@ Topic: **Campus Lost-and-Found System** — assigned to this group as Paws&Found
 | 2 | Login / logout | **Done** | Real PHP sessions. `api/auth.php`; bcrypt, CSRF, three-attempt lock, administrator unlock |
 | 3 | Minimum 3 user roles | **Done** | Customer/User, Staff/Pet Coordinator, Administrator |
 | 4 | MySQL database | **Done** | MariaDB 10.4.32 via XAMPP. `database/schema.sql`, four migrations, `database/seed.sql` |
-| 5 | Minimum 8 related tables | **Done** | 15 tables, 23 foreign keys, counted from `information_schema`. Fourteen are on the ERD; the fifteenth, `schema_migrations`, is infrastructure. |
+| 5 | Minimum 8 related tables | **Done** | 17 tables, 24 foreign keys, counted from `information_schema`. Fifteen are on the ERD; the other two, `schema_migrations` and `auth_rate_limits`, are operational tables with no foreign keys. |
 | 6 | CRUD operations | **Done** | Reports, users, categories, matches, moderation — all SQL behind the REST API |
 | 7 | Server-side processing (PHP) | **Done** | `api/index.php` front controller; sessions, authentication, per-request authorisation |
 | 8 | JavaScript interaction | **Done** | React 19 + Vite, client-side routing, dynamic content |
@@ -35,7 +35,7 @@ Topic: **Campus Lost-and-Found System** — assigned to this group as Paws&Found
 | 14 | Dashboard | **Done** | Customer, staff and admin dashboards |
 | 15 | Reports | **Done** | `GET /api/reports/stats` — three SQL `GROUP BY` queries behind charts on the staff and administrator dashboards |
 | 16 | Form validation | **Done** | Report wizard, per-step, with error messages |
-| 17 | Security implementation | **Done** | bcrypt, PDO prepared statements with emulation off, server-side validation, CSRF, audit log. 151 cases in `npm run audit` |
+| 17 | Security implementation | **Done** | bcrypt, PDO prepared statements with emulation off, server-side validation, CSRF, audit log. 167 cases in `npm run audit`, plus 53 in `scripts/auth_lifecycle.py` |
 | 18 | Error handling | **Done** | Loading, error and empty states on every async view; 401/403/404/409/422 from the API, with no SQL or paths in any response |
 | 19 | Deployment | **Ready; hosting pending** | Runs from Apache at `http://localhost/pawsandfound/`, one origin for site and API. Host-agnostic: `npm run build:deploy` + `api/config.local.php`. The eighteen-step runbook is `docs/deployment-plan.md` §3. **Not yet on a public URL.** |
 | 20 | Technical documentation | **Done** | `docs/` — ERD defence, database cheat sheet, role permissions, matching explanation, deployment plan, presentation defence, design system, feature status |

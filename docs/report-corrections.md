@@ -57,36 +57,43 @@ the new name.
 
 | Stale | Correct |
 | --- | --- |
-| 117 test cases | **151** |
-| C. Authentication: 13 | **35** |
-| G. Functional: 24 | **31** |
+| 117 test cases | **167** |
+| C. Authentication: 13 | **38** |
+| G. Functional: 24 | **44** |
 | H. Error handling: 6 | **10** |
-| axe-core over 25 pages | **26 pages** |
+| axe-core over 25 pages | **29 pages** |
 
 Current table:
 
 | Category | Cases | Passing |
 | --- | --- | --- |
 | A. Input validation | 19 | 19 |
-| B. SQL injection | 13 | 13 |
-| C. Authentication | 35 | 35 |
+| B. SQL injection | 14 | 14 |
+| C. Authentication | 38 | 38 |
 | D. Authorization | 31 | 31 |
 | E. Cross-site scripting | 4 | 4 |
 | F. File upload | 7 | 7 |
-| G. Functional | 31 | 31 |
+| G. Functional | 44 | 44 |
 | H. Error handling | 10 | 10 |
-| SQL-14 (inside B) asserts the ERD's 23 foreign keys | | |
-| **Total** | **151** | **151** |
+| SQL-14 (inside B) asserts the ERD's 24 foreign keys | | |
+| **Total** | **167** | **167** |
 
 Authentication grew with the three-attempt lockout and CSRF. Error handling
-grew when endpoint-level testing found a routing fault (§4).
+grew when endpoint-level testing found a routing fault (§4). Functional grew
+again in the final hardening pass, with the contact-preference and
+collar-answer cases.
 
 There is also a second suite the report does not mention yet:
 
-> `npm run multi-device` — 40 checks across three independent sessions, proving
+> `npm run multi-device` — 55 checks across three independent sessions, proving
 > that a report change, a read-state change, a role downgrade, a suspension, a
-> three-attempt lock and an administrator unlock are all decided by the shared
-> database rather than by any one device.
+> three-attempt lock, an administrator unlock and a server-side session expiry
+> are all decided by the shared database rather than by any one device.
+
+> `python scripts/auth_lifecycle.py` — 53 checks over registration,
+> verification, the password reset, session revocation, the safe email change
+> and rate limiting. It reads every link out of captured mail, because there is
+> no endpoint that hands out a token.
 
 ---
 
@@ -94,15 +101,16 @@ There is also a second suite the report does not mention yet:
 
 | Stale | Correct |
 | --- | --- |
-| 11 tables | **15** |
-| 20 foreign keys | **23** |
+| 11 tables | **17** |
+| 20 foreign keys | **24** |
 
 The sentence to use, because the two numbers need explaining together:
 
-> The database has **15 tables**. Fourteen are on the ERD. The fifteenth is
+> The database has **17 tables**. Fifteen are on the ERD. The other two are
 > `schema_migrations`, which records which files in `database/migrations/` have
-> been applied — it holds no domain data and has no foreign keys, so it is
-> deliberately not drawn on a diagram of the domain.
+> been applied, and `auth_rate_limits`, which counts how recently an address
+> asked for something — neither holds domain data and neither has a foreign
+> key, so neither is drawn on a diagram of the domain.
 
 Also: 15 primary keys, 7 unique constraints over 11 columns, 2 CHECK
 constraints, InnoDB throughout. All counted from `information_schema` on the
@@ -123,7 +131,7 @@ the user. No unit was wrong, so only asking the running API for endpoints it
 does not have could find it. Fixed; cases EH-07 to EH-10.
 
 **Automated accessibility testing could not see the contrast problem.**
-axe-core reported zero violations across all 26 pages, but it cannot judge text
+axe-core reported zero violations across all 29 pages, but it cannot judge text
 over a photograph: it sees a transparent background, declines to guess what is
 behind the words, and reports nothing. Measuring the actual rendered pixels —
 hiding the text, photographing the page, comparing each text colour against

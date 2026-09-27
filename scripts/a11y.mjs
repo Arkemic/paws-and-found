@@ -27,6 +27,11 @@ const PAGES = [
   ['guest', '/privacy', 'Privacy Notice'],
   ['guest', '/login', 'Sign in'],
   ['guest', '/register', 'Register'],
+  // The account-lifecycle pages. Reached from an email rather than the
+  // navigation, which is exactly why they are easy to forget to check.
+  ['guest', '/forgot-password', 'Forgot password'],
+  ['guest', '/reset-password?token=' + 'a'.repeat(64), 'Reset password'],
+  ['guest', '/verify-email', 'Verify email — no token'],
   ['guest', '/no-such-page', 'Not found'],
   ['maria.santos@example.com', '/report/lost', 'Report a lost pet'],
   ['maria.santos@example.com', '/report/found', 'Report a found pet'],

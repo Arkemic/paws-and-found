@@ -45,7 +45,9 @@ const DECISIONS = {
   confirm: {
     title: 'Confirm this match?',
     description:
-      'Both reports will be marked Returned, and both reporters will be notified that ownership was verified. This is the end of the case.',
+      'Both reports will be marked Returned, and both reporters will be notified that '
+      + 'ownership was verified. This is the end of the case. '
+      + 'Remind them to meet somewhere public, in daylight, with somebody else along.',
     button: 'Confirm match',
     variant: 'primary',
   },

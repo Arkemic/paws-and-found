@@ -146,10 +146,16 @@ if (extraBreeds.length) {
 
 // users
 L.push('-- 10 accounts: 7 community members, 2 coordinators, 1 administrator.')
-L.push('INSERT INTO users (user_id, full_name, email, password_hash, contact_number, role, account_status, preferred_location, created_at) VALUES')
+L.push('INSERT INTO users (user_id, full_name, email, password_hash, contact_number, role, account_status, preferred_location, created_at, email_verified_at) VALUES')
 L.push(users.map((u, i) =>
   `  (${i + 1}, ${q(u.fullName)}, ${q(u.email)}, ${q(hash)}, ${q(u.phone)}, ${q(u.role)}, ` +
-  `${q(u.accountStatus ?? 'active')}, ${q(u.preferredLocation)}, ${ts(u.createdAt) === 'NULL' ? 'CURRENT_TIMESTAMP' : ts(u.createdAt)})`
+    // email_verified_at repeats created_at. Since migration 005 an unverified
+    // address cannot sign in, and this file is re-imported on every audit run:
+    // leaving it NULL would lock every demonstration account out, administrators
+    // included, with the recovery path being email these addresses never receive.
+    `${q(u.accountStatus ?? 'active')}, ${q(u.preferredLocation)}, ` +
+    `${ts(u.createdAt) === 'NULL' ? 'CURRENT_TIMESTAMP' : ts(u.createdAt)}, ` +
+    `${ts(u.createdAt) === 'NULL' ? 'CURRENT_TIMESTAMP' : ts(u.createdAt)})`
 ).join(',\n') + ';')
 L.push('')
 

@@ -23,6 +23,10 @@ function userFromApi(row) {
     accountStatus: row.account_status,
     preferredLocation: row.preferred_location ?? '',
     createdAt: row.created_at,
+    // Only present for somebody entitled to see the account's contact details
+    // — their own, or a coordinator arranging a handover.
+    emailVerified: row.email_verified ?? true,
+    pendingEmail: row.pending_email ?? null,
   }
 }
 
@@ -103,13 +107,25 @@ export async function signOut() {
 }
 
 /**
- * Create an account and sign in as it.
+ * Create an account.
+ *
+ * Does NOT sign in, and there is nothing to sign into yet: the address has not
+ * been proved, so the API refuses a session until the link in the email is
+ * followed. What comes back says so, and the form sends the person to the
+ * "check your email" screen rather than to a dashboard they cannot use.
  *
  * The role is deliberately not sent: the API always creates an ordinary user,
  * so a crafted request cannot register an administrator.
  */
-export async function register({ fullName, email, password, phone = '', privacyConsent = false }) {
-  await apiFetch('/auth/register', {
+export async function register({
+  fullName,
+  email,
+  password,
+  phone = '',
+  privacyConsent = false,
+  captchaToken = null,
+}) {
+  const payload = await apiFetch('/auth/register', {
     method: 'POST',
     body: JSON.stringify({
       full_name: fullName,
@@ -119,10 +135,78 @@ export async function register({ fullName, email, password, phone = '', privacyC
       // Sent as a real boolean: the API compares with `=== true`, so a
       // request that leaves it out, or sends the string "false", is refused.
       privacy_consent: privacyConsent === true,
+      captcha_token: captchaToken,
     }),
   })
 
-  return getCurrentUser()
+  return {
+    verificationRequired: payload.verification_required === true,
+    // Whether the message actually left. False is not a failed registration —
+    // the account exists — but the screen has to offer a resend rather than
+    // claim an email is on its way that is not.
+    emailSent: payload.email_sent !== false,
+    email: payload.email ?? '',
+  }
+}
+
+/** Follow the link from a verification or email-change message. */
+export async function verifyEmail(token) {
+  const payload = await apiFetch('/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  })
+
+  return { verified: payload.verified === true, email: payload.email ?? '' }
+}
+
+/**
+ * Ask for another verification message.
+ *
+ * The answer is the same whatever the address is, so there is nothing here to
+ * branch on — and nothing the interface could reveal even if it tried.
+ */
+export async function resendVerification(email) {
+  const payload = await apiFetch('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+
+  return payload.message ?? ''
+}
+
+/** Begin a password reset. Same answer for every address, by design. */
+export async function forgotPassword(email) {
+  const payload = await apiFetch('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+
+  return payload.message ?? ''
+}
+
+/** Finish a password reset. Every other session for the account ends. */
+export async function resetPassword(token, password) {
+  await apiFetch('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  })
+
+  return true
+}
+
+/**
+ * What this server will accept, asked at run time rather than built in.
+ *
+ * The Turnstile site key belongs in the page — that is what a site key is for
+ * — but baking it into the bundle would mean rebuilding to change it, and the
+ * same image has to run with or without a Turnstile site in front of it.
+ */
+export async function getPublicConfig() {
+  const payload = await apiFetch('/config')
+  return {
+    turnstileEnabled: payload.data?.turnstile_enabled === true,
+    turnstileSiteKey: payload.data?.turnstile_site_key ?? null,
+  }
 }
 
 /**

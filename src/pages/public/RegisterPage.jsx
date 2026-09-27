@@ -1,8 +1,12 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { MailCheck, TriangleAlert } from 'lucide-react'
 import { Button, Card, CardBody, Input, RequiredNote } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { AuthShell } from '@/components/AuthShell'
+import { PasswordChecklist, PasswordField } from '@/components/PasswordField'
+import { Turnstile } from '@/components/Turnstile'
+import { passwordChecks } from '@/utils/passwordRules'
 import { userService } from '@/services'
 import { cn } from '@/utils/cn'
 
@@ -11,27 +15,33 @@ import { cn } from '@/utils/cn'
  *
  * The API hashes the password with bcrypt, rejects an email address that is
  * already taken, and always creates an ordinary user — the role is never sent
- * from here. A successful registration also starts the session, so a new member
- * arrives signed in rather than being asked to type the password again.
+ * from here.
+ *
+ * Registering does NOT sign anybody in any more. The address has not been
+ * proved yet, so the account cannot be used, and handing out a session here
+ * would be a session that is refused by everything it tried. The form ends on
+ * "check your email" instead.
  *
  * The API validates every field regardless of what this form checks; the checks
  * here exist to answer faster, not to be the ones that count.
- *
- * @param {Object} props
- * @param {(user: Object) => void} props.onSignedIn
  */
-export function RegisterPage({ onSignedIn }) {
-  const navigate = useNavigate()
-
+export function RegisterPage() {
   const [form, setForm] = useState({
     fullName: '',
     email: '',
     phone: '',
     password: '',
+    confirmation: '',
     // Starts false and is never pre-ticked. An agreement somebody has to
     // actively give is the only kind worth recording.
     privacyConsent: false,
   })
+  const [captchaToken, setCaptchaToken] = useState(null)
+  // Bumped to make the widget draw itself again after a refusal: a Turnstile
+  // token is single-use, so the one on screen is spent even though it looks
+  // fine, and submitting it twice fails for a reason nobody could guess.
+  const [captchaAttempt, setCaptchaAttempt] = useState(0)
+  const [sent, setSent] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   // Keyed by the API's field names, so a 422 marks the right inputs.
@@ -50,23 +60,63 @@ export function RegisterPage({ onSignedIn }) {
     setFieldErrors({})
 
     try {
-      const user = await userService.register({
+      const result = await userService.register({
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
         password: form.password,
         privacyConsent: form.privacyConsent,
+        captchaToken,
       })
 
-      onSignedIn(user)
-      navigate('/dashboard', { replace: true })
+      setSent(result)
     } catch (caught) {
       const failure = caught instanceof Error ? caught : new Error(String(caught))
       // A 422 or a duplicate email names the fields that failed (see api.js).
       if (failure.fields) setFieldErrors(failure.fields)
       setError(failure)
+      setCaptchaToken(null)
+      setCaptchaAttempt((attempt) => attempt + 1)
       setIsSubmitting(false)
     }
+  }
+
+  const passwordReady = passwordChecks(form.password, form.confirmation).every((c) => c.met)
+  const canSubmit = form.privacyConsent && passwordReady
+
+  // The account exists; as far as the system is concerned the address does not
+  // yet belong to anybody. This screen is the whole reason registration no
+  // longer ends at a dashboard.
+  if (sent) {
+    return (
+      <AuthShell>
+        <Card>
+          <CardBody className="flex flex-col items-center gap-4 text-center">
+            {sent.emailSent ? (
+              <MailCheck size={40} className="text-brand" aria-hidden="true" />
+            ) : (
+              <TriangleAlert size={40} className="text-lost" aria-hidden="true" />
+            )}
+            <PageHeader
+              title={sent.emailSent ? 'Check your email' : 'Account created — but the email did not send'}
+              description={
+                sent.emailSent
+                  ? `We sent a link to ${sent.email}. Follow it and your account is ready.`
+                  : 'Your account exists and nothing was lost. The message could not be delivered just now, so ask for it again in a moment.'
+              }
+            />
+            <p className="text-sm text-fg-muted">
+              The link works once and expires in a day. If nothing arrives, check the spam
+              folder before asking for another.
+            </p>
+            <ResendVerification email={form.email.trim()} />
+            <Button as={Link} to="/login" variant="ghost">
+              Back to sign in
+            </Button>
+          </CardBody>
+        </Card>
+      </AuthShell>
+    )
   }
 
   return (
@@ -114,16 +164,22 @@ export function RegisterPage({ onSignedIn }) {
               maxLength={30}
               hint="Optional. Never shown on a report unless you choose to share it."
             />
-            <Input
+            <PasswordField
               label="Password"
-              type="password"
-              autoComplete="new-password"
               value={form.password}
               onChange={(event) => change('password', event.target.value)}
               error={fieldErrors.password}
               required
-              hint="At least 8 characters."
             />
+            <PasswordField
+              label="Type it again"
+              value={form.confirmation}
+              onChange={(event) => change('confirmation', event.target.value)}
+              required
+            />
+            <PasswordChecklist password={form.password} confirmation={form.confirmation} />
+
+            <Turnstile onToken={setCaptchaToken} attempt={captchaAttempt} />
 
             {/* The privacy acknowledgement sits immediately above the button
                 that creates the account, not in the footer. Somebody should be
@@ -177,7 +233,7 @@ export function RegisterPage({ onSignedIn }) {
             {/* Disabled until the box is ticked, so the requirement is visible
                 before it is discovered. The API refuses either way. */}
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" isLoading={isSubmitting} disabled={!form.privacyConsent}>
+              <Button type="submit" isLoading={isSubmitting} disabled={!canSubmit}>
                 {isSubmitting ? 'Creating account…' : 'Create account'}
               </Button>
               {/* A marked way out. Somebody who arrived here and changed
@@ -199,5 +255,45 @@ export function RegisterPage({ onSignedIn }) {
         </CardBody>
       </Card>
     </AuthShell>
+  )
+}
+
+/**
+ * Ask for the verification email again.
+ *
+ * The answer never varies, so there is nothing to branch on — the same
+ * sentence comes back whether the address has an unverified account, a
+ * verified one, or no account at all. Used here and on the sign-in page, which
+ * reaches the same dead end from the other direction.
+ */
+export function ResendVerification({ email }) {
+  const [state, setState] = useState('idle')
+  const [message, setMessage] = useState('')
+
+  const send = async () => {
+    setState('sending')
+
+    try {
+      setMessage(await userService.resendVerification(email))
+    } catch (caught) {
+      // A rate limit is the likely one, and its message is worth showing.
+      setMessage(caught instanceof Error ? caught.message : String(caught))
+    }
+
+    setState('sent')
+  }
+
+  if (state === 'sent') {
+    return (
+      <p role="status" className="text-sm text-fg-muted">
+        {message}
+      </p>
+    )
+  }
+
+  return (
+    <Button onClick={send} isLoading={state === 'sending'} disabled={!email}>
+      {state === 'sending' ? 'Sending…' : 'Send the link again'}
+    </Button>
   )
 }

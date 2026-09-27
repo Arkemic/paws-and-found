@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowRight, CircleCheck, Hourglass, HeartHandshake, Info } from 'lucide-react'
+import { ArrowRight, CircleCheck, HeartHandshake, Hourglass, Info, ShieldAlert } from 'lucide-react'
 import { Button, EmptyState, LoadingSkeleton } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { MatchPairCard, StatusStrip } from '@/components/MatchComparison'
@@ -285,6 +285,18 @@ function StagePanel({ match, iAmFinder, isBusy, onRequestVerification, onDismiss
   return (
     <div className="flex flex-col gap-3">
       {suggestionNote}
+      {/* Said here, where the decision is, rather than only on the Help page.
+          Somebody about to claim a pet is about to be asked to prove it, and
+          the useful moment to mention that proof is private is before they
+          post it somewhere it is not. */}
+      <p className="flex items-start gap-2 rounded-control border border-border bg-sunken/70 p-3 text-sm text-fg-muted">
+        <ShieldAlert size={16} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
+        <span>
+          A Pet Coordinator checks this before anyone meets. Keep photographs, records and
+          anything else that proves the pet is yours between you and them — never on a
+          public page.
+        </span>
+      </p>
       <div className="flex flex-wrap gap-2">
         <Button onClick={onRequestVerification} isLoading={isBusy}>
           {iAmFinder ? 'This could be the same pet' : 'This could be my pet'}

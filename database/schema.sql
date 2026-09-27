@@ -5,15 +5,17 @@
 -- Target: MariaDB 10.4+ (what XAMPP ships) or MySQL 8, via phpMyAdmin.
 -- Counted from information_schema on the running database, 25 September 2026:
 --
---   15 tables      the 14 on the ERD, plus schema_migrations
---   23 foreign keys    all 23 on the 14; schema_migrations has none
+--   17 tables      the 15 on the ERD, plus schema_migrations and
+--                  auth_rate_limits, which are operational
+--   24 foreign keys    all 24 on the 15; neither infrastructure table has one
 --   15 primary keys    one per table
 --    7 unique constraints
 --    2 CHECK constraints
 --
 -- First imported on MariaDB 10.4.32 (XAMPP) on 2026-08-19 at 11 tables and 20
 -- foreign keys; the lockout, audit and consent tables arrived with the
--- hardening pass as migrations 001 to 004.
+-- hardening pass as migrations 001 to 004, and the account-lifecycle tables
+-- with 005 and 006.
 --
 -- NOTE: this XAMPP installation runs MySQL on PORT 3307, not the default 3306,
 -- because a separate MySQL 8.0 Windows service holds 3306. phpMyAdmin is already
@@ -22,11 +24,14 @@
 -- Engine InnoDB throughout, because the project relies on foreign keys and
 -- transactions. MyISAM ignores foreign keys silently.
 --
--- 14 tables. The guide requires a minimum of 8; the extra six
--- (match_signals, notifications, moderation_cases, login_attempts, audit_logs,
--- privacy_consents) exist because three of the application's workspaces, the
--- three-attempt lock, the audit trail and the privacy acknowledgement have
--- nowhere to store their data without them.
+-- 17 tables, 15 of them on the ERD. The guide requires a minimum of 8; the
+-- extra ones (match_signals, notifications, moderation_cases, login_attempts,
+-- audit_logs, privacy_consents, auth_tokens) exist because three of the
+-- application's workspaces, the three-attempt lock, the audit trail, the
+-- privacy acknowledgement and the emailed one-time links have nowhere to store
+-- their data without them. The remaining two, schema_migrations and
+-- auth_rate_limits, are operational: no domain data, no foreign keys, and so
+-- not on the diagram.
 --
 -- A fifteenth table, `schema_migrations`, is created by the first migration.
 -- It is infrastructure — a record of which files in database/migrations/ this
@@ -43,6 +48,8 @@ CREATE DATABASE IF NOT EXISTS pawsandfound
 USE pawsandfound;
 
 -- Dropped in reverse dependency order so the file can be re-run while we build.
+DROP TABLE IF EXISTS auth_rate_limits;
+DROP TABLE IF EXISTS auth_tokens;
 DROP TABLE IF EXISTS privacy_consents;
 DROP TABLE IF EXISTS audit_logs;
 DROP TABLE IF EXISTS login_attempts;
@@ -80,10 +87,29 @@ CREATE TABLE users (
   user_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
   full_name       VARCHAR(120)  NOT NULL,
   email           VARCHAR(190)  NOT NULL,
+
+  -- Added by migration 005, in the positions its AFTER clauses produced, so a
+  -- fresh import of this file and a database built from the migrations are
+  -- identical under SHOW CREATE TABLE.
+  --
+  -- NOT another account_status. A suspended account and an unproved address
+  -- are different facts: one is what an administrator decided, the other is
+  -- what the person demonstrated. NULL means never proved, and a timestamp
+  -- rather than a boolean because "when" is the question asked afterwards.
+  email_verified_at TIMESTAMP         NULL DEFAULT NULL,
+
+  -- An address asked for and not yet proved. The column above still governs.
+  pending_email     VARCHAR(190)      NULL DEFAULT NULL,
   password_hash   VARCHAR(255)  NOT NULL,
   contact_number  VARCHAR(30)       NULL,
   role            ENUM('user','staff','admin') NOT NULL DEFAULT 'user',
   account_status  ENUM('active','suspended','locked') NOT NULL DEFAULT 'active',
+
+  -- Bumped when every existing session for this account must stop working.
+  -- Sessions are files on disk and cannot be enumerated safely, so each one
+  -- remembers the number it signed in under and current_user() compares it on
+  -- every request — the rule the role and account status already follow.
+  session_version   INT UNSIGNED  NOT NULL DEFAULT 1,
   preferred_location VARCHAR(120)   NULL,
 
   -- Which updates this person wants to be told about. Three booleans rather
@@ -93,6 +119,8 @@ CREATE TABLE users (
   notify_status     BOOLEAN       NOT NULL DEFAULT TRUE,
   notify_staff      BOOLEAN       NOT NULL DEFAULT TRUE,
   created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+
 
   PRIMARY KEY (user_id),
   -- 190 characters so the unique index fits within InnoDB's key limit on
@@ -519,7 +547,10 @@ CREATE TABLE audit_logs (
                      'logout','register','role_changed','account_suspended',
                      'account_reinstated',
                      'report_status_changed','match_decided',
-                     'moderation_resolved','category_changed') NOT NULL,
+                     'moderation_resolved','category_changed',
+                     -- migration 005
+                     'email_verified','email_change_completed',
+                     'password_reset') NOT NULL,
 
   target_type   ENUM('user','report','match','category','moderation_case') NULL,
   target_id     INT UNSIGNED     NULL,
@@ -592,7 +623,15 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
   PRIMARY KEY (version)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO schema_migrations (version) VALUES ('001'), ('002'), ('003')
+-- A fresh import of this file already contains everything migrations 001 to
+-- 006 do, so it records all six as applied. Otherwise somebody running the
+-- migrations afterwards would re-apply changes that are already here.
+--
+-- 004 and 005 were missing from this list: the baseline had their schema
+-- changes but claimed only three migrations had run. Harmless until somebody
+-- trusted the list.
+INSERT INTO schema_migrations (version)
+VALUES ('001'), ('002'), ('003'), ('004'), ('005'), ('006')
   ON DUPLICATE KEY UPDATE version = version;
 
 
@@ -626,11 +665,90 @@ INSERT INTO pet_breeds (category_id, breed_name) VALUES
   ((SELECT category_id FROM pet_categories WHERE category_code = 'rabbit'), 'Holland Lop');
 
 
+-- -----------------------------------------------------------------------------
+-- auth_tokens — one table for all three one-time links  (migration 005)
+--
+-- The RAW token goes in the email and is never written down. What is stored is
+-- a SHA-256 of it, so a copy of this table is not a set of working links: an
+-- attacker holding the database still cannot verify an address or reset a
+-- password. The same reasoning as password_hash, applied to the thing that can
+-- replace a password.
+-- -----------------------------------------------------------------------------
+CREATE TABLE auth_tokens (
+  token_id     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id      INT UNSIGNED NOT NULL,
+
+  purpose      ENUM('email_verification','password_reset','email_change') NOT NULL,
+
+  -- SHA-256 hex. Unique because a collision would let one link act on two
+  -- accounts, and because the lookup is by hash.
+  token_hash   CHAR(64) NOT NULL,
+
+  -- Only for email_change: the address being proved, which is not yet the
+  -- account's address. NULL for the other two purposes.
+  target_email VARCHAR(190) NULL DEFAULT NULL,
+
+  -- DEFAULT is named explicitly and is never used: token_issue() always
+  -- supplies this value. Naming it is what suppresses the implicit
+  -- ON UPDATE CURRENT_TIMESTAMP that the first bare TIMESTAMP column in a
+  -- table is given, which would reset the expiry on every write to the row
+  -- (migration 006).
+  expires_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  -- Set the moment it is spent. A used token is kept rather than deleted, so a
+  -- replay can be recognised as a replay instead of as an unknown token.
+  used_at      TIMESTAMP NULL DEFAULT NULL,
+
+  created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (token_id),
+  UNIQUE KEY uq_auth_tokens_hash (token_hash),
+  KEY idx_auth_tokens_user_purpose (user_id, purpose),
+  KEY idx_auth_tokens_expiry (expires_at),
+
+  -- CASCADE: a token belongs to an account and means nothing without it.
+  -- Unlike audit_logs, there is nothing here worth preserving afterwards.
+  CONSTRAINT fk_auth_tokens_user
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- -----------------------------------------------------------------------------
+-- auth_rate_limits — how often an unauthenticated stranger may ask  (005)
+--
+-- Different from the three-attempt account lock, which protects ONE account
+-- from guessing. This protects the SYSTEM from somebody registering a thousand
+-- accounts or using the password-reset form as a mailing service.
+--
+-- No foreign key and no domain meaning, so it is operational infrastructure
+-- and, like schema_migrations, is deliberately not on the ERD.
+--
+-- The subject is a keyed hash, never a raw address or IP: the system needs to
+-- count, not to know who.
+-- -----------------------------------------------------------------------------
+CREATE TABLE auth_rate_limits (
+  rate_limit_id     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  action            VARCHAR(40) NOT NULL,
+  subject_hash      CHAR(64) NOT NULL,
+  window_started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  attempt_count     SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                          ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (rate_limit_id),
+  -- One row per action per subject. The insert-or-increment relies on this:
+  -- two simultaneous requests cannot both create a row and both count 1.
+  UNIQUE KEY uq_auth_rate_limits (action, subject_hash),
+  KEY idx_auth_rate_limits_window (window_started_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 -- =============================================================================
 -- Verification
 --
--- Run after importing. Expect 15 tables — the 14 on the ERD plus
--- schema_migrations — and a non-zero foreign key count.
+-- Run after importing. Expect 17 tables — the 15 on the ERD plus
+-- schema_migrations and auth_rate_limits — and a non-zero foreign key count.
 -- =============================================================================
 
 -- SELECT COUNT(*) AS tables_created

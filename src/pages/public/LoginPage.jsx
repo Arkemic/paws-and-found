@@ -4,6 +4,7 @@ import { Lock, ShieldAlert } from 'lucide-react'
 import { Button, Card, CardBody, Input, RequiredNote } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import { AuthShell } from '@/components/AuthShell'
+import { ResendVerification } from '@/pages/public/RegisterPage'
 import { ROLES, ROLE_LABELS } from '@/constants'
 import { useAsync } from '@/hooks/useAsync'
 import { userService } from '@/services'
@@ -53,6 +54,9 @@ export function LoginPage({ onSignedIn, onDemoSignIn }) {
   // offering. Clearing this needs an administrator, not a retype — which is
   // why editing the fields below does not bring the button back.
   const isLocked = Boolean(error?.payload?.locked)
+  // A refusal the person can act on, unlike a wrong password: the account is
+  // real and the password was right, the address simply has not been proved.
+  const needsVerification = error?.payload?.code === 'verification_required'
 
   const change = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -122,6 +126,25 @@ export function LoginPage({ onSignedIn, onDemoSignIn }) {
             <SignInProblem error={error} />
 
             <div className="flex flex-wrap items-center gap-3">
+              {needsVerification && (
+                <div className="flex flex-col gap-2 rounded-control border border-border bg-sunken/70 p-3">
+                  <p className="text-sm font-medium text-fg">Email not verified</p>
+                  <p className="text-sm text-fg-muted">
+                    Follow the link we sent when you registered. If it has expired or never
+                    arrived, ask for another.
+                  </p>
+                  <div className="self-start">
+                    <ResendVerification email={form.email.trim()} />
+                  </div>
+                </div>
+              )}
+
+              <p className="-mt-1 text-sm">
+                <Link to="/forgot-password" className="text-brand hover:underline">
+                  Forgot your password?
+                </Link>
+              </p>
+
               <Button type="submit" isLoading={isSubmitting} disabled={isLocked}>
                 {isLocked ? 'Account locked' : isSubmitting ? 'Signing in…' : 'Sign in'}
               </Button>

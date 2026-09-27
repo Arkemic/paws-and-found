@@ -190,7 +190,7 @@ api/                 The PHP REST API — flat files, no framework
 └── auth · reports · matches · users · notifications · categories · moderation
 
 database/
-├── schema.sql       15 tables (14 on the ERD + schema_migrations)
+├── schema.sql       17 tables (15 on the ERD + schema_migrations, auth_rate_limits)
 └── seed.sql         Generated — do not hand-edit
 
 scripts/gen-seed.mjs  Turns src/mock/ into database/seed.sql

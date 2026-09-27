@@ -10,6 +10,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/tokens.php';
+require_once __DIR__ . '/mail.php';
+require_once __DIR__ . '/mail_messages.php';
 
 function handle_auth(string $method, ?string $action): never
 {
@@ -27,6 +30,23 @@ function handle_auth(string $method, ?string $action): never
 
     if ($method === 'GET' && $action === 'me') {
         auth_me();
+    }
+
+    // Proving an address, and getting back in without an administrator.
+    if ($method === 'POST' && $action === 'verify-email') {
+        auth_verify_email();
+    }
+
+    if ($method === 'POST' && $action === 'resend-verification') {
+        auth_resend_verification();
+    }
+
+    if ($method === 'POST' && $action === 'forgot-password') {
+        auth_forgot_password();
+    }
+
+    if ($method === 'POST' && $action === 'reset-password') {
+        auth_reset_password();
     }
 
     json_error('No such endpoint.', 404);
@@ -68,7 +88,8 @@ function auth_login(): never
     }
 
     $statement = db()->prepare(
-        'SELECT user_id, full_name, email, password_hash, role, account_status
+        'SELECT user_id, full_name, email, password_hash, role, account_status,
+                email_verified_at, session_version
            FROM users
           WHERE email = :email'
     );
@@ -100,6 +121,21 @@ function auth_login(): never
         json_error(LOCKED_MESSAGE, 403, ['locked' => true, 'attempts_remaining' => 0]);
     }
 
+    // An address nobody has proved belongs to them cannot sign in.
+    //
+    // Checked AFTER the password, on purpose: answering before it would tell
+    // anybody who typed an address whether an account exists and is pending,
+    // which is the enumeration the whole sign-in path is careful to avoid.
+    // Getting this far already required the correct password.
+    if ($user['email_verified_at'] === null) {
+        clear_login_attempts($email);
+
+        json_error('Check your email and follow the verification link before signing in.', 403, [
+            'code' => 'verification_required',
+            'verification_required' => true,
+        ]);
+    }
+
     // Signing in successfully is what clears the counter. Nothing else does,
     // apart from an administrator unlocking the account.
     clear_login_attempts($email);
@@ -111,6 +147,10 @@ function auth_login(): never
     session_regenerate_id(true);
     session_started_now();
     $_SESSION['user_id'] = (int) $user['user_id'];
+    // The generation this session belongs to. A password reset bumps the
+    // column and every session carrying an older number stops working, without
+    // anybody having to find and delete session files on disk.
+    $_SESSION['session_version'] = (int) $user['session_version'];
 
     audit_log('login', (int) $user['user_id'], $user['email'], 'user', (int) $user['user_id']);
 
@@ -233,8 +273,15 @@ function attempts_message(int $remaining): string
 function auth_register(): never
 {
     $body = request_body();
+
+    // Before anything is validated or written. Rate limiting answers "how
+    // often", Turnstile answers "is this a person" — related, but not the same
+    // question, and a script that solves one does not solve the other.
+    rate_limit_or_fail('register', 'ip:' . client_ip());
+    turnstile_or_fail(isset($body['captcha_token']) ? (string) $body['captcha_token'] : null);
+
     $fullName = trim((string) ($body['full_name'] ?? ''));
-    $email = trim((string) ($body['email'] ?? ''));
+    $email = normalise_email((string) ($body['email'] ?? ''));
     $password = (string) ($body['password'] ?? '');
     $contact = trim((string) ($body['contact_number'] ?? ''));
 
@@ -331,24 +378,303 @@ function auth_register(): never
         throw $exception;
     }
 
-    // Registering signs you in, so nobody has to retype the password they just
-    // chose. Same fresh session id as auth_login(), for the same reason.
-    start_session();
-    session_regenerate_id(true);
-    session_started_now();
-    $_SESSION['user_id'] = $userId;
-
     audit_log('register', $userId, $email, 'user', $userId);
 
+    // Registering no longer signs anybody in. The account exists and cannot be
+    // used until the address is proved, so handing out a session here would be
+    // a session that is not allowed to do anything.
+    //
+    // Creating the row and sending the mail cannot be one transaction: MySQL
+    // and an SMTP server do not share one. So the account is committed first
+    // and the send is reported honestly — an account that exists with no email
+    // delivered is recoverable by pressing resend, whereas rolling back a
+    // perfectly good account because a mail server answered slowly is not.
+    $delivered = true;
+    $token = token_issue($userId, 'email_verification');
+
+    try {
+        send_mail(
+            $email,
+            $fullName,
+            'Verify your Paws&Found email',
+            mail_body_verification($fullName, $token),
+            mail_text_verification($fullName, $token)
+        );
+    } catch (MailFailure $failure) {
+        // The reason goes to the log, never to the browser: it can name the
+        // mail host and quote its refusal.
+        error_log('[pawsandfound] verification email to user ' . $userId . ' failed: ' . $failure->getMessage());
+        $delivered = false;
+    }
+
     json_response([
-        'csrf_token' => rotate_csrf_token(),
-        'user' => [
-            'user_id' => $userId,
-            'full_name' => $fullName,
-            'email' => $email,
-            'role' => 'user',
-        ],
+        'verification_required' => true,
+        'email_sent' => $delivered,
+        'email' => mask_email($email),
     ], 201);
+}
+
+/**
+ * Show enough of an address to recognise it, not enough to learn it.
+ *
+ * The person who just typed it knows what it says; anybody reading over their
+ * shoulder, or reading a screenshot afterwards, does not need the whole thing.
+ */
+function mask_email(string $email): string
+{
+    [$local, $domain] = array_pad(explode('@', $email, 2), 2, '');
+
+    $shown = mb_substr($local, 0, 1);
+    $hidden = str_repeat('*', max(1, mb_strlen($local) - 1));
+
+    return $domain === '' ? $shown . $hidden : $shown . $hidden . '@' . $domain;
+}
+
+/**
+ * One spelling of an address.
+ *
+ * Trim and lower-case, and nothing else. Deliberately NOT the clever
+ * provider-specific canonicalisation — stripping dots or +tags — because those
+ * rules belong to one provider, not to email, and applying them elsewhere
+ * merges two people who are not the same person.
+ *
+ * The column is utf8mb4_unicode_ci, so uniqueness was already
+ * case-insensitive; this makes what is stored match what is compared.
+ */
+function normalise_email(string $email): string
+{
+    return mb_strtolower(trim($email));
+}
+
+/**
+ * Prove an email address.
+ *
+ * Handles both purposes, because to the person clicking they are the same act:
+ * a link arrived, they followed it, the address is theirs now. An email-change
+ * token additionally moves `pending_email` into `email`.
+ */
+function auth_verify_email(): never
+{
+    $body = request_body();
+    $raw = trim((string) ($body['token'] ?? ''));
+
+    $token = token_consume($raw, 'email_verification') ?? token_consume($raw, 'email_change');
+
+    if ($token === null) {
+        // Wrong, expired and already used are one answer on purpose. A link
+        // that says "expired" tells whoever holds it that it was once real.
+        json_error('That link is no longer valid. Ask for a new one.', 400, [
+            'code' => 'token_invalid',
+        ]);
+    }
+
+    $pdo = db();
+    $pdo->beginTransaction();
+
+    try {
+        if ($token['purpose'] === 'email_change') {
+            $newEmail = (string) $token['target_email'];
+
+            // Somebody else may have taken the address during the wait. The
+            // unique index decides; this only makes the refusal readable.
+            $taken = $pdo->prepare('SELECT 1 FROM users WHERE email = :email AND user_id <> :id');
+            $taken->execute([':email' => $newEmail, ':id' => $token['user_id']]);
+
+            if ($taken->fetchColumn()) {
+                $pdo->rollBack();
+                json_error('That email address is now in use by another account.', 409, [
+                    'code' => 'email_taken',
+                ]);
+            }
+
+            $update = $pdo->prepare(
+                'UPDATE users
+                    SET email = :email, pending_email = NULL, email_verified_at = NOW()
+                  WHERE user_id = :id'
+            );
+            $update->execute([':email' => $newEmail, ':id' => $token['user_id']]);
+        } else {
+            $update = $pdo->prepare(
+                'UPDATE users SET email_verified_at = NOW()
+                  WHERE user_id = :id AND email_verified_at IS NULL'
+            );
+            $update->execute([':id' => $token['user_id']]);
+        }
+
+        $pdo->commit();
+    } catch (Throwable $exception) {
+        $pdo->rollBack();
+        throw $exception;
+    }
+
+    $person = $pdo->prepare('SELECT email FROM users WHERE user_id = :id');
+    $person->execute([':id' => $token['user_id']]);
+    $address = (string) ($person->fetchColumn() ?: '');
+
+    audit_log(
+        $token['purpose'] === 'email_change' ? 'email_change_completed' : 'email_verified',
+        (int) $token['user_id'],
+        $address,
+        'user',
+        (int) $token['user_id']
+    );
+
+    json_response(['verified' => true, 'email' => mask_email($address)]);
+}
+
+/**
+ * Send the verification email again.
+ *
+ * Answers the same way whatever the address is. An endpoint that says "no such
+ * account" is a list of which addresses have accounts, available to anybody.
+ */
+function auth_resend_verification(): never
+{
+    $body = request_body();
+    $email = normalise_email((string) ($body['email'] ?? ''));
+
+    rate_limit_or_fail('resend_verification', $email);
+    rate_limit_or_fail('resend_verification', 'ip:' . client_ip());
+
+    $statement = db()->prepare(
+        'SELECT user_id, full_name, email FROM users
+          WHERE email = :email AND email_verified_at IS NULL'
+    );
+    $statement->execute([':email' => $email]);
+    $user = $statement->fetch();
+
+    if ($user) {
+        $token = token_issue((int) $user['user_id'], 'email_verification');
+
+        try {
+            send_mail(
+                $user['email'],
+                $user['full_name'],
+                'Verify your Paws&Found email',
+                mail_body_verification($user['full_name'], $token),
+                mail_text_verification($user['full_name'], $token)
+            );
+        } catch (MailFailure $failure) {
+            error_log('[pawsandfound] resend to user ' . $user['user_id'] . ' failed: ' . $failure->getMessage());
+        }
+    }
+
+    json_response([
+        'message' => 'If an unverified account uses that email address, '
+            . 'a new verification link has been sent.',
+    ]);
+}
+
+/**
+ * Begin a password reset.
+ *
+ * The answer never varies. Not for an unknown address, not for an unverified
+ * one, not for a suspended account, and not when the mail server refuses —
+ * because any difference at all is a way of asking whether an address is
+ * registered.
+ */
+function auth_forgot_password(): never
+{
+    $body = request_body();
+    $email = normalise_email((string) ($body['email'] ?? ''));
+
+    rate_limit_or_fail('forgot_password', $email);
+    rate_limit_or_fail('forgot_password', 'ip:' . client_ip());
+
+    $statement = db()->prepare(
+        'SELECT user_id, full_name, email FROM users
+          WHERE email = :email AND email_verified_at IS NOT NULL'
+    );
+    $statement->execute([':email' => $email]);
+    $user = $statement->fetch();
+
+    if ($user) {
+        $token = token_issue((int) $user['user_id'], 'password_reset');
+
+        try {
+            send_mail(
+                $user['email'],
+                $user['full_name'],
+                'Reset your Paws&Found password',
+                mail_body_reset($user['full_name'], $token),
+                mail_text_reset($user['full_name'], $token)
+            );
+        } catch (MailFailure $failure) {
+            error_log('[pawsandfound] reset mail to user ' . $user['user_id'] . ' failed: ' . $failure->getMessage());
+        }
+    }
+
+    json_response([
+        'message' => 'If an account uses that email address, '
+            . 'password reset instructions have been sent.',
+    ]);
+}
+
+/**
+ * Finish a password reset.
+ *
+ * Deliberately does NOT unlock a locked account or reinstate a suspended one.
+ * Those are an administrator's decision about a person; this is a person
+ * proving they can read their own email. Conflating them would turn the reset
+ * form into a way around the three-attempt lock.
+ */
+function auth_reset_password(): never
+{
+    $body = request_body();
+    $raw = trim((string) ($body['token'] ?? ''));
+    $password = (string) ($body['password'] ?? '');
+
+    // The same rule as registration, checked in the same order, so the two
+    // forms cannot drift apart.
+    if (strlen($password) < 8) {
+        json_error('Use at least 8 characters.', 422, [
+            'fields' => ['password' => 'Use at least 8 characters.'],
+        ]);
+    }
+
+    if (strlen($password) > 72) {
+        json_error('That password is too long (72 characters maximum).', 422, [
+            'fields' => ['password' => 'That password is too long (72 characters maximum).'],
+        ]);
+    }
+
+    $token = token_consume($raw, 'password_reset');
+
+    if ($token === null) {
+        json_error('That link is no longer valid. Ask for a new one.', 400, [
+            'code' => 'token_invalid',
+        ]);
+    }
+
+    $pdo = db();
+    $pdo->beginTransaction();
+
+    try {
+        // Both in one statement: the new password, and the generation bump that
+        // makes every session signed in under the old one stop working.
+        $update = $pdo->prepare(
+            'UPDATE users
+                SET password_hash = :hash, session_version = session_version + 1
+              WHERE user_id = :id'
+        );
+        $update->execute([
+            ':hash' => password_hash($password, PASSWORD_DEFAULT),
+            ':id' => $token['user_id'],
+        ]);
+
+        $pdo->commit();
+    } catch (Throwable $exception) {
+        $pdo->rollBack();
+        throw $exception;
+    }
+
+    $person = $pdo->prepare('SELECT email FROM users WHERE user_id = :id');
+    $person->execute([':id' => $token['user_id']]);
+
+    audit_log('password_reset', (int) $token['user_id'], $person->fetchColumn() ?: null,
+        'user', (int) $token['user_id'], 'success', 'reset by email link; other sessions ended');
+
+    json_response(['reset' => true]);
 }
 
 function auth_logout(): never
@@ -405,6 +731,11 @@ function auth_me(): never
             'notify_matches' => (bool) $user['notify_matches'],
             'notify_status' => (bool) $user['notify_status'],
             'notify_staff' => (bool) $user['notify_staff'],
+            // The person's own account, so both are theirs to see. The profile
+            // needs them to show "awaiting verification" rather than claiming
+            // an address change is already done.
+            'email_verified_at' => $user['email_verified_at'],
+            'pending_email' => $user['pending_email'],
         ],
     ]);
 }

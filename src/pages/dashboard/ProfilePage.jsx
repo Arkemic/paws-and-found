@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Lock, MapPin, ShieldCheck, UserRound } from 'lucide-react'
+import { Check, Lock, MailWarning, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react'
 import {
   Button, Card, CardBody, CardHeader, Checkbox, Input, LoadingSkeleton, RequiredNote,
 } from '@/components/ui'
@@ -94,6 +94,24 @@ function ProfileForm({ user, onSaved }) {
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  // Reading is the default state. The form used to be permanently open, so a
+  // stray keystroke on a real account field was a real change waiting for a
+  // Save nobody meant to press.
+  const [isEditing, setIsEditing] = useState(false)
+
+  /** Throw away anything typed and go back to reading. */
+  const cancel = () => {
+    setForm({
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone,
+      preferredLocation: user.preferredLocation,
+      ...user.notificationPreferences,
+    })
+    setSaveError(null)
+    setIsSaved(false)
+    setIsEditing(false)
+  }
 
   // The server's own per-field messages, placed under the fields they name.
   const fieldErrors = Object.fromEntries(
@@ -123,6 +141,7 @@ function ProfileForm({ user, onSaved }) {
         },
       })
       setIsSaved(true)
+      setIsEditing(false)
       onSaved()
     } catch (caught) {
       setSaveError(caught instanceof Error ? caught : new Error(String(caught)))
@@ -135,7 +154,13 @@ function ProfileForm({ user, onSaved }) {
     <form onSubmit={save} className="flex flex-col gap-6">
       {header}
 
-      <RequiredNote className="-mt-2 text-sm text-fg-muted" />
+      {/* One disabled fieldset rather than a second, read-only copy of every
+          field. The browser makes every control inside it non-interactive and
+          skips it in the tab order, which is exactly what view mode means —
+          and it cannot drift from the editable version the way a duplicate
+          layout would. */}
+      <fieldset disabled={!isEditing} className="flex flex-col gap-6 border-0 p-0">
+        {isEditing && <RequiredNote className="-mt-2 text-sm text-fg-muted" />}
 
       <Card>
         <CardHeader
@@ -191,6 +216,18 @@ function ProfileForm({ user, onSaved }) {
                 required
                 error={fieldErrors.email}
               />
+              {/* A change that has been asked for and not yet proved. The account
+                  keeps its old address until somebody follows the link sent to the
+                  new one, so saying "saved" here would be wrong. */}
+              {user.pendingEmail && (
+                <p className="-mt-3 flex items-start gap-2 rounded-control border border-border bg-sunken/70 p-3 text-sm text-fg-muted">
+                  <MailWarning size={16} className="mt-0.5 shrink-0 text-lost" aria-hidden="true" />
+                  <span>
+                    Waiting for <strong className="font-medium text-fg">{user.pendingEmail}</strong> to be
+                    confirmed. Until then this account still uses the address above.
+                  </span>
+                </p>
+              )}
               <Input
                 label="Phone number"
                 type="tel"
@@ -234,12 +271,26 @@ function ProfileForm({ user, onSaved }) {
         </CardBody>
       </Card>
 
+      </fieldset>
+
       {/* The action bar: separated from the last card, with the outcome of
           the last save beside the button. */}
       <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center">
-        <Button type="submit" isLoading={isSaving} className="w-full sm:w-auto">
-          {isSaving ? 'Saving…' : 'Save changes'}
-        </Button>
+        {isEditing ? (
+          <div className="flex flex-wrap gap-3">
+            <Button type="submit" isLoading={isSaving}>
+              {isSaving ? 'Saving…' : 'Save changes'}
+            </Button>
+            <Button type="button" variant="ghost" onClick={cancel} disabled={isSaving}>
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button type="button" onClick={() => setIsEditing(true)} className="w-full sm:w-auto">
+            <Pencil size={16} aria-hidden="true" />
+            Edit profile
+          </Button>
+        )}
 
         {isSaved && (
           <p role="status" className="flex items-center gap-1 text-sm text-success-ink">

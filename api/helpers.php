@@ -265,7 +265,7 @@ function current_user(): ?array
     $statement = db()->prepare(
         'SELECT user_id, full_name, email, contact_number, role, account_status,
                 preferred_location, notify_matches, notify_status, notify_staff,
-                created_at
+                created_at, email_verified_at, pending_email, session_version
            FROM users
           WHERE user_id = :id'
     );
@@ -274,6 +274,22 @@ function current_user(): ?array
 
     if (!$user) {
         // The account was deleted while the session lived on.
+        session_destroy();
+        return null;
+    }
+
+    // A password reset bumps users.session_version, and every session still
+    // carrying the previous number stops working here — on every device at
+    // once, without anybody trying to find and delete PHP's session files.
+    //
+    // Sessions created before this column existed have no version recorded.
+    // They are adopted at the account's current value rather than thrown away,
+    // for the same reason the idle timeout adopts them: signing everybody out
+    // to deploy a feature is a worse first impression than the feature.
+    if (!isset($_SESSION['session_version'])) {
+        $_SESSION['session_version'] = (int) $user['session_version'];
+    } elseif ((int) $_SESSION['session_version'] !== (int) $user['session_version']) {
+        $_SESSION = [];
         session_destroy();
         return null;
     }

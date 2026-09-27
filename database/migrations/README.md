@@ -13,6 +13,9 @@ column, and it never drops the data that is already there.
     002_audit_logs.sql      who did what, and when
     003_privacy_consent.sql who agreed to which version of the privacy notice
     004_audit_actions.sql   the case events join the audit vocabulary
+    005_account_lifecycle.sql  proving an address, resetting a password, and
+                            revoking sessions without hunting for session files
+    006_token_expiry_explicit.sql  stop auth_tokens.expires_at rewriting itself
 
 ## Applying one
 
@@ -27,7 +30,9 @@ this database already had done to it":
 
 `schema_migrations` is infrastructure, not part of the domain — it is
 deliberately **not** on the ERD, for the same reason a filing cabinet is not on
-a family tree.
+a family tree. `auth_rate_limits`, added by 005, is left off for the same kind
+of reason: it counts requests against an address that usually has no account,
+so it has no foreign key and no domain relationship to draw.
 
 ## Writing one
 
@@ -36,9 +41,14 @@ a family tree.
    value — never `DROP` something with data in it.
 3. Use `IF NOT EXISTS` where MariaDB allows it, so running it twice is not a
    disaster.
-4. End it with its own `INSERT` into `schema_migrations`.
-5. Make the same change in `schema.sql`, so a fresh import and a migrated
+4. Give every `TIMESTAMP` column an explicit `DEFAULT`. The first bare
+   `TIMESTAMP NOT NULL` in a table is silently given
+   `DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`, so the column
+   quietly rewrites itself on every write to the row. That is what 006 had to
+   undo.
+5. End it with its own `INSERT` into `schema_migrations`.
+6. Make the same change in `schema.sql`, so a fresh import and a migrated
    database end up identical. A migration that is not mirrored in the baseline
    is how the two quietly drift apart.
-6. Update `docs/diagrams/fig2-erd.svg` and `docs/erd-defense.md` if the change
+7. Update `docs/diagrams/fig2-erd.svg` and `docs/erd-defense.md` if the change
    touches a table or a relationship.

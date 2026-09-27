@@ -103,7 +103,7 @@ at all. That is the same property the hosted version will rely on.
 
 `scripts/multi_device.py` opens **three independent sessions** — three cookie
 jars, three CSRF tokens, exactly as three browsers on three machines have — and
-runs the whole sequence against one Apache, one PHP and one MySQL. **40 checks,
+runs the whole sequence against one Apache, one PHP and one MySQL. **55 checks,
 all passing as of 25 September 2026.** It restores the demonstration data at
 the end, so it can be run as often as the code changes.
 

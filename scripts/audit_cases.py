@@ -23,6 +23,13 @@ def png(width=40, height=30):
 
 # =============================================================== A. VALIDATION
 def input_validation():
+    # Registration is rate-limited per address; this suite registers far more
+    # often than a person would. Cleared at the top of every block that
+    # registers, exactly as the lock cases clear login_attempts — these are
+    # testing validation, and the limit has its own cases in
+    # scripts/auth_lifecycle.py.
+    sql("DELETE FROM auth_rate_limits;")
+
     C = 'A. Input validation'
     status(C, 'IV-01', 'Report with an empty body', 'customer', 'POST', '/reports', {}, 422)
     status(C, 'IV-02', 'Report with no species', 'customer', 'POST', '/reports',
@@ -105,22 +112,30 @@ def sql_injection():
     check(C, 'SQL-11', 'pet_reports table intact afterwards', '32 rows',
           sql('SELECT COUNT(*) FROM pet_reports;') + ' rows',
           sql('SELECT COUNT(*) FROM pet_reports;') == '32')
-    # 15: the 14 tables on the ERD, plus schema_migrations, which is
-    # infrastructure rather than a domain table (database/migrations/README.md).
-    check(C, 'SQL-12', 'Schema intact afterwards', '15 tables',
+    # 17 physical: the 15 on the ERD, plus schema_migrations and
+    # auth_rate_limits, which are infrastructure rather than domain tables
+    # (database/migrations/README.md).
+    check(C, 'SQL-12', 'Schema intact afterwards', '17 tables',
           sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='pawsandfound';") + ' tables',
-          sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='pawsandfound';") == '15')
-    # The ERD claims 23. A diagram cannot be wrong quietly if the suite counts
+          sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='pawsandfound';") == '17')
+    # The ERD claims 24. A diagram cannot be wrong quietly if the suite counts
     # the same thing the diagram is drawing.
     fks = sql("SELECT COUNT(*) FROM information_schema.table_constraints "
               "WHERE table_schema='pawsandfound' AND constraint_type='FOREIGN KEY';")
-    check(C, 'SQL-14', 'Foreign keys match the ERD', '23 keys', fks + ' keys', fks == '23')
+    check(C, 'SQL-14', 'Foreign keys match the ERD', '24 keys', fks + ' keys', fks == '24')
     roles = sql('SELECT GROUP_CONCAT(role ORDER BY user_id) FROM users WHERE user_id<=3;')
     check(C, 'SQL-13', 'No account was promoted', 'user,user,user', roles, roles == 'user,user,user')
 
 
 # =========================================================== C. AUTHENTICATION
 def authentication():
+    # Registration is rate-limited per address; this suite registers far more
+    # often than a person would. Cleared at the top of every block that
+    # registers, exactly as the lock cases clear login_attempts — these are
+    # testing validation, and the limit has its own cases in
+    # scripts/auth_lifecycle.py.
+    sql("DELETE FROM auth_rate_limits;")
+
     C = 'C. Authentication'
     from audit import ACCOUNTS, PW, Session
     status(C, 'AU-01', 'Sign in with correct credentials', 'guest', 'POST', '/auth/login',
@@ -164,9 +179,33 @@ def authentication():
         'privacy_consent': True})
     check(C, 'AU-09', 'Register a new account', 201, code, code == 201)
     role = sql("SELECT role FROM users WHERE email='audit.new@example.com';")
-    check(C, 'AU-10', 'New account is signed in immediately', 'session started',
+    # Since migration 005 registering does NOT sign anybody in: the address has
+    # not been proved yet, so a session here would be one that is not allowed
+    # to do anything. The old case asserted the opposite and was right at the
+    # time; it is inverted rather than deleted, because "does not happen" is
+    # worth asserting once it used to.
+    check(C, 'AU-10', 'A new account is NOT signed in', 'not signed in',
           'session started' if reg.call('GET', '/auth/me')[1].get('user') else 'not signed in',
-          bool(reg.call('GET', '/auth/me')[1].get('user')))
+          not reg.call('GET', '/auth/me')[1].get('user'))
+    check(C, 'AU-10b', 'And it is unverified until the link is followed', '1',
+          sql("SELECT COUNT(*) FROM users WHERE email='audit.new@example.com' "
+              "AND email_verified_at IS NULL;"),
+          sql("SELECT COUNT(*) FROM users WHERE email='audit.new@example.com' "
+              "AND email_verified_at IS NULL;") == '1')
+    # The CORRECT password, deliberately. A wrong one answers 401 whether or
+    # not the address is verified — the password is checked first on purpose,
+    # so that "this account exists but is pending" is never something an
+    # attacker can learn by guessing at addresses.
+    check(C, 'AU-10c', 'And cannot sign in yet, even with the right password', 403,
+          Session().call('POST', '/auth/login',
+                         {'email': 'audit.new@example.com', 'password': 'auditpass123'})[0],
+          Session().call('POST', '/auth/login',
+                         {'email': 'audit.new@example.com', 'password': 'auditpass123'})[0] == 403)
+    check(C, 'AU-10d', 'And a wrong password is still only a wrong password', 401,
+          Session().call('POST', '/auth/login',
+                         {'email': 'audit.new@example.com', 'password': 'not-it'})[0],
+          Session().call('POST', '/auth/login',
+                         {'email': 'audit.new@example.com', 'password': 'not-it'})[0] == 401)
 
     esc = Session()
     esc.call('POST', '/auth/register', {
@@ -263,6 +302,8 @@ def authentication():
 
     # --------------------------------------------- the privacy acknowledgement
     #
+    sql("DELETE FROM auth_rate_limits;")
+
     # The checkbox on the form is a convenience. What makes the consent record
     # trustworthy is that the account cannot be created without it here.
     status(C, 'AU-25', 'Registering without the privacy acknowledgement',

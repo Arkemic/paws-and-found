@@ -54,7 +54,7 @@ try {
         case '':
             json_response([
                 'name' => 'Paws&Found API',
-                'endpoints' => ['/health', '/auth', '/reports', '/matches', '/notifications', '/users', '/categories', '/moderation'],
+                'endpoints' => ['/health', '/config', '/auth', '/reports', '/matches', '/notifications', '/users', '/categories', '/moderation'],
             ]);
 
         // A platform health check, and the first thing to curl after a deploy.
@@ -68,6 +68,21 @@ try {
             } catch (Throwable) {
                 json_response(['status' => 'degraded', 'database' => 'unreachable'], 503);
             }
+
+            // no break — json_response() exits.
+
+        // What the browser is allowed to know about how this server is set
+        // up. Public on purpose and deliberately tiny: a site key is meant to
+        // be in the page, and everything else here would be reconnaissance.
+        //
+        // Served at run time rather than baked into the build, so the same
+        // image runs in front of a Turnstile site or without one, and the
+        // deployment does not need a rebuild to change it.
+        case 'config':
+            json_response(['data' => [
+                'turnstile_enabled' => TURNSTILE_ENABLED,
+                'turnstile_site_key' => TURNSTILE_ENABLED ? TURNSTILE_SITE_KEY : null,
+            ]]);
 
             // no break — json_response() exits.
 

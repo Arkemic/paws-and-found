@@ -141,7 +141,7 @@ showing 14 without that sentence looks like an omission.
 
 Three things, and each one found something reading the code did not.
 
-**1. Endpoint-level testing found a router fault.** `npm run audit` — 151 cases
+**1. Endpoint-level testing found a router fault.** `npm run audit` — 167 cases
 in eight categories, run against the live system, restoring the data
 afterwards. Every handler in `api/` was correct **on its own**. But
 `api/index.php` passed only the first two path segments to most of them, so a
@@ -156,7 +156,7 @@ asking the running API for endpoints it does not have did. Cases EH-07 to
 EH-10.
 
 **2. Automated accessibility testing could not see the contrast problem.**
-`npm run a11y` runs axe-core over all 26 pages in every role: zero violations.
+`npm run a11y` runs axe-core over all 29 pages in every role: zero violations.
 But axe cannot judge text over a photograph — it sees a transparent background,
 declines to guess what is behind the words, and reports nothing. So we hid the
 text, photographed the page, and compared each text colour against **every
@@ -165,7 +165,7 @@ paragraphs under AA, the worst at **1.17:1**, on pages axe had already called
 clean. The readings are in `docs/design-system.md`.
 
 **3. Multi-device testing proved the database is the authority.**
-`npm run multi-device` — 40 checks across three independent sessions. A role
+`npm run multi-device` — 55 checks across three independent sessions. A role
 change on one device takes effect on the other two on their very next request.
 Three wrong passwords on one device refuse the correct password on another.
 

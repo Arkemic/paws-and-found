@@ -22,6 +22,9 @@ import { HelpPage } from '@/pages/public/HelpPage'
 import { PrivacyPage } from '@/pages/public/PrivacyPage'
 import { LoginPage } from '@/pages/public/LoginPage'
 import { RegisterPage } from '@/pages/public/RegisterPage'
+import { VerifyEmailPage } from '@/pages/public/VerifyEmailPage'
+import { ForgotPasswordPage } from '@/pages/public/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/public/ResetPasswordPage'
 
 import { DashboardOverviewPage } from '@/pages/dashboard/DashboardOverviewPage'
 import { MyReportsPage } from '@/pages/dashboard/MyReportsPage'
@@ -142,7 +145,12 @@ export default function App() {
             path="/login"
             element={<LoginPage onSignedIn={setSignedInUser} onDemoSignIn={changeRole} />}
           />
-          <Route path="/register" element={<RegisterPage onSignedIn={setSignedInUser} />} />
+          <Route path="/register" element={<RegisterPage />} />
+          {/* Reached from an email, never from the navigation. They are steps
+              in a flow somebody is already inside, not places to browse to. */}
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Filing a report requires an account, so a report can be traced
               back to a person and followed up. Any signed-in role may file. */}

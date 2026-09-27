@@ -316,10 +316,11 @@ screen.
 
 **Needs:** `database/migrations/` with numbered, additive files.
 
-**Done.** `database/migrations/` holds `001` to `004`, each additive, each
+**Done.** `database/migrations/` holds `001` to `006`, each additive, each
 recording itself in `schema_migrations`. The baseline is kept in step: a fresh
 import of `schema.sql` was diffed against the migrated database table by table
-on 25 September and came back identical, 15 tables each.
+on 25 September and came back identical, 15 tables each, and again on 27
+September after migration `005`, 17 tables each.
 
 ### G10 — The defence documents do not exist  ·  **closed 25 September 2026**
 
@@ -372,14 +373,19 @@ redrawn, so for two days the ERD showed eleven boxes against fourteen tables.
 That is exactly the fault this section exists to catch, and it was caught by
 counting `information_schema` rather than by reading the diagram.
 
-The figure now shows 14 tables and 23 foreign keys, and the count is asserted
-by case SQL-12. The table-by-table defence is `docs/erd-defense.md`.
+The figure now shows 15 tables and 24 foreign keys, and the count is asserted
+by cases SQL-12 and SQL-14. The table-by-table defence is `docs/erd-defense.md`.
 
-**The number to say out loud:** the database has **15** tables. Fourteen are on
-the ERD. The fifteenth is `schema_migrations`, which records which files in
-`database/migrations/` have been applied — it is infrastructure, it holds no
-domain data, it has no foreign keys, and a filing cabinet does not belong on a
-family tree.
+**Updated again, 27 September 2026,** for the same reason: migration `005` added
+`auth_tokens`, `auth_rate_limits` and three columns on `users`, and the figure
+was redrawn to match rather than left to drift a second time.
+
+**The number to say out loud:** the database has **17** tables. Fifteen are on
+the ERD. The other two are `schema_migrations`, which records which files in
+`database/migrations/` have been applied, and `auth_rate_limits`, which counts
+how recently an address asked for something — both are infrastructure, both
+hold no domain data, neither has a foreign key, and a filing cabinet does not
+belong on a family tree.
 
 The relationships below are the eleven-table list as it stood; the full,
 current list of all 23 is in `docs/erd-defense.md`.

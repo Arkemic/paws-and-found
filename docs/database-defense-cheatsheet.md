@@ -1,6 +1,6 @@
 # Database cheat sheet
 
-**ITS122P–AM5 · Group 3** · counted from `information_schema`, 25 September 2026
+**ITS122P–AM5 · Group 3** · counted from `information_schema`, 27 September 2026
 
 One page. The long version is `docs/erd-defense.md`; this is what to have in
 your head walking in.
@@ -11,23 +11,26 @@ your head walking in.
 
 | | |
 | --- | --- |
-| Tables | **15** — the **14** on the ERD, plus `schema_migrations` |
-| Foreign keys | **23**, all on the 14 |
-| Primary keys | 15, one per table |
-| Unique constraints | 7, over 11 columns |
+| Tables | **17** — the **15** on the ERD, plus `schema_migrations` and `auth_rate_limits` |
+| Foreign keys | **24**, all on the 15 |
+| Primary keys | 17, one per table |
+| Unique constraints | 9, over 14 columns |
 | CHECK constraints | 2 |
 | Engine | InnoDB throughout |
 | Server | MariaDB 10.4.32 via XAMPP — **port 3307** on the development laptop |
 
-**Say both table numbers.** `SHOW TABLES` gives 15; the ERD draws 14. The
-fifteenth is `schema_migrations`, which records which files in
-`database/migrations/` have been applied. It holds no domain data and has no
-foreign keys — a filing cabinet does not belong on a family tree. Saying "14"
-and leaving it there makes a decision look like an omission.
+**Say both table numbers.** `SHOW TABLES` gives 17; the ERD draws 15. The two
+that are missing are `schema_migrations`, which records which files in
+`database/migrations/` have been applied, and `auth_rate_limits`, which counts
+how recently an address asked for something so the API can refuse the fourth
+request. Neither holds domain data and neither has a foreign key — a filing
+cabinet does not belong on a family tree. Saying "15" and leaving it there
+makes a decision look like an omission. The diagram carries the explanation in
+its own note, so the answer is on the page you are pointing at.
 
 ---
 
-## The 14, one line each
+## The 15, one line each
 
 | Table | What it holds |
 | --- | --- |
@@ -45,6 +48,7 @@ and leaving it there makes a decision look like an omission.
 | `login_attempts` | Failed sign-ins per **email address** |
 | `audit_logs` | Who did what, append-only |
 | `privacy_consents` | Who agreed to which version of the privacy notice |
+| `auth_tokens` | One-time links — verify an address, reset a password. Stored **hashed** |
 
 ---
 
@@ -105,7 +109,7 @@ and CASCADE so deleting an account takes its counter with it.
 ## Run these if you are asked to prove it
 
 ```sql
--- 15 tables, 23 foreign keys
+-- 17 tables, 24 foreign keys (15 of the 17 are on the ERD)
 SELECT COUNT(*) FROM information_schema.tables
  WHERE table_schema = 'pawsandfound';
 
@@ -113,7 +117,7 @@ SELECT COUNT(*) FROM information_schema.table_constraints
  WHERE table_schema = 'pawsandfound' AND constraint_type = 'FOREIGN KEY';
 ```
 
-Three refusals. **All three were run live on 25 September and all three
+Three refusals. **All three were run live on 27 September and all three
 failed as intended** — which is the point:
 
 ```sql
@@ -156,4 +160,4 @@ PHP in that transaction at all.
 > the values are sent to the server separately from the statement and are never
 > part of the SQL text. Tested with 13 payloads in category B of
 > `npm run audit`; after every one, `SELECT COUNT(*) FROM pet_reports` still
-> returns 32 and the schema still has 15 tables.
+> returns 32 and the schema still has 17 tables.

@@ -113,7 +113,8 @@ Keep `--default-character-set=utf8mb4`. Without it, curly apostrophes in the
 demonstration data turn into mojibake on Windows and nothing reports an error.
 
 There are no migrations to apply to a fresh database — `database/migrations/`
-001 to 004 are already folded into `schema.sql`.
+001 to 006 are already folded into `schema.sql`, which records all six as
+applied so nobody re-runs them afterwards.
 
 ### 4.3 Check it imported
 
@@ -123,7 +124,7 @@ SELECT COUNT(*) FROM pet_reports;                                               
 SELECT COUNT(*) FROM users;                                                        -- 10
 ```
 
-**15 tables, not 14.** Fourteen are on the ERD; the fifteenth is
+**17 tables, not 15.** Fifteen are on the ERD; the other two are
 `schema_migrations`, which records which migration files have run. It is
 operational, has no foreign keys and no domain data, which is why it is
 deliberately not drawn on a diagram of the domain. Know that sentence — it is
@@ -215,17 +216,18 @@ part of the system.
 ## 7. Running the checks
 
 ```bash
-npm run audit          # 151 cases against the running API and database
-npm run multi-device   # 40 checks across three independent sessions
-npm run a11y           # axe-core over 26 pages in every role
+npm run audit          # 167 cases against the running API and database
+npm run multi-device   # 55 checks across three independent sessions
+npm run a11y           # axe-core over 29 pages in every role
 npm run lint
 npm run build
 npm run verify:deploy http://localhost/pawsandfound
 ```
 
-As of 26 September 2026, on the development laptop: **151/151, 40/40, axe
-clean, lint clean, build green, 27/28 preflight** — the one preflight failure
-is HTTPS, correctly, because `localhost` has no certificate.
+As of 27 September 2026, on the development laptop: **167/167, 55/55, 53/53,
+13/13, axe clean over 29 pages, lint clean, build green, 27/28 preflight** —
+the one preflight failure is HTTPS, correctly, because `localhost` has no
+certificate.
 
 `npm run audit` needs Python and a reachable database. It reseeds at the start
 and restores at the end, so it is safe to run repeatedly — but it will wipe

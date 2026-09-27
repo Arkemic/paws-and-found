@@ -64,7 +64,7 @@ _Last updated: accessibility audited with axe-core; failure states swept — 202
 prints a table per category. It restores the demonstration data afterwards, so
 it can be run again at any time.
 
-`npm run a11y` runs axe-core over all 26 pages in every role.
+`npm run a11y` runs axe-core over all 29 pages in every role.
 
 | Category | Cases | Passing |
 | --- | --- | --- |
@@ -80,7 +80,7 @@ it can be run again at any time.
 
 Last run 2026-09-25 against the deployed build. Authentication grew with the
 three-attempt lockout and CSRF; error handling grew when a routing fault was
-found — see below; SQL-14 was added so the ERD's "23 foreign keys" is asserted
+found — see below; SQL-14 was added so the ERD's "24 foreign keys" is asserted
 by the suite rather than only by a document.
 
     npm run multi-device
@@ -110,9 +110,9 @@ pointed at the LAN address or at the hosted site.
 | Item | Status | Notes |
 | --- | --- | --- |
 | Responsive (390 / 768 / 1366 / 1920) | `[x]` | Eight representative pages measured at all four widths against the deployed build — homepage, Explore, report detail, report form, customer dashboard, coordinator comparison, admin dashboard and admin table. No horizontal overflow anywhere. Explore overflowed by 16px at 390px until the results controls were allowed to wrap. |
-| Accessibility | `[x]` | Focus ring, skip link, labels, `aria-describedby`, breadcrumb `aria-current`, reduced motion — and now **audited with axe-core** across all 26 pages in every role: zero violations. Run `npm run a11y`. Four rules had been failing: colour contrast in five places, an invalid `dl`, and headings skipping a level. |
+| Accessibility | `[x]` | Focus ring, skip link, labels, `aria-describedby`, breadcrumb `aria-current`, reduced motion — and now **audited with axe-core** across all 29 pages in every role: zero violations. Run `npm run a11y`. Four rules had been failing: colour contrast in five places, an invalid `dl`, and headings skipping a level. |
 | Empty / loading / error states | `[x]` | Swept by forcing each state: a new account for empty lists, a search matching nothing, aborted and 500 responses for errors, delayed responses for loading. Two faults found and fixed — a slow first load showed a blank page, and the report page called every failure "this report does not exist". |
-| Real database | `[x]` | MySQL, **14 tables** and 23 foreign keys, verified against `information_schema` on MariaDB 10.4.32 via XAMPP — not against the file. `database/schema.sql`, defended table by table in `docs/erd-defense.md`. A fifteenth table, `schema_migrations`, is infrastructure and deliberately not on the ERD. |
+| Real database | `[x]` | MySQL, **17 tables** and 24 foreign keys, verified against `information_schema` on MariaDB 10.4.32 via XAMPP — not against the file. `database/schema.sql`, defended table by table in `docs/erd-defense.md`. Fifteen are on the ERD; `schema_migrations` and `auth_rate_limits` are operational, have no foreign keys, and are deliberately left off it. |
 | Prepared statements everywhere | `[x]` | PDO with `ATTR_EMULATE_PREPARES => false`. Injection tested with three payloads. |
 | Session lifetime | `[x]` | Enforced on the server in `current_user()`, not by a browser timer. Idle **1 hour**, absolute **8 hours**, both in `api/config.php` so they can be changed in one place. An expired session is reported the way a signed-out visitor is, so `/auth/me` keeps answering "nobody" rather than growing a special case. Sessions that predate the check are adopted rather than thrown away. Proved by turning the timeouts down to a second in a gitignored local config — `npm run multi-device` section K. |
 | Atomic state transitions | `[x]` | Every state-machine `UPDATE` carries the status it expects and checks the row count: `match_claims` (`matches.php:164`), `pet_reports` on a status change (`reports.php:371`) and on a confirmation closing both reports (`matches.php:284`). Zero rows means somebody else moved first, and the answer is **409** with `code: "stale_state"`. `json_response()` rolls back an open transaction on any error, so a losing request writes nothing, logs nothing and notifies nobody. Proved in `npm run multi-device` sections I and J. |

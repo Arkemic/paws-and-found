@@ -158,7 +158,7 @@ In `api/*.php`:
 | `LIMIT … OFFSET` | 2 | Works unchanged |
 
 **Verdict: no major redesign, but a great many small changes, each of which can
-be silently wrong.** The ERD does not change — 14 domain tables, 23 foreign
+be silently wrong.** The ERD does not change — 15 domain tables, 24 foreign
 keys, the same relationships and the same delete rules. What changes is
 `schema.sql`, all four migrations, `seed.sql`, every query in `api/`, and the
 PDO DSN.
@@ -230,9 +230,9 @@ uploading a file and fetching it back as a signed-out visitor.
 
 | Suite | Cases | If we stay on MySQL | If we move to PostgreSQL |
 | --- | --- | --- | --- |
-| `npm run audit` | 151 | **Config only.** `PAWS_API` + `PAWS_MYSQL_ARGS` already exist | **Rewrite.** 49 assertions shell out to `mysql.exe`; 3 read `information_schema` with MySQL-specific column names |
-| `npm run multi-device` | 40 | **Config only.** `PAWS_API` | Mostly config — it is nearly all API-level |
-| `npm run a11y` | 26 pages | None | None |
+| `npm run audit` | 167 | **Config only.** `PAWS_API` + `PAWS_MYSQL_ARGS` already exist | **Rewrite.** 49 assertions shell out to `mysql.exe`; 3 read `information_schema` with MySQL-specific column names |
+| `npm run multi-device` | 55 | **Config only.** `PAWS_API` | Mostly config — it is nearly all API-level |
+| `npm run a11y` | 29 pages | None | None |
 | `npm run verify:deploy` | 28 | **None.** Takes a URL | None |
 
 Staying on MySQL costs **two environment variables**. Moving to PostgreSQL
@@ -310,7 +310,7 @@ Regardless of route:
 * the CSRF check in `index.php` before the router;
 * `REPORT_TRANSITIONS` and the match decision state machine;
 * `may_read_proof()`;
-* the 151 + 40 case suites, as behaviour rather than as files.
+* the 167 + 55 + 53 case suites, as behaviour rather than as files.
 
 ---
 

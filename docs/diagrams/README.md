@@ -5,7 +5,7 @@ The two figures used in the revised Phase 1 and Phase 2 submission.
 | File | Figure | Shows |
 | --- | --- | --- |
 | `fig1-architecture.svg` / `.png` | Figure 1 | Three-tier system architecture: React client, PHP REST API, MySQL |
-| `fig2-erd.svg` / `.png` | Figure 2 | The revised ERD — 14 tables, 23 foreign keys |
+| `fig2-erd.svg` / `.png` | Figure 2 | The revised ERD — 15 tables, 24 foreign keys. The database has 17; the figure's own note says which two are left off and why |
 
 The SVGs are the source; edit those, not the PNGs. To regenerate a PNG after
 editing:

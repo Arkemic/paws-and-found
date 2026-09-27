@@ -1,28 +1,30 @@
 # Paws&Found — defending the database, table by table
 
-**ITS122P–AM5 · Group 3** · checked against the live database on 25 September 2026
+**ITS122P–AM5 · Group 3** · checked against the live database on 27 September 2026
 
 Every fact here was read out of `information_schema` on the running MariaDB,
 not out of `schema.sql`. If the two ever disagree, the database is right and
 this document is wrong.
 
-**The database has 15 tables. Fourteen are on the ERD.**
+**The database has 17 tables. Fifteen are on the ERD.**
 
-The fifteenth is `schema_migrations`, which records which files in
-`database/migrations/` have been applied. It is infrastructure: no domain data,
-no foreign keys, and a filing cabinet does not belong on a family tree. Say
-both numbers rather than one of them — anybody who runs `SHOW TABLES` gets 15,
-and a diagram that says 14 without explaining the difference looks like an
-omission instead of a decision.
+The two that are not are `schema_migrations`, which records which files in
+`database/migrations/` have been applied, and `auth_rate_limits`, which counts
+how many times an address has asked for something recently so the API can
+refuse the fourth request. Both are operational: no domain data, no foreign
+keys, and a filing cabinet does not belong on a family tree. Say both numbers
+rather than one of them — anybody who runs `SHOW TABLES` gets 17, and a diagram
+that says 15 without explaining the difference looks like an omission instead
+of a decision.
 
-Counted from `information_schema`, 25 September 2026:
+Counted from `information_schema`, 27 September 2026:
 
 | | |
 | --- | --- |
-| Tables | **15** (14 on the ERD + `schema_migrations`) |
-| Foreign keys | **23** — all of them on the 14; `schema_migrations` has none |
-| Primary keys | 15, one per table |
-| Unique constraints | 7, over 11 columns |
+| Tables | **17** (15 on the ERD + `schema_migrations` + `auth_rate_limits`) |
+| Foreign keys | **24** — all of them on the 15; neither operational table has one |
+| Primary keys | 17, one per table |
+| Unique constraints | 9, over 14 columns |
 | CHECK constraints | 2 |
 | Engine | InnoDB throughout — MyISAM ignores foreign keys silently |
 
@@ -57,7 +59,7 @@ The people. Everything in the system is eventually somebody's.
 | **Primary key** | `user_id` |
 | **Foreign keys** | none — this is a parent everywhere it appears |
 | **Unique** | `email`, so one address is one account |
-| **Referenced by** | `pet_reports` (twice), `notifications`, `status_logs`, `match_claims` (twice), `moderation_cases` (twice), `login_attempts`, `privacy_consents`, `audit_logs` |
+| **Referenced by** | `pet_reports` (twice), `notifications`, `status_logs`, `match_claims` (twice), `moderation_cases` (twice), `login_attempts`, `privacy_consents`, `audit_logs`, `auth_tokens` |
 
 **Why it exists.** Reporting requires an account so a report can be traced back
 to somebody and followed up.
@@ -71,6 +73,17 @@ show on screen.
 `role` is `ENUM('user','staff','admin')` and `account_status` is
 `ENUM('active','suspended','locked')`. Both are constrained **by the database**,
 so a crafted request cannot invent a fourth role even if it gets past PHP.
+
+**Three columns added in the hardening pass.** `email_verified_at` is NULL
+until the emailed link is clicked, and sign-in refuses an account that still
+has NULL there — so an address nobody can read cannot become a working account.
+`pending_email` holds an address somebody has *asked* to move to but has not
+yet proved they can receive at; it is a separate column precisely so a typo in
+the new address cannot lock anybody out of the old one. `session_version` is an
+integer that goes up by one whenever every session should end at once — a
+password reset, a suspension. Each request compares it with the number stored
+in the session, so signing every device out does not require finding and
+deleting session files.
 
 **If it were removed.** Nothing works. It is the only table with no foreign keys
 of its own, which is what makes it the root.
@@ -361,6 +374,98 @@ sign-in attempts`.
 
 ---
 
+## 15. `auth_tokens` — 0 rows at rest
+
+Every one-time link the system sends: verify this address, reset this password,
+prove you own this new address. **Added in the hardening pass.**
+
+| | |
+| --- | --- |
+| **Primary key** | `token_id` |
+| **Foreign key** | `user_id` -> users (CASCADE) |
+| **Unique** | `token_hash` |
+| **Columns worth naming** | `purpose`, `target_email`, `expires_at`, `used_at` |
+
+**Why one table for three kinds of link.** All three are the same object: a
+secret that belongs to one account, works once, and stops working after a set
+time. Three tables would be the same five columns written out three times, and
+the code that spends a token would be written three times with it. `purpose`
+carries the difference, and it is an ENUM so a fourth kind cannot appear by
+typo.
+
+**The answer she is most likely to ask for: what is `token_hash`?** A SHA-256
+of the link we emailed. The link itself is never stored anywhere — not in this
+table, not in `audit_logs`, not in the server log. So somebody who obtains a
+copy of this database does not obtain a set of working links; they obtain 64
+hex characters they cannot reverse. It is the same reasoning as
+`password_hash`, applied to the thing that can *replace* a password.
+
+**Why keep a spent token instead of deleting it.** `used_at` is set the moment
+it is redeemed and the row stays. A deleted row and a never-existing row look
+identical, so a link clicked twice would be reported as "unknown link". Keeping
+it means the second click is recognisable as a replay.
+
+**How single-use is actually enforced** — not by reading the row and then
+updating it, which two simultaneous clicks can both pass:
+
+```sql
+UPDATE auth_tokens SET used_at = NOW()
+ WHERE token_hash = ? AND purpose = ?
+   AND used_at IS NULL AND expires_at > NOW();
+```
+
+The token is spent only if that statement changed exactly one row. The database
+decides, and it decides once.
+
+**Why CASCADE.** A one-time link for a deleted account is a live secret with
+nothing behind it. It should not outlive the account for a moment.
+
+**One thing that was wrong here, and worth saying so.** As first written,
+`expires_at` was `TIMESTAMP NOT NULL` with no DEFAULT. MariaDB gives the first
+column declared that way an automatic `ON UPDATE CURRENT_TIMESTAMP`, so
+spending a token also reset its expiry to that moment: a link issued for an
+hour read as having expired the instant it was used. Nothing was exploitable,
+because both statements that write to this table also set `used_at` and both
+require `used_at IS NULL` — no live token could have its life extended. But the
+stored expiry was a lie, and the safety was accidental rather than stated.
+Migration `006` names the DEFAULT explicitly, which is what suppresses the
+implicit `ON UPDATE`. If she asks how you know the one-hour rule is real, the
+answer is that you can now read it off the row.
+
+---
+
+## 16. `auth_rate_limits` — 0 rows at rest, and not on the ERD
+
+How many times an address has asked for something recently. **Added in the
+hardening pass.**
+
+| | |
+| --- | --- |
+| **Primary key** | `rate_limit_id` |
+| **Foreign keys** | none — this is why it is off the diagram |
+| **Unique** | (`action`, `subject_hash`) |
+| **Columns worth naming** | `window_started_at`, `attempt_count` |
+
+**Why it has no foreign key, and why that is the point.** It counts requests
+for an *address typed into a form*, which is usually not an account — most of
+what a rate limiter exists to stop is somebody guessing at addresses that do
+not exist. A `user_id` would be NULL for exactly the traffic we care about. So
+the subject is stored as an HMAC of the address rather than a reference to a
+row, and the table has no domain relationship to anything. That is the whole
+reason it is left off the ERD, and the diagram says so in its own note.
+
+**Why `UNIQUE (action, subject_hash)` matters.** The counter is an
+insert-or-increment in one statement. Without the unique key two simultaneous
+requests could each insert a row and each count 1, and the limit would never be
+reached.
+
+**What it is not.** It is not `login_attempts`. That table locks a single
+account after three wrong passwords and is a user-facing rule with a visible
+consequence. This one throttles how often *anyone* may ask the server to send
+an email, and its consequence is a 429 and a Retry-After header.
+
+---
+
 ## Every relationship, in one list
 
     users            1 ── N  pet_reports         (user_id, RESTRICT)
@@ -374,6 +479,7 @@ sign-in attempts`.
     users            1 ── N  login_attempts      (CASCADE)
     users            1 ── N  privacy_consents    (CASCADE)
     users            1 ── N  audit_logs          (SET NULL)
+    users            1 ── N  auth_tokens         (CASCADE)
     pet_categories   1 ── N  pet_breeds          (RESTRICT)
     pet_categories   1 ── N  pet_reports         (RESTRICT)
     pet_breeds     0..1 ── N pet_reports         (SET NULL — breed is optional)
@@ -387,7 +493,9 @@ sign-in attempts`.
     match_claims     1 ── N  match_signals       (CASCADE)
     match_claims     1 ── N  notifications       (CASCADE)
 
-23 foreign keys. Counted from `information_schema`, not from memory.
+24 foreign keys. Counted from `information_schema`, not from memory.
+`auth_rate_limits` and `schema_migrations` appear nowhere above, because
+they have no relationships to appear in.
 
 ---
 
@@ -411,10 +519,12 @@ report can be in several possible pairings at once, and each pairing has its
 own score, status and decision. Columns on the report could hold one pairing
 and nowhere to put its attributes.
 
-**"How many tables, and why that many?"** 14. The guide asks for at least 8.
-The extra six each carry something the application genuinely needs and has
-nowhere else to put: explainable matching, notifications, moderation, the
-three-attempt lock, consent, and the audit trail.
+**"How many tables, and why that many?"** 17, of which 15 are on the ERD. The
+guide asks for at least 8. The extra ones each carry something the application
+genuinely needs and has nowhere else to put: explainable matching,
+notifications, moderation, the three-attempt lock, consent, the audit trail and
+the one-time links. The two that are not on the diagram keep no domain data at
+all — one records which migrations have run, the other counts requests.
 
 **"Is this normalised?"** To third normal form. Species and breed are looked up
 rather than repeated as text; location is its own entity; a pairing's

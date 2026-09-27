@@ -14,6 +14,10 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/tokens.php';
+require_once __DIR__ . '/mail.php';
+require_once __DIR__ . '/mail_messages.php';
 
 function handle_users(string $method, ?string $identifier): never
 {
@@ -87,13 +91,18 @@ function users_list(): never
  * people on a case. Contact details are only included for staff and
  * administrators, who need them to coordinate a handover.
  */
-function user_detail(int $id): never
+/**
+ * @param array<string, mixed> $extra Merged into the response. Used by
+ *        profile_update() to report whether the email-change message actually
+ *        went out, which the browser has to know in order to offer a retry.
+ */
+function user_detail(int $id, array $extra = []): never
 {
     $viewer = require_login();
 
     $statement = db()->prepare(
         'SELECT user_id, full_name, email, contact_number, role, account_status,
-                preferred_location, created_at
+                preferred_location, created_at, email_verified_at, pending_email
            FROM users
           WHERE user_id = :id'
     );
@@ -107,7 +116,7 @@ function user_detail(int $id): never
     $privileged = in_array($viewer['role'], ['staff', 'admin'], true)
         || (int) $viewer['user_id'] === $id;
 
-    json_response(['data' => shape_user($user, $privileged)]);
+    json_response(['data' => shape_user($user, $privileged)] + $extra);
 }
 
 /**
@@ -153,10 +162,39 @@ function profile_update(): never
         json_error('Please check the highlighted fields.', 422, ['fields' => $errors]);
     }
 
+    // The address is NOT changed here.
+    //
+    // A verified address is the only way back into an account: it is where a
+    // password reset goes. Letting the profile form replace it with an
+    // unverified one means a typo locks somebody out of their own account, and
+    // means anyone who borrows an unlocked laptop can move the account
+    // somewhere they control.
+    //
+    // So the new address becomes `pending_email`, a link goes to it, and the
+    // current one keeps working until somebody proves they can read the new
+    // one. api/auth.php's verify-email endpoint is what finally moves it.
+    $pendingChange = null;
+
+    if ($email !== '' && $email !== normalise_email($user['email'])) {
+        $taken = db()->prepare('SELECT 1 FROM users WHERE email = :email AND user_id <> :id');
+        $taken->execute([':email' => $email, ':id' => $user['user_id']]);
+
+        if ($taken->fetchColumn()) {
+            // The same words the registration form uses for the same
+            // situation. This one is reachable only by somebody already signed
+            // in, about their own account, so it reveals nothing they could
+            // not learn by trying to register.
+            json_error('Please check the highlighted fields.', 422, [
+                'fields' => ['email' => 'An account already uses that email address.'],
+            ]);
+        }
+
+        $pendingChange = $email;
+    }
+
     $statement = db()->prepare(
         'UPDATE users
             SET full_name = :name,
-                email = :email,
                 contact_number = :phone,
                 preferred_location = :location,
                 notify_matches = :matches,
@@ -168,7 +206,6 @@ function profile_update(): never
     try {
         $statement->execute([
             ':name' => $fullName,
-            ':email' => $email,
             ':phone' => $phone === '' ? null : $phone,
             ':location' => $location === '' ? null : $location,
             // Absent means "leave as it is", so an update that only changes a
@@ -190,7 +227,33 @@ function profile_update(): never
         throw $exception;
     }
 
-    user_detail($id);
+    // Now the address, if one was asked for. After the rest is saved, so a mail
+    // server having a bad morning does not also lose the name and phone number
+    // the person just corrected.
+    $emailSent = null;
+
+    if ($pendingChange !== null) {
+        $pending = db()->prepare('UPDATE users SET pending_email = :email WHERE user_id = :id');
+        $pending->execute([':email' => $pendingChange, ':id' => $id]);
+
+        $token = token_issue((int) $id, 'email_change', $pendingChange);
+        $emailSent = true;
+
+        try {
+            send_mail(
+                $pendingChange,
+                $fullName,
+                'Confirm your new Paws&Found email address',
+                mail_body_email_change($fullName, $token),
+                mail_text_email_change($fullName, $token)
+            );
+        } catch (MailFailure $failure) {
+            error_log('[pawsandfound] email-change mail for user ' . $id . ' failed: ' . $failure->getMessage());
+            $emailSent = false;
+        }
+    }
+
+    user_detail($id, ['email_change_sent' => $emailSent]);
 }
 
 /** Change a role or suspend an account. Administrators only. */
@@ -311,6 +374,12 @@ function shape_user(array $row, bool $includeContact = true): array
     if ($includeContact) {
         $user['email'] = $row['email'];
         $user['contact_number'] = $row['contact_number'];
+        // Both are about the person's own address, so they travel with the
+        // contact details rather than being public. The profile needs them to
+        // show "awaiting verification" instead of pretending the change is
+        // already done.
+        $user['email_verified'] = ($row['email_verified_at'] ?? null) !== null;
+        $user['pending_email'] = $row['pending_email'] ?? null;
     }
 
     return $user;
