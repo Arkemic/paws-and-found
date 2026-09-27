@@ -92,7 +92,14 @@ MAIL_USERNAME=<smtp user>
 MAIL_PASSWORD=<smtp password>
 MAIL_FROM_ADDRESS=<the address the mail comes from>
 MAIL_FROM_NAME=Paws&Found
+MAIL_ENCRYPTION=starttls
 ```
+
+`MAIL_ENCRYPTION` takes `starttls` (the default, and what port 587 wants),
+`tls` for implicit TLS on port 465, or anything else for an unencrypted
+connection, which no real provider will accept. Match it to the port: `587`
+with `starttls`, `465` with `tls`. Getting this pair wrong is the usual reason
+mail appears to be configured and silently never sends.
 
 `APP_URL` falls back to `RAILWAY_PUBLIC_DOMAIN_URL`, so it is usually already
 right — but check it, because **every link in every email is built from it**.
@@ -198,31 +205,97 @@ Deliberate and manual, **once**. Nothing in the image touches the database on
 startup — a container that seeds itself is a container that erases production
 on its next restart.
 
-Enable the MySQL service's public TCP proxy, then from a laptop:
+Railway's database is **empty** and is called `railway`. There is no earlier
+version of Paws&Found on it, so there is nothing to migrate: install the final
+17-table design once and record all seven migrations as applied. **Do not run
+`005`, `006` or `007` separately here.** `schema.sql` already contains
+everything they do, and running them afterwards would try to re-apply changes
+that are already in place.
+
+#### 1. Generate the Railway-safe copies
+
+`schema.sql` and `seed.sql` both open by creating `pawsandfound` and selecting
+it. Railway hands you a database that already exists, under a name it chose,
+and the account it gives you generally cannot create another. Left unedited,
+the import either fails on the `CREATE` or succeeds into a second database the
+application is not pointed at.
 
 ```bash
-mysql -h <proxy-host> -P <proxy-port> -u root -p railway < database/schema.sql
-mysql -h <proxy-host> -P <proxy-port> -u root -p railway < database/seed.sql
+node scripts/railway-sql.mjs
 ```
 
-`schema.sql` opens with `CREATE DATABASE IF NOT EXISTS pawsandfound` and `USE
-pawsandfound`. Railway's database is called `railway`, so **both lines have to
-be removed** and the import run against the already-selected database — or
-create `pawsandfound` on that server and point `DB_NAME` at it instead.
+That writes `database/railway/schema.sql` and `database/railway/seed.sql` with
+those two statements removed and nothing else changed. The folder is
+gitignored: `database/schema.sql` stays the only source of truth, and these are
+regenerated whenever they are needed.
 
-Verify, and expect exactly this. Every number was read from the development
-database on 27 September 2026 with migration `006` applied, so a mismatch means
-the import is wrong rather than the list being out of date:
+#### 2. You need a MySQL 8 client, and XAMPP's is not one
+
+This is the part that will otherwise waste an hour. XAMPP ships MariaDB's
+client, and against Railway's MySQL 8 it fails before it even connects:
+
+```
+ERROR 1045 (28000): Plugin caching_sha2_password could not be loaded:
+The specified module could not be found. Library path is 'caching_sha2_password.dll'
+```
+
+MySQL 8 authenticates with `caching_sha2_password` and the MariaDB client does
+not implement it. Use the official client from Docker instead — it needs no
+installation, and Docker is already set up for the image build.
+
+#### 3. Test the connection before importing anything
+
+In PowerShell, from the project folder. Take the host, port, user and password
+from Railway's MySQL service; enable its public TCP proxy first.
+
+```powershell
+docker run --rm -it mysql:8.0 mysql -h RAILWAY_HOST -P RAILWAY_PORT -u RAILWAY_USER -p railway
+```
+
+It prompts for the password rather than taking it on the command line, so the
+password does not end up in the PowerShell history. A `mysql>` prompt means you
+are connected; `SELECT DATABASE();` should answer `railway`. Type `exit`.
+
+#### 4. Import, schema first
+
+```powershell
+Get-Content database\railway\schema.sql -Raw | docker run --rm -i mysql:8.0 mysql -h RAILWAY_HOST -P RAILWAY_PORT -u RAILWAY_USER -pPASSWORD railway
+```
+
+```powershell
+Get-Content database\railway\seed.sql -Raw | docker run --rm -i mysql:8.0 mysql -h RAILWAY_HOST -P RAILWAY_PORT -u RAILWAY_USER -pPASSWORD railway
+```
+
+`-pPASSWORD` has **no space** after `-p`. It is on the command line here
+because the import reads from stdin and so cannot also prompt; run
+`Clear-History` afterwards if that matters to you.
+
+Expect no output at all. Any line beginning `ERROR` means the import stopped
+there and the database is half-built — fix the cause, drop every table, and
+start again rather than importing on top of the wreckage.
+
+#### 5. Verify, before deploying any code against it
 
 ```sql
+SELECT DATABASE();                                                               -- railway
 SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();  -- 17
 SELECT COUNT(*) FROM information_schema.table_constraints
  WHERE table_schema = DATABASE() AND constraint_type = 'FOREIGN KEY';            -- 24
-SELECT COUNT(*) FROM pet_reports;                                                -- 32
 SELECT COUNT(*) FROM users;                                                      -- 10
+SELECT COUNT(*) FROM pet_reports;                                                -- 32
+SELECT COUNT(*) FROM match_claims;                                               -- 4
 SELECT COUNT(*) FROM users WHERE email_verified_at IS NULL;                      -- 0
-SELECT GROUP_CONCAT(version ORDER BY version) FROM schema_migrations;   -- 001..006
+SELECT GROUP_CONCAT(version ORDER BY version) FROM schema_migrations;
+                                                        -- 001,002,003,004,005,006,007
 ```
+
+Every one of these numbers was read from a real MySQL 8.0.46 on 27 September
+2026, after importing these exact two files into a database called `railway`.
+They are measurements, not expectations.
+
+Of the 17 tables, **15 are on the ERD**; `schema_migrations` and
+`auth_rate_limits` are operational, carry no foreign keys, and are the two the
+figure deliberately leaves off.
 
 **The `email_verified_at` line is the one that matters most.** Sign-in now
 refuses an account whose address has never been proved. If that count comes
@@ -231,29 +304,78 @@ lifecycle and **nobody will be able to sign in on the day** — not the
 demonstration accounts, not the administrator. Re-import `seed.sql` from this
 branch; it sets `email_verified_at` to each account's `created_at`.
 
+#### Why there is a migration named after a database engine
+
+Worth knowing, because it is a fair question. Rehearsing this import against a
+real MySQL 8 rather than against XAMPP is what caught it:
+
+```
+ERROR 3823 (HY000): Column 'lost_report_id' cannot be used in a check
+constraint 'chk_match_distinct': needed in a foreign key constraint
+'fk_match_lost' referential action.
+```
+
+MySQL 8 refuses a `CHECK` over a column that a foreign key's referential action
+could rewrite; MariaDB allows it. `fk_match_lost` and `fk_match_found` carried
+`ON UPDATE CASCADE`, and `chk_match_distinct` is over exactly those two
+columns, so `schema.sql` imported cleanly on every laptop and would have
+stopped dead on the host.
+
+Migration `007` drops the `ON UPDATE CASCADE` and keeps the `CHECK`.
+`report_id` is an `AUTO_INCREMENT` surrogate that nothing ever updates, so the
+cascade had never done anything; the `CHECK` is the database's own guarantee
+that a report cannot be paired with itself, and it is the first of the three
+refusals in the cheat sheet. `ON DELETE CASCADE` stays, so deleting a report
+still takes its pairings with it. The foreign key count is 24 either way.
+
 There is no SMTP on a fresh Railway service, so until `MAIL_*` is configured a
 visitor who registers gets an account they cannot verify. Import the seed, and
 demonstrate registration only once mail works.
 
 ### The order to do it in
 
-1. Push this branch so Railway sees the `Dockerfile` (it stops guessing Node).
-2. Set the six variables above.
-3. Add **one** volume, mounted at `/var/lib/pawsandfound`.
-4. Deploy. Watch the build log for `apache2-foreground`.
-5. `curl https://<domain>/api/health` → `{"status":"ok","database":"ok"}`.
-   A **503** here means the app is up but cannot reach MySQL: check the
-   variables. HTML instead of JSON means the Dockerfile was not used.
-6. Generate the public domain, then `npm run verify:deploy https://<domain>`.
-   **Target 28/28** — item 7.1 can finally pass, because Railway terminates TLS
-   and forwards `X-Forwarded-Proto`, which `request_is_https()` already reads.
-7. Enable the MySQL public proxy and run the full suites:
+**The database goes in before the code does.** This is backwards from ordinary
+deployment, and it is deliberate. `api/auth.php` selects `email_verified_at`
+and `session_version` on the sign-in path, so the new code against a database
+that has not been imported yet does not degrade gracefully — it returns 500 on
+every sign-in attempt, for everybody, immediately. There is no production data
+to preserve, so there is nothing to be gained by deploying first.
+
+Until step 7, `team/current` stays where it is and Railway keeps serving what
+it is already serving.
+
+1. Enable the MySQL service's public TCP proxy.
+2. Import the schema and the seed, and run the verification queries above.
+   **Do not continue until they all match.**
+3. Set the database variables, `APP_URL`, and the `MAIL_*` block.
+4. Set the Turnstile variables, or leave all three unset. Do not set
+   `TURNSTILE_ENABLED=true` with a key missing — production refuses to start,
+   on purpose.
+5. Add **one** volume, mounted at `/var/lib/pawsandfound`.
+6. Confirm the service is building from the `Dockerfile` rather than guessing
+   Node.
+7. **Now** merge `feature/final-auth-hardening` into `team/current` and push.
+   Railway deploys on the push.
+8. Watch the deploy log for `apache2-foreground`, and for the six `[paws]`
+   lines the entrypoint prints — they name the upload path, the session path
+   and the MPM, which is what the 502 on 26 September turned out to be.
+9. `curl https://<domain>/api/health` → `{"status":"ok","database":"ok"}`.
+   A **503** means the app is up but cannot reach MySQL: check the variables.
+   HTML instead of JSON means the Dockerfile was not used.
+10. `npm run verify:deploy https://<domain>`. **Target 28/28** — item 7.1 can
+    finally pass, because Railway terminates TLS and forwards
+    `X-Forwarded-Proto`, which `request_is_https()` already reads.
+11. Run the full suites against the live site:
 
 ```bash
 PAWS_API=https://<domain>/api PAWS_MYSQL_ARGS="-u root -p<password> -h <proxy-host> -P <proxy-port>" python scripts/audit_cases.py
 
 PAWS_API=https://<domain>/api python scripts/multi_device.py
 ```
+
+`PAWS_MYSQL_ARGS` goes to a MySQL 8 client, so this needs one that speaks
+`caching_sha2_password` — the same constraint as the import, and the same
+reason XAMPP's client will not do.
 
 Against a host, `multi_device.py` reports **53/53 with 2 skipped**, not 55/55.
 That is correct and not a regression. Checks K3 and K4 prove the session
@@ -263,13 +385,13 @@ server somewhere else never reads that file. The suite says so by name rather
 than reporting a failure. The same two checks run for real against the local
 build, which is where 55/55 comes from.
 
-8. Open it on a phone **on mobile data, not the same Wi-Fi**. That is the thing
-   actually being asked for: it is no longer localhost.
-9. Run the account-lifecycle suite too, once `MAIL_*` is set. It needs the
-   capture transport, which production must never have — so run it against the
-   **local** build, not against Railway, and prove mail on the host by
-   registering one throwaway account by hand and reading the inbox.
-10. Disable the public proxy again once the suites have run.
+12. Register one throwaway account by hand and read the inbox. That is the only
+    way to prove `MAIL_*` is right: the account-lifecycle suite reads captured
+    mail, and the capture transport must never exist in production, so run that
+    suite against the local build instead.
+13. Open the site on a phone **on mobile data, not the same Wi-Fi**. That is
+    the thing actually being asked for: it is no longer localhost.
+14. Disable the public MySQL proxy again once the suites have run.
 
 ### Proved locally before any of this
 

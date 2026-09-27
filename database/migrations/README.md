@@ -16,6 +16,7 @@ column, and it never drops the data that is already there.
     005_account_lifecycle.sql  proving an address, resetting a password, and
                             revoking sessions without hunting for session files
     006_token_expiry_explicit.sql  stop auth_tokens.expires_at rewriting itself
+    007_match_fk_mysql8.sql   let match_claims import on MySQL 8, not only MariaDB
 
 ## Applying one
 
@@ -46,9 +47,15 @@ so it has no foreign key and no domain relationship to draw.
    `DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`, so the column
    quietly rewrites itself on every write to the row. That is what 006 had to
    undo.
-5. End it with its own `INSERT` into `schema_migrations`.
-6. Make the same change in `schema.sql`, so a fresh import and a migrated
+5. Check it on **MySQL 8**, not only on XAMPP's MariaDB. They are not the same
+   engine and they disagree about things a migration can easily walk into —
+   007 exists because MySQL 8 refuses a CHECK over a column a foreign key's
+   referential action can rewrite, and MariaDB does not. The cheapest way:
+   `docker run -d -e MYSQL_ROOT_PASSWORD=x -e MYSQL_DATABASE=railway -p 3399:3306 mysql:8.0`
+   then import `database/railway/schema.sql` into it.
+6. End it with its own `INSERT` into `schema_migrations`.
+7. Make the same change in `schema.sql`, so a fresh import and a migrated
    database end up identical. A migration that is not mirrored in the baseline
    is how the two quietly drift apart.
-7. Update `docs/diagrams/fig2-erd.svg` and `docs/erd-defense.md` if the change
+8. Update `docs/diagrams/fig2-erd.svg` and `docs/erd-defense.md` if the change
    touches a table or a relationship.

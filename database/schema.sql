@@ -342,12 +342,21 @@ CREATE TABLE match_claims (
   CONSTRAINT chk_match_distinct CHECK (lost_report_id <> found_report_id),
   CONSTRAINT chk_match_score CHECK (match_score BETWEEN 0 AND 100),
 
+  -- These two are ON DELETE CASCADE but NOT ON UPDATE CASCADE, unlike every
+  -- other foreign key in this file. MySQL 8 refuses a CHECK constraint over a
+  -- column that a foreign key's referential action could rewrite, and
+  -- chk_match_distinct above is over exactly these two columns. MariaDB allows
+  -- it, so the file imported here for weeks and would have failed on the host.
+  --
+  -- Nothing is lost. ON UPDATE CASCADE means "follow the parent key if it
+  -- changes", and report_id is an AUTO_INCREMENT surrogate that never changes.
+  -- The CHECK is a rule we actually rely on. See migration 007.
   CONSTRAINT fk_match_lost
     FOREIGN KEY (lost_report_id) REFERENCES pet_reports (report_id)
-    ON DELETE CASCADE ON UPDATE CASCADE,
+    ON DELETE CASCADE,
   CONSTRAINT fk_match_found
     FOREIGN KEY (found_report_id) REFERENCES pet_reports (report_id)
-    ON DELETE CASCADE ON UPDATE CASCADE,
+    ON DELETE CASCADE,
   CONSTRAINT fk_match_submitted_by
     FOREIGN KEY (submitted_by_user_id) REFERENCES users (user_id)
     ON DELETE SET NULL ON UPDATE CASCADE,
@@ -624,14 +633,14 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- A fresh import of this file already contains everything migrations 001 to
--- 006 do, so it records all six as applied. Otherwise somebody running the
+-- 007 do, so it records all seven as applied. Otherwise somebody running the
 -- migrations afterwards would re-apply changes that are already here.
 --
 -- 004 and 005 were missing from this list: the baseline had their schema
 -- changes but claimed only three migrations had run. Harmless until somebody
 -- trusted the list.
 INSERT INTO schema_migrations (version)
-VALUES ('001'), ('002'), ('003'), ('004'), ('005'), ('006')
+VALUES ('001'), ('002'), ('003'), ('004'), ('005'), ('006'), ('007')
   ON DUPLICATE KEY UPDATE version = version;
 
 
