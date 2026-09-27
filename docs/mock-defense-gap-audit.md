@@ -5,6 +5,27 @@
 > implemented and tested; see `feature-status.md`. **B1, public hosting, is now
 > the only thing left before the presentation.** Everything below is the audit
 > as written, so the reasoning stays readable next to what was done about it.
+>
+> **Update, 27 September 2026.** The final hardening pass closed the two rows
+> this audit ranked highest and had deferred pending a host:
+>
+> * **Lesson 8, verify the email is real** — built. Registration no longer
+>   signs anybody in; an unverified account is refused at sign-in.
+> * **Lesson 9, forgot / reset password** — built, with one answer for every
+>   address so it cannot be used to ask who has an account.
+> * **Lesson 7, password rules visible up front** — show/hide and a live
+>   checklist, as this table recommended.
+> * **Lesson 14, view mode vs edit mode** — the profile reads as a profile
+>   until you choose to edit it.
+> * **Lesson 15, prerequisites before big actions** — now that 8 exists, this
+>   is no longer partial.
+> * **Lesson 17, limit repeated actions** — `auth_rate_limits`, a 429 with
+>   `Retry-After`, separate from the three-attempt account lock.
+>
+> The SMTP question this audit said to "decide after hosting" was decided:
+> the transport is configurable, and with no credentials it writes messages to
+> a log rather than pretending to send them. **B1, public hosting, is still the
+> only thing left.**
 
 **ITS122P–AM5 · Group 3** · 26 September 2026 · **audit only, no code changed**
 
@@ -302,7 +323,7 @@ From `deployment-architecture-audit.md`, now with the email question added:
 | Sessions | Ordinary file-backed sessions on one server |
 | HTTPS | Free certificate |
 | Config | A file outside the repository (`api/config.local.php`) |
-| **SMTP** | **Only if items 8 and 9 are built.** Decide after hosting |
+| **SMTP** | **Required** — items 8 and 9 are built. Without credentials the mail transport writes to a log and no visitor can verify an address |
 | Remote MySQL | Only to run `npm run audit` from a laptop |
 
 Everything except the last two is ordinary shared hosting.

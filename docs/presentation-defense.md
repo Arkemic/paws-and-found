@@ -65,7 +65,7 @@ your architecture" question, and a specific answer beats a diagram.
 
 ---
 
-## 3. The eleven questions, with answers
+## 3. The nineteen questions, with answers
 
 **"Is this validation client-side or server-side?"**
 Both, and they do different jobs. The browser gives an immediate, polite answer
@@ -88,7 +88,7 @@ There are none. `users.password_hash` holds a bcrypt hash from PHP's
 **"How do you stop SQL injection?"**
 PDO prepared statements everywhere, with `ATTR_EMULATE_PREPARES => false`
 (`api/db.php:45`), so values go to the server separately from the SQL text.
-Thirteen payloads in category B; after every one, the schema still has 15
+Fourteen payloads in category B; after every one, the schema still has 17
 tables and `pet_reports` still has 32 rows.
 
 **"What happens on the third wrong password?"**
@@ -111,10 +111,11 @@ no training data. `matching-explanation.md` §7 has a worked example that adds
 to 85 — do the addition out loud.
 
 **"How do you know who changed this?"**
-`audit_logs`, append-only, thirteen actions: sign-in, failed sign-in, lock,
+`audit_logs`, append-only, sixteen actions: sign-in, failed sign-in, lock,
 unlock, role change, suspend, reinstate, register, sign-out, report status
-change, match decision, moderation decision, category change. Each row names
-the actor, the target, the outcome and a readable detail.
+change, match decision, moderation decision, category change, email verified,
+email change completed, password reset. Each row names the actor, the target,
+the outcome and a readable detail — and never a token.
 
 **"What about privacy?"**
 A public report shows the reporter's **name** — an anonymous lost-pet report is
@@ -131,9 +132,73 @@ migration, apply, `DESCRIBE`, show `COUNT(*)` unchanged, mirror into
 `schema.sql`.
 
 **"How many tables?"**
-**15.** Fourteen on the ERD; the fifteenth is `schema_migrations`, which is
-infrastructure. Say both numbers — `SHOW TABLES` gives 15, and a diagram
-showing 14 without that sentence looks like an omission.
+**17.** Fifteen on the ERD; the other two are `schema_migrations` and
+`auth_rate_limits`, which are operational — no domain data, no foreign keys.
+Say both numbers — `SHOW TABLES` gives 17, and a diagram showing 15 without
+that sentence looks like an omission. The figure carries the explanation in its
+own note, so it is on the page you are pointing at.
+
+**"Why do I have to click a link before I can sign in?"**
+Because until somebody opens that link, all we know is that an address was
+typed into a form. Registration creates the account and sends the link; it does
+not sign anybody in. Sign-in refuses an unverified account with 403 and a code
+the browser can act on — but only **after** checking the password, so the
+refusal tells nothing to somebody who does not already know it.
+
+**"What is actually stored when you send a reset link?"**
+A SHA-256 of it, in `auth_tokens`, and nothing else. The link itself exists in
+the email and nowhere else — not in the database, not in `audit_logs`, not in
+the server log. Somebody who obtains a copy of our database does not obtain a
+set of working links. It is the same reasoning as `password_hash`, applied to
+the thing that can *replace* a password.
+
+**"What stops me clicking the same link twice?"**
+One statement:
+`UPDATE auth_tokens SET used_at = NOW() WHERE token_hash = ? AND used_at IS NULL AND expires_at > NOW()`.
+The token is spent only if that changed exactly one row. A `SELECT` and then an
+`UPDATE` would let two clicks arriving together both pass the check — the
+database has to decide, and decide once. The same lesson as the match decisions
+in `matches.php`.
+
+**"Can I use 'forgot password' to find out who has an account here?"**
+No, and that is the reason the page is worded the way it is. A registered
+address, an address nobody has ever used, an unverified account and a suspended
+one all get the identical response, the identical status code, and a link sent
+only where there is somewhere to send it. Anything that varied — a different
+message, a different delay, a different error — would be a way of asking the
+question one guess at a time. Cases E1 and E2 assert the two responses are
+byte-for-byte the same.
+
+**"If I reset my password, does that unlock a locked account?"**
+No. They are different facts about different things: the lock is what the
+system decided after three wrong passwords, and only an administrator lifts it.
+Section F proves it — a locked account can complete a reset and is still
+locked, still refused at sign-in. Letting a reset clear a lock would make the
+lock worth nothing, because the attacker who triggered it can ask for a reset.
+
+**"What happens to my other devices when I reset?"**
+They are signed out. `users.session_version` goes up by one and every request
+compares it against the number stored in the session, so the next click
+anywhere else is refused. That is the point of resetting a password you think
+somebody else knows. We do not go hunting through session files on disk to do
+it — one integer does the whole job.
+
+**"What if I mistype my new email address?"**
+Nothing breaks. The new address goes into `users.pending_email` and the link is
+sent **to the new address**. The account address only moves once that link is
+followed. A typo means the link goes nowhere and you carry on signing in with
+the address you still control — which is the failure that matters, because the
+alternative locks people out of their own accounts.
+
+**"Is the CAPTCHA doing anything, or is it decoration?"**
+The widget produces a string. The string proves nothing: a script can produce
+one too. It means something only when the server asks Cloudflare whether that
+token was issued for this site and has not already been spent, which
+`turnstile_or_fail()` does with cURL before the account is created. The site
+key is public and served at run time by `GET /api/config`; the secret never
+leaves the server. It is off until the group supplies keys, and production
+refuses to start with it switched on and no keys rather than quietly letting
+everything through.
 
 ---
 
@@ -180,15 +245,19 @@ what a person actually does."*
 Say these plainly if asked. A clean "no, and here is why" is worth more than a
 hedge.
 
-* **No email verification.** Registering does not send an email. Nothing in the
-  system depends on an address being reachable.
 * **No messaging between users.** Contact happens through the details a
   reporter chose to publish, or through a coordinator. The interface never
   offers a message box it cannot deliver.
 * **No location heatmap.** There is a map with markers and an approximate-area
   circle; there is no density layer.
-* **No rate limit on registration.** The three-attempt lock covers sign-in
-  only.
+* **The CAPTCHA is off.** It is built and verified server-side, but it stays
+  switched off until the group supplies Cloudflare keys. Say that rather than
+  implying the registration form is unprotected — registration is rate-limited
+  either way.
+* **Mail depends on an SMTP account we have to be given.** With no credentials
+  configured the transport writes messages to a log instead of sending them,
+  which is right for a laptop and useless on a host. It is the one thing on
+  this list that stops a feature working for a real visitor.
 * **No self-service account deletion.** Accounts are suspended rather than
   deleted, so case histories stay readable. The Privacy Notice says so in those
   words rather than implying otherwise.

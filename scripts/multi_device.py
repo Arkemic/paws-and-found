@@ -27,7 +27,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import audit
 from audit import reseed, sql
 
-if os.environ.get('PAWS_API'):
+# A run against PAWS_API is driving a server whose source tree this machine may
+# not own — a container, or a host. Two checks in section K turn the session
+# timeout down by writing a local config file, and such a server never reads it.
+REMOTE = bool(os.environ.get('PAWS_API'))
+if REMOTE:
     audit.API = os.environ['PAWS_API']
 
 PW = audit.PW
@@ -39,6 +43,21 @@ def check(step, what, expected, actual):
     results.append((step, what, expected, actual, ok))
     verdict = 'PASS' if ok else 'FAIL'
     print(f'  {step:<5} {what:<56} {str(expected):<22} {str(actual):<22} {verdict}')
+
+
+skipped = []
+
+
+def skip(step, what, why):
+    """A check this run is not in a position to make.
+
+    Not a pass and not a failure. Counting it either way would be a lie: one
+    hides that the check did not happen, the other reports the product as
+    broken when it is the harness that cannot reach far enough.
+    """
+    skipped.append((step, what, why))
+    print(f'  {step:<5} {what:<56} {"-":<22} {"-":<22} SKIP')
+    print(f'        {why}')
 
 
 def device(email, password=PW):
@@ -245,9 +264,15 @@ try:
     check('K1', 'Signs in normally', 200, code)
     check('K2', 'And is signed in', 'user', role_of(expiring))
     time.sleep(2.5)
-    check('K3', 'After the timeout, /auth/me says nobody', 'signed out', role_of(expiring))
-    check('K4', 'And a protected call is refused', 401,
-          expiring.call('GET', '/notifications')[0])
+    if REMOTE:
+        why = ('the timeout is turned down by writing api/config.local.php here, '
+               'which a server running elsewhere never reads')
+        skip('K3', 'After the timeout, /auth/me says nobody', why)
+        skip('K4', 'And a protected call is refused', why)
+    else:
+        check('K3', 'After the timeout, /auth/me says nobody', 'signed out', role_of(expiring))
+        check('K4', 'And a protected call is refused', 401,
+              expiring.call('GET', '/notifications')[0])
 finally:
     if existing is None:
         os.remove(local_config)
@@ -263,7 +288,10 @@ check('K6', 'And the session holds', 'user', role_of(fresh_again))
 passed = sum(1 for row in results if row[4])
 print()
 print('=' * 118)
-print(f'  {passed}/{len(results)} passed')
+print(f'  {passed}/{len(results)} passed'
+      + (f', {len(skipped)} skipped' if skipped else ''))
+for step, what, why in skipped:
+    print(f'  SKIPPED {step}  {what}: {why}')
 if passed != len(results):
     print()
     for step, what, expected, actual, ok in results:

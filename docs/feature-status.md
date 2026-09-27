@@ -7,7 +7,8 @@ exists.
 **Legend:** `[ ]` not started · `[~]` partial · `[x]` done — working in the browser
 against the live PHP API and MySQL database, unless a note says otherwise.
 
-_Last updated: accessibility audited with axe-core; failure states swept — 2026-09-10_
+_Last updated: account lifecycle — verification, password reset, safe email change,
+rate limiting — 2026-09-27_
 
 ## Foundation
 
@@ -23,6 +24,13 @@ _Last updated: accessibility audited with axe-core; failure states swept — 202
 | Image assets | `[x]` | Every seeded report carries a photograph (33 images across 32 reports). Reports 025 and 026 are the same dog from either side, so the 100% pairing demonstrates convincingly. Help header band (IMG-012) in place. |
 | Routing & navigation | `[x]` | All 25 routes, navbar, mobile nav, footer, sidebar, breadcrumb, 404, unauthorized |
 | Role-aware navigation + route guards | `[x]` | Route guards keep the interface coherent; they are not security — every endpoint checks the session again. The demo role selector is **development only** and is removed from production builds along with the demo password (see below). |
+| Email verification | `[x]` | Registration creates the account and sends a link; it does **not** sign anybody in. Sign-in refuses an unverified address with 403 `verification_required`, and only **after** the password check, so the refusal says nothing to somebody who does not already know the password. `api/auth.php`, `api/tokens.php`. |
+| Forgot / reset password | `[x]` | One answer for every address — registered, unknown, unverified, suspended. Anything that varies is a way of asking which addresses have accounts. The reset ends every other session on that account, and does **not** unlock a locked one. |
+| Safe email change | `[x]` | The new address goes in `users.pending_email` and the link is sent **to the new address**. The account address only moves once that link is followed, so a typo cannot lock anybody out of the address they still control. |
+| One-time links | `[x]` | `auth_tokens` stores only a SHA-256 of each link. Single use is one conditional `UPDATE`, not a `SELECT` then an `UPDATE`, so two clicks arriving together cannot both be honoured. Expiry is explicit since migration `006`. |
+| Rate limiting | `[x]` | `auth_rate_limits`, counted per action against an HMAC of the address, with a rolling window and a 429 carrying `Retry-After`. Separate from the three-attempt account lock, which is a different rule with a different consequence. |
+| Turnstile on registration | `[~]` | Implemented and verified server-side; **off until the group supplies keys**. The site key is served at run time by `GET /api/config`, never built into the bundle; the secret never leaves the server. Production refuses to start with `TURNSTILE_ENABLED=true` and no keys rather than silently allowing everything through. |
+| Session revocation | `[x]` | `users.session_version` against `$_SESSION['session_version']`, compared on every request. A password reset or a suspension ends every session everywhere without hunting through session files on disk. |
 
 ## Core workflows
 
@@ -64,26 +72,53 @@ _Last updated: accessibility audited with axe-core; failure states swept — 202
 prints a table per category. It restores the demonstration data afterwards, so
 it can be run again at any time.
 
-`npm run a11y` runs axe-core over all 29 pages in every role.
-
 | Category | Cases | Passing |
 | --- | --- | --- |
 | A. Input validation | 19 | 19 |
-| B. SQL injection | 13 | 13 |
-| C. Authentication | 35 | 35 |
+| B. SQL injection | 14 | 14 |
+| C. Authentication | 38 | 38 |
 | D. Authorization | 31 | 31 |
 | E. Cross-site scripting | 4 | 4 |
 | F. File upload | 7 | 7 |
 | G. Functional | 44 | 44 |
 | H. Error handling | 10 | 10 |
-| **Total** | **164** | **164** |
+| **Total** | **167** | **167** |
 
-Last run 2026-09-25 against the deployed build. Authentication grew with the
-three-attempt lockout and CSRF; error handling grew when a routing fault was
-found — see below; SQL-14 was added so the ERD's "24 foreign keys" is asserted
-by the suite rather than only by a document.
+Authentication grew with the three-attempt lockout and CSRF; error handling
+grew when a routing fault was found — see below; functional grew again in the
+final hardening pass with the contact-preference and collar-answer cases.
+SQL-12 and SQL-14 assert the table and foreign-key counts, so the ERD cannot
+be wrong quietly.
+
+    python scripts/auth_lifecycle.py
+
+**53 checks over the account lifecycle**: registration no longer signing
+anybody in, an unproved address being refused, following the link, the
+password reset, the session revocation that comes with it, a reset *not*
+unlocking a locked account, the safe email change, and rate limiting. It reads
+every link out of captured mail, exactly as a person reads it out of an inbox,
+because there is no endpoint that hands out a token and there is not going to
+be one.
 
     npm run multi-device
+
+**55 checks across three independent sessions** — three cookie jars, three
+CSRF tokens, as three browsers on three machines have. It proves the shared
+database is the authority for a report change, a read-state change, a role
+downgrade, a suspension, a three-attempt lock, an administrator unlock, a
+server-side session expiry, and five forbidden addresses. It takes `PAWS_API`
+so it can be pointed at the LAN address or at the hosted site.
+
+    npm run test:contract
+
+**13 checks with no server at all** — the shape of what the report form sends
+and what the API sends back. They exist because two defects got through
+everything above by being agreements between two files rather than faults in
+either one: the collar answer and the contact preferences.
+
+    npm run a11y
+
+axe-core over all 29 pages in every role: zero violations.
 
     npm run verify:deploy https://<domain>
 
@@ -96,14 +131,8 @@ is readable over the web, and whether any demo password reached the bundle.
 27/28 against the local deployment — the one failure is HTTPS, correctly,
 because localhost is plain HTTP.
 
-    npm run multi-device
-
-A second suite: **55 checks across three independent sessions** — three cookie
-jars, three CSRF tokens, as three browsers on three machines have. It proves
-the shared database is the authority for a report change, a read-state change,
-a role downgrade, a suspension, a three-attempt lock, an administrator unlock,
-and five forbidden addresses. All 40 passing. It takes `PAWS_API` so it can be
-pointed at the LAN address or at the hosted site.
+Last run in full on 27 September 2026 on the development laptop: 167/167,
+53/53, 55/55, 13/13, axe clean, lint clean, build green, 27/28 preflight.
 
 ## Cross-cutting
 

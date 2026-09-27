@@ -349,12 +349,14 @@ and table counts that moved.
 
 * ~~`report_update()` does not refuse edits to a finished report.~~ Closed with
   G4.
-* No rate limit on registration.
+* ~~No rate limit on registration.~~ Closed 27 September 2026 —
+  `auth_rate_limits`, counted per action against an HMAC of the address.
 * The demo selector's dead code still ships in the bundle (the *password* does
   not). "It is not in the production build" is a better sentence than "it is in
   the build but never runs."
-* No `429` anywhere; no `409` outside `match_decide()`, `moderation_decide()`
-  and `report_update()`.
+* ~~No `429` anywhere;~~ the rate limiter answers 429 with `Retry-After`.
+  Still no `409` outside `match_decide()`, `moderation_decide()` and
+  `report_update()`, which is correct — those are the only state machines.
 * ~~A third path segment was silently dropped, so the router answered a URL
   that does not exist: `GET /matches/1/claims` returned the match, and
   `GET /users/1/password` returned the user.~~ Closed 25 September 2026.

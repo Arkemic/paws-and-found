@@ -66,7 +66,7 @@ Two services in one project:
     Paws-Found  ──private network──▶  MySQL
     (this Dockerfile)                 (Railway's MySQL image)
 
-### The six variables on the Paws-Found service
+### The variables on the Paws-Found service
 
 Set as **references**, not pasted values, so they follow the database if it is
 ever recreated:
@@ -79,6 +79,45 @@ DB_USER=${{MySQL.MYSQLUSER}}
 DB_PASS=${{MySQL.MYSQLPASSWORD}}
 APP_ENV=production
 ```
+
+Then the account lifecycle, which needs somewhere to send mail from and a URL
+to put in the links:
+
+```
+APP_URL=https://<domain>
+MAIL_TRANSPORT=smtp
+MAIL_HOST=<smtp host>
+MAIL_PORT=587
+MAIL_USERNAME=<smtp user>
+MAIL_PASSWORD=<smtp password>
+MAIL_FROM_ADDRESS=<the address the mail comes from>
+MAIL_FROM_NAME=Paws&Found
+```
+
+`APP_URL` falls back to `RAILWAY_PUBLIC_DOMAIN_URL`, so it is usually already
+right — but check it, because **every link in every email is built from it**.
+A wrong `APP_URL` sends people to a verification page that does not exist, and
+nothing in the app will complain.
+
+`MAIL_TRANSPORT` defaults to `log`, which writes the message to the error log
+instead of sending it. That is right on a laptop and wrong on a host: with it
+left at `log`, registration appears to work and no email ever arrives. The
+third value, `capture`, exists only for `scripts/auth_lifecycle.py` and must
+never be set in production.
+
+Turnstile is optional and **off** until the group has keys:
+
+```
+TURNSTILE_SITE_KEY=<site key>
+TURNSTILE_SECRET_KEY=<secret key>
+TURNSTILE_ENABLED=true
+```
+
+The site key is public and is served to the browser at run time by
+`GET /api/config`; the secret is read only by the server. Setting
+`TURNSTILE_ENABLED=true` with either key missing makes the app refuse to start
+in production, deliberately — a CAPTCHA that silently switches itself off is
+worse than none, because nobody notices.
 
 `PERSIST_ROOT` and `SESSION_SAVE_PATH` need no variables — the image defaults
 them to the volume's path. Set them only if the mount path changes.
@@ -171,16 +210,30 @@ pawsandfound`. Railway's database is called `railway`, so **both lines have to
 be removed** and the import run against the already-selected database — or
 create `pawsandfound` on that server and point `DB_NAME` at it instead.
 
-Verify, and expect exactly this:
+Verify, and expect exactly this. Every number was read from the development
+database on 27 September 2026 with migration `006` applied, so a mismatch means
+the import is wrong rather than the list being out of date:
 
 ```sql
-SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();  -- 15
+SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();  -- 17
 SELECT COUNT(*) FROM information_schema.table_constraints
- WHERE table_schema = DATABASE() AND constraint_type = 'FOREIGN KEY';            -- 23
+ WHERE table_schema = DATABASE() AND constraint_type = 'FOREIGN KEY';            -- 24
 SELECT COUNT(*) FROM pet_reports;                                                -- 32
 SELECT COUNT(*) FROM users;                                                      -- 10
-SELECT version FROM schema_migrations ORDER BY version;                          -- 001..004
+SELECT COUNT(*) FROM users WHERE email_verified_at IS NULL;                      -- 0
+SELECT GROUP_CONCAT(version ORDER BY version) FROM schema_migrations;   -- 001..006
 ```
+
+**The `email_verified_at` line is the one that matters most.** Sign-in now
+refuses an account whose address has never been proved. If that count comes
+back as 10 rather than 0, the seed that was imported predates the account
+lifecycle and **nobody will be able to sign in on the day** — not the
+demonstration accounts, not the administrator. Re-import `seed.sql` from this
+branch; it sets `email_verified_at` to each account's `created_at`.
+
+There is no SMTP on a fresh Railway service, so until `MAIL_*` is configured a
+visitor who registers gets an account they cannot verify. Import the seed, and
+demonstrate registration only once mail works.
 
 ### The order to do it in
 
@@ -202,9 +255,21 @@ PAWS_API=https://<domain>/api PAWS_MYSQL_ARGS="-u root -p<password> -h <proxy-ho
 PAWS_API=https://<domain>/api python scripts/multi_device.py
 ```
 
+Against a host, `multi_device.py` reports **53/53 with 2 skipped**, not 55/55.
+That is correct and not a regression. Checks K3 and K4 prove the session
+timeout is enforced by the server, and they do it by turning the timeout down
+to one second in `api/config.local.php` on the machine running the suite — a
+server somewhere else never reads that file. The suite says so by name rather
+than reporting a failure. The same two checks run for real against the local
+build, which is where 55/55 comes from.
+
 8. Open it on a phone **on mobile data, not the same Wi-Fi**. That is the thing
    actually being asked for: it is no longer localhost.
-9. Disable the public proxy again once the suites have run.
+9. Run the account-lifecycle suite too, once `MAIL_*` is set. It needs the
+   capture transport, which production must never have — so run it against the
+   **local** build, not against Railway, and prove mail on the host by
+   registering one throwaway account by hand and reading the inbox.
+10. Disable the public proxy again once the suites have run.
 
 ### Proved locally before any of this
 
