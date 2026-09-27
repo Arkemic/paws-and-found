@@ -258,21 +258,48 @@ are connected; `SELECT DATABASE();` should answer `railway`. Type `exit`.
 
 #### 4. Import, schema first
 
+Run these from the project folder in PowerShell. They mount `database\railway`
+into the container read-only and let the **container** open the files, which is
+deliberate — see the warning below.
+
 ```powershell
-Get-Content database\railway\schema.sql -Raw | docker run --rm -i mysql:8.0 mysql -h RAILWAY_HOST -P RAILWAY_PORT -u RAILWAY_USER -pPASSWORD railway
+docker run --rm -v "${PWD}\database\railway:/sql:ro" mysql:8.0 sh -c "mysql -h RAILWAY_HOST -P RAILWAY_PORT -u RAILWAY_USER -pPASSWORD --default-character-set=utf8mb4 railway < /sql/schema.sql"
 ```
 
 ```powershell
-Get-Content database\railway\seed.sql -Raw | docker run --rm -i mysql:8.0 mysql -h RAILWAY_HOST -P RAILWAY_PORT -u RAILWAY_USER -pPASSWORD railway
+docker run --rm -v "${PWD}\database\railway:/sql:ro" mysql:8.0 sh -c "mysql -h RAILWAY_HOST -P RAILWAY_PORT -u RAILWAY_USER -pPASSWORD --default-character-set=utf8mb4 railway < /sql/seed.sql"
 ```
 
-`-pPASSWORD` has **no space** after `-p`. It is on the command line here
-because the import reads from stdin and so cannot also prompt; run
-`Clear-History` afterwards if that matters to you.
+`-pPASSWORD` has **no space** after `-p`. The password is on the command line
+because the import reads a file and so cannot also prompt; run `Clear-History`
+afterwards if that matters to you.
 
 Expect no output at all. Any line beginning `ERROR` means the import stopped
 there and the database is half-built — fix the cause, drop every table, and
 start again rather than importing on top of the wreckage.
+
+> **Do not pipe the file in with `Get-Content`.** The obvious command,
+> `Get-Content seed.sql -Raw | docker run -i ... mysql`, imports without a
+> single error and silently corrupts the data. PowerShell re-encodes on the way
+> through the pipe, and the seed contains em-dashes and curly apostrophes.
+> Tested on 27 September: it turned
+>
+> ```
+> Closed at the reporter’s request.
+> ```
+>
+> into
+>
+> ```
+> Closed at the reporterÃ¢â‚¬â„¢s request.
+> ```
+>
+> which is then in the database, on screen, during the demonstration. The
+> mounted-file version above was checked the same way and came back clean:
+> zero mojibake rows, em-dash and curly apostrophe both intact.
+>
+> This is the same trap as `--default-character-set=utf8mb4` in
+> `docs/team-setup.md` §4.2, arriving by a different route.
 
 #### 5. Verify, before deploying any code against it
 
@@ -287,6 +314,10 @@ SELECT COUNT(*) FROM match_claims;                                              
 SELECT COUNT(*) FROM users WHERE email_verified_at IS NULL;                      -- 0
 SELECT GROUP_CONCAT(version ORDER BY version) FROM schema_migrations;
                                                         -- 001,002,003,004,005,006,007
+
+-- Nothing was re-encoded on the way in. Both must be 0.
+SELECT COUNT(*) FROM pet_reports  WHERE description LIKE BINARY '%Ã%';         -- 0
+SELECT COUNT(*) FROM status_logs  WHERE note        LIKE BINARY '%Ã%';         -- 0
 ```
 
 Every one of these numbers was read from a real MySQL 8.0.46 on 27 September
